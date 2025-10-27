@@ -1,0 +1,27 @@
+# Git files
+.git
+.gitignore
+
+# Node modules (if you add any in the future)
+node_modules/
+
+# Test files
+**/test/
+**/*-test.html
+**/debug*.html
+
+# Database SQL files
+database/
+
+# Documentation
+*.md
+docs/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+

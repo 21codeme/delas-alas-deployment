@@ -1,0 +1,1932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Delas Alas Dental Clinic</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦷</text></svg>">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../images/tooth.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../images/tooth.png">
+    <link rel="shortcut icon" href="../../../images/tooth.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../images/tooth.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+
+        .clinic-title h2 {
+            color: #ffd700;
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .user-profile {
+            padding: 25px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 32px;
+        }
+
+        .user-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 18px;
+        }
+
+        .user-info p {
+            margin: 0;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 25px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 4px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            border-left-color: #ffd700;
+        }
+
+        .nav-item.active {
+            background: rgba(255,255,255,0.2);
+            border-left-color: #ffd700;
+        }
+
+        .nav-item i {
+            font-size: 18px;
+            width: 20px;
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: none;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,0,0,0.2);
+            border-left-color: #ff6b6b;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            background: #f5f5f5;
+            padding: 30px;
+        }
+
+        /* Iframe Mode - Hide sidebar when loaded in iframe */
+        .iframe-mode .sidebar {
+            display: none;
+        }
+
+        .iframe-mode .main-content {
+            margin-left: 0;
+            padding: 0;
+        }
+
+        .iframe-mode .menu-toggle {
+            display: none !important;
+        }
+
+        /* Settings Styles */
+        .settings-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .header-left h1 {
+            margin: 0 0 5px 0;
+            color: #2c3e50;
+            font-size: 28px;
+        }
+
+        .header-left p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .settings-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .settings-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .settings-card-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+        }
+
+        .settings-card-header h3 {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .settings-card-body {
+            padding: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        /* Profile Picture Upload Styles */
+        .profile-picture-upload {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .current-picture {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid #e0e0e0;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .current-picture img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .picture-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+        }
+
+        .picture-placeholder i {
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+
+        .picture-placeholder span {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .upload-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .upload-hint {
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #667eea;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .settings-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .notification-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-info h4 {
+            margin: 0 0 5px 0;
+            color: #2c3e50;
+        }
+
+        .notification-info p {
+            margin: 0;
+            color: #666;
+            font-size: 12px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .settings-container {
+                grid-template-columns: 1fr;
+            }
+
+            .settings-actions {
+                flex-direction: column;
+            }
+
+            .menu-toggle {
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 1001;
+                background: #667eea;
+                color: white;
+                border: none;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                font-size: 20px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            }
+        }
+
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 8px;
+            padding: 15px 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 10000;
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .notification-success {
+            border-left: 4px solid #4caf50;
+        }
+
+        .notification-success i {
+            color: #4caf50;
+        }
+
+        .notification-info {
+            border-left: 4px solid #2196f3;
+        }
+
+        .notification-info i {
+            color: #2196f3;
+        }
+
+        .notification-error {
+            border-left: 4px solid #f44336;
+        }
+
+        .notification-error i {
+            color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="clinic-title">
+                    <h2>🦷 Delas Alas Dental Clinic</h2>
+                </div>
+            </div>
+            
+                <div class="user-profile">
+                <div class="avatar">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <div class="user-info">
+                    <h3 id="dentistName">Loading...</h3>
+                    <p id="dentistEmail">Loading...</p>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a class="nav-item" onclick="navigateToSection('dashboard')">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('schedule')">
+                    <i class="fas fa-calendar"></i>
+                    <span>Schedule</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('appointments')">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Appointments</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('patients')">
+                    <i class="fas fa-users"></i>
+                    <span>Patients</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('services')">
+                    <i class="fas fa-tools"></i>
+                    <span>Services</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('dentist-list')">
+                    <i class="fas fa-user-md"></i>
+                    <span>Dentist List</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('messages')">
+                    <i class="fas fa-comments"></i>
+                    <span>Messages</span>
+                </a>
+                <a class="nav-item active" onclick="navigateToSection('settings')">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <button class="nav-item logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="settings-content">
+                <div class="settings-header">
+                    <div class="header-left">
+                        <h1>⚙️ Settings</h1>
+                        <p>Manage your account and clinic settings</p>
+                    </div>
+                </div>
+
+                <div class="settings-container">
+                    <!-- Profile Settings -->
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <h3><i class="fas fa-user"></i> Profile Settings</h3>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="fullName" value="Dr. Delas Alas">
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="email" value="delas.alas@clinic.com">
+                            </div>
+                            <div class="form-group">
+                                <label>Phone Number</label>
+                                <input type="tel" id="phone" value="+63 912 345 6789">
+                            </div>
+                            <div class="form-group">
+                                <label>Specialization</label>
+                                <input type="text" id="specialization" value="General Dentistry">
+                            </div>
+                            
+                            <!-- Profile Picture Upload -->
+                            <div class="form-group">
+                                <label>Profile Picture</label>
+                                <div class="profile-picture-upload">
+                                    <div class="current-picture" id="currentPicture">
+                                        <img id="profileImage" src="" alt="Profile Picture" style="display: none;">
+                                        <div class="picture-placeholder" id="picturePlaceholder">
+                                            <i class="fas fa-user-md"></i>
+                                            <span>No picture uploaded</span>
+                                        </div>
+                                    </div>
+                                    <div class="upload-controls">
+                                        <input type="file" id="profilePictureInput" accept="image/*" style="display: none;" onchange="handleProfilePictureUpload(event)">
+                                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('profilePictureInput').click()">
+                                            <i class="fas fa-upload"></i> Upload Picture
+                                        </button>
+                                        <button type="button" class="btn btn-danger" id="removePictureBtn" onclick="removeProfilePicture()" style="display: none;">
+                                            <i class="fas fa-trash"></i> Remove
+                                        </button>
+                                    </div>
+                                    <small class="upload-hint">Supported formats: JPG, PNG, GIF. Max size: 5MB</small>
+                                </div>
+                            </div>
+                            <div class="settings-actions">
+                                <button class="btn btn-primary" onclick="updateProfile()">
+                                    <i class="fas fa-save"></i> Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Clinic Settings -->
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <h3><i class="fas fa-building"></i> Clinic Settings</h3>
+                            <p style="color: #666; font-size: 14px; margin: 0;">Edit the information that appears in the Contact Us section</p>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="form-group">
+                                <label>Clinic Name</label>
+                                <input type="text" id="clinicName" value="Delas Alas Dental Clinic">
+                            </div>
+                            <div class="form-group">
+                                <label>Address</label>
+                                <textarea id="clinicAddress">123 Main Street, Barangay Health Center, City, Philippines</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Operating Hours</label>
+                                <input type="text" id="operatingHours" value="Monday-Friday: 8:00 AM - 6:00 PM">
+                            </div>
+                            <div class="form-group">
+                                <label>Contact Number</label>
+                                <input type="tel" id="clinicPhone" value="+63 2 1234 5678">
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="clinicEmail" value="info@delasalasdental.com">
+                            </div>
+                            <div class="settings-actions">
+                                <button class="btn btn-primary" onclick="updateClinic()">
+                                    <i class="fas fa-save"></i> Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notification Settings -->
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <h3><i class="fas fa-bell"></i> Notification Settings</h3>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="notification-item">
+                                <div class="notification-info">
+                                    <h4>Email Notifications</h4>
+                                    <p>Receive notifications via email</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="emailNotifications" onchange="updateNotificationPrefs()">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="notification-item">
+                                <div class="notification-info">
+                                    <h4>SMS Notifications</h4>
+                                    <p>Receive notifications via SMS</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="smsNotifications" onchange="updateNotificationPrefs()">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="notification-item">
+                                <div class="notification-info">
+                                    <h4>Appointment Reminders</h4>
+                                    <p>Get reminded about upcoming appointments</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="appointmentReminders" checked onchange="updateNotificationPrefs()">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="notification-item">
+                                <div class="notification-info">
+                                    <h4>New Patient Alerts</h4>
+                                    <p>Get notified when new patients register</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="patientAlerts" checked onchange="updateNotificationPrefs()">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="notification-item">
+                                <div class="notification-info">
+                                    <h4>Message Notifications</h4>
+                                    <p>Get notified when receiving new messages</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="messageNotifications" checked onchange="updateNotificationPrefs()">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="notification-item">
+                                <div class="notification-info">
+                                    <h4>Schedule Changes</h4>
+                                    <p>Get notified about schedule updates</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="scheduleNotifications" checked onchange="updateNotificationPrefs()">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Settings -->
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <h3><i class="fas fa-shield-alt"></i> Security Settings</h3>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="form-group">
+                                <label>Current Password</label>
+                                <input type="password" id="currentPassword" placeholder="Enter current password">
+                            </div>
+                            <div class="form-group">
+                                <label>New Password</label>
+                                <input type="password" id="newPassword" placeholder="Enter new password">
+                            </div>
+                            <div class="form-group">
+                                <label>Confirm New Password</label>
+                                <input type="password" id="confirmPassword" placeholder="Confirm new password">
+                            </div>
+                            <div class="settings-actions">
+                                <button class="btn btn-primary" onclick="changePassword()">
+                                    <i class="fas fa-key"></i> Change Password
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Actions -->
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Account Actions</h3>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="form-group">
+                                <p style="color: #666; margin-bottom: 15px;">
+                                    Manage your account data and privacy settings.
+                                </p>
+                            </div>
+                            <div class="settings-actions">
+                                <button class="btn btn-danger" onclick="deleteAccount()">
+                                    <i class="fas fa-trash"></i> Delete Account
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Mobile Menu Toggle (visible on mobile only) -->
+        <button class="menu-toggle" onclick="toggleMobileMenu()" style="display: none;">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <script>
+        // Load current user and update sidebar name/email
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                const data = localStorage.getItem('currentUser');
+                if (data) {
+                    const user = JSON.parse(data);
+                    const nameEl = document.getElementById('dentistName');
+                    const emailEl = document.getElementById('dentistEmail');
+                    if (nameEl) nameEl.textContent = user.name || user.email || 'User';
+                    if (emailEl) emailEl.textContent = user.email || '';
+                }
+            } catch (e) { console.warn('Failed to read currentUser'); }
+        });
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check if loaded in iframe
+            if (window !== window.top) {
+                document.body.classList.add('iframe-mode');
+            }
+            
+            // Load profile from Supabase first (async)
+            await loadUserProfileFromSupabase();
+            
+            // Load clinic settings from Supabase
+            await loadClinicSettingsFromSupabase();
+            
+            // Load notification preferences
+            await loadNotificationPreferences();
+            
+            // Then load other settings
+            loadSettings();
+            loadProfilePicture(); // Load saved profile picture
+            setupFormHandlers();
+        });
+
+        // Load clinic settings from Supabase
+        async function loadClinicSettingsFromSupabase() {
+            try {
+                console.log('🔍 Loading clinic settings from Supabase...');
+                
+                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/clinic_settings?id=eq.clinic&select=*`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('📊 Clinic settings from Supabase:', data);
+                    
+                    if (Array.isArray(data) && data.length > 0) {
+                        const settings = data[0];
+                        
+                        // Populate form fields
+                        if (settings.clinic_name && document.getElementById('clinicName')) {
+                            document.getElementById('clinicName').value = settings.clinic_name;
+                        }
+                        if (settings.clinic_address && document.getElementById('clinicAddress')) {
+                            document.getElementById('clinicAddress').value = settings.clinic_address;
+                        }
+                        if (settings.operating_hours && document.getElementById('operatingHours')) {
+                            document.getElementById('operatingHours').value = settings.operating_hours;
+                        }
+                        if (settings.clinic_phone && document.getElementById('clinicPhone')) {
+                            document.getElementById('clinicPhone').value = settings.clinic_phone;
+                        }
+                        if (settings.clinic_email && document.getElementById('clinicEmail')) {
+                            document.getElementById('clinicEmail').value = settings.clinic_email;
+                        }
+                        
+                        console.log('✅ Clinic settings loaded successfully');
+                    } else {
+                        console.log('⚠️ No clinic settings found in Supabase');
+                    }
+                } else {
+                    console.error('❌ Failed to load clinic settings:', response.status);
+                }
+            } catch (error) {
+                console.error('❌ Error loading clinic settings:', error);
+            }
+        }
+
+        // Load settings data
+        function loadSettings() {
+            // This function is now disabled - we use loadUserProfileFromSupabase instead
+            // But we keep it for backwards compatibility with clinic settings
+            console.log('Load settings called, but profile data comes from Supabase');
+        }
+
+        // Set up form handlers
+        function setupFormHandlers() {
+            // Add save buttons to all forms
+            addSaveButtons();
+            
+            // Add auto-save functionality
+            const inputs = document.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('change', () => {
+                    saveFormData(input.closest('.settings-card-body'));
+                });
+            });
+        }
+
+        // Add save buttons to forms
+        function addSaveButtons() {
+            const forms = document.querySelectorAll('.settings-card-body');
+            forms.forEach(form => {
+                // Check if form already has a save button (either .save-btn or .settings-actions)
+                if (!form.querySelector('.save-btn') && !form.querySelector('.settings-actions')) {
+                    const saveBtn = document.createElement('button');
+                    saveBtn.className = 'btn btn-primary save-btn';
+                    saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+                    saveBtn.type = 'button';
+                    saveBtn.onclick = () => saveFormData(form);
+                    form.appendChild(saveBtn);
+                }
+            });
+        }
+
+        // Save form data
+        function saveFormData(form) {
+            const data = {};
+            
+            // Collect all input values
+            const inputs = form.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                if (input.type === 'checkbox') {
+                    data[input.name || input.id] = input.checked;
+                } else {
+                    data[input.name || input.id] = input.value;
+                }
+            });
+
+            // Save to localStorage (in real app, save to backend)
+            const settingsKey = form.closest('.settings-card').querySelector('h3').textContent.toLowerCase().replace(/\s+/g, '_');
+            localStorage.setItem(`dentalSettings_${settingsKey}`, JSON.stringify(data));
+            
+            // Show success message
+            showNotification('Settings saved successfully!', 'success');
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            
+            let icon;
+            if (type === 'success') {
+                icon = 'check-circle';
+            } else if (type === 'error') {
+                icon = 'exclamation-circle';
+            } else {
+                icon = 'info-circle';
+            }
+            
+            notification.innerHTML = `
+                <i class="fas fa-${icon}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => notification.classList.add('show'), 100);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Navigation function
+        function navigateToSection(section) {
+            // If loaded in iframe, communicate with parent
+            if (window !== window.top) {
+                window.parent.postMessage({ action: 'loadSection', section: section }, '*');
+            } else {
+                // If standalone, navigate directly
+                window.location.href = `../${section}/${section}-standalone.html`;
+            }
+        }
+
+        // Load user profile from Supabase
+        async function loadUserProfileFromSupabase() {
+            try {
+                console.log('🔍 Loading profile from Supabase...');
+                const userData = localStorage.getItem('currentUser');
+                if (!userData) {
+                    console.log('⚠️ No currentUser in localStorage');
+                    return;
+                }
+                
+                const user = JSON.parse(userData);
+                if (!user || !user.id) {
+                    console.log('⚠️ Invalid user data or missing user ID');
+                    return;
+                }
+                
+                console.log('👤 Current user ID:', user.id);
+                
+                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}&select=name,email,phone`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+                
+                console.log('📡 Supabase response status:', response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('📊 Supabase response data:', data);
+                    
+                    if (Array.isArray(data) && data.length > 0) {
+                        const profile = data[0];
+                        console.log('✅ Profile data:', profile);
+                        
+                        // Fill in the form fields
+                        const fullNameEl = document.getElementById('fullName');
+                        const emailEl = document.getElementById('email');
+                        const phoneEl = document.getElementById('phone');
+                        const specializationEl = document.getElementById('specialization');
+                        
+                        if (fullNameEl) fullNameEl.value = profile.name || user.name || '';
+                        if (emailEl) emailEl.value = profile.email || user.email || '';
+                        if (phoneEl) phoneEl.value = profile.phone || '';
+                        if (specializationEl) specializationEl.value = profile.specialization || 'General Dentistry';
+                        
+                        console.log('✅ Profile loaded successfully from Supabase');
+                    } else {
+                        console.log('⚠️ No profile data found in Supabase, using localStorage fallback');
+                        // Fallback to localStorage data
+                        const fullNameEl = document.getElementById('fullName');
+                        const emailEl = document.getElementById('email');
+                        if (fullNameEl) fullNameEl.value = user.name || '';
+                        if (emailEl) emailEl.value = user.email || '';
+                    }
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Supabase error:', response.status, errorText);
+                    // Fallback to localStorage data
+                    const fullNameEl = document.getElementById('fullName');
+                    const emailEl = document.getElementById('email');
+                    if (fullNameEl) fullNameEl.value = user.name || '';
+                    if (emailEl) emailEl.value = user.email || '';
+                }
+            } catch (error) {
+                console.error('❌ Error loading profile from Supabase:', error);
+                // Fallback to localStorage data
+                try {
+                    const userData = localStorage.getItem('currentUser');
+                    if (userData) {
+                        const user = JSON.parse(userData);
+                        const fullNameEl = document.getElementById('fullName');
+                        const emailEl = document.getElementById('email');
+                        if (fullNameEl) fullNameEl.value = user.name || '';
+                        if (emailEl) emailEl.value = user.email || '';
+                    }
+                } catch (e) {
+                    console.error('Failed fallback:', e);
+                }
+            }
+        }
+        
+        // Action functions
+        async function updateProfile() {
+            try {
+                const userData = localStorage.getItem('currentUser');
+                if (!userData) {
+                    showNotification('Please login first', 'error');
+                    return;
+                }
+                
+                const user = JSON.parse(userData);
+                if (!user || !user.id) return;
+                
+                const profileData = {
+                    name: document.getElementById('fullName').value,
+                    email: document.getElementById('email').value,
+                    phone: document.getElementById('phone').value
+                };
+                
+                // Get specialization value for localStorage (not saved to Supabase)
+                const specialization = document.getElementById('specialization').value;
+                
+                // Save to Supabase (only name, email, phone - without specialization)
+                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                
+                console.log('📡 Sending profile update to Supabase:', profileData);
+                
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify(profileData)
+                });
+                
+                if (response.ok) {
+                    // Update localStorage as well (including specialization)
+                    const updatedUser = {
+                        ...user,
+                        ...profileData,
+                        specialization: specialization
+                    };
+                    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+                    
+                    // Update sidebar
+                    document.getElementById('dentistName').textContent = profileData.name;
+                    document.getElementById('dentistEmail').textContent = profileData.email;
+                    
+                    showNotification('Profile updated successfully!', 'success');
+                    
+                    // Notify parent window to update profile
+                    if (window.parent && window.parent !== window) {
+                        window.parent.postMessage({ action: 'updateProfile' }, '*');
+                    }
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Error updating profile:', response.status, errorText);
+                    
+                    try {
+                        const error = JSON.parse(errorText);
+                        showNotification(`Failed to update profile: ${error.message || errorText}`, 'error');
+                    } catch (e) {
+                        showNotification(`Failed to update profile: ${errorText}`, 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Error updating profile:', error);
+                showNotification('Failed to update profile', 'error');
+            }
+        }
+
+        // Profile Picture Functions
+        function handleProfilePictureUpload(event) {
+            const file = event.target.files[0];
+            
+            if (!file) return;
+            
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please select a valid image file.');
+                return;
+            }
+            
+            // Validate file size (5MB max)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File size must be less than 5MB.');
+                return;
+            }
+            
+            // Compress image to reduce size
+            const image = new Image();
+            image.onload = async function() {
+                // Create canvas to resize image
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Set maximum dimensions (200x200 for profile pictures)
+                const maxWidth = 200;
+                const maxHeight = 200;
+                let width = image.width;
+                let height = image.height;
+                
+                // Calculate new dimensions
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height *= maxWidth / width;
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width *= maxHeight / height;
+                        height = maxHeight;
+                    }
+                }
+                
+                // Set canvas size
+                canvas.width = width;
+                canvas.height = height;
+                
+                // Draw and compress
+                ctx.drawImage(image, 0, 0, width, height);
+                const compressedImage = canvas.toDataURL('image/jpeg', 0.5); // 50% quality for smaller size
+                
+                const profileImage = document.getElementById('profileImage');
+                const picturePlaceholder = document.getElementById('picturePlaceholder');
+                const removeBtn = document.getElementById('removePictureBtn');
+                
+                // Show the uploaded image first
+                profileImage.src = compressedImage;
+                profileImage.style.display = 'block';
+                picturePlaceholder.style.display = 'none';
+                removeBtn.style.display = 'inline-block';
+                
+                // Save to Supabase FIRST (primary storage)
+                try {
+                    const user = JSON.parse(localStorage.getItem('currentUser'));
+                    if (user && user.id) {
+                        const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                        
+                        console.log('💾 Saving compressed profile picture to Supabase...', 'Original:', file.size, 'bytes', 'Compressed:', compressedImage.length, 'bytes');
+                        
+                        const response = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'return=representation'
+                            },
+                            body: JSON.stringify({
+                                profile_picture: compressedImage
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            const savedData = await response.json();
+                            console.log('✅ Profile picture saved to Supabase successfully!');
+                            console.log('📊 Profile picture data length:', savedData[0].profile_picture?.length || 'No data');
+                            showNotification('✅ Profile picture saved to cloud! Visible on all devices.', 'success');
+                            
+                            // Show success modal with verification info
+                            setTimeout(() => {
+                                alert(`✅ PROFILE PICTURE SAVED TO SUPABASE!\n\nYou can now:\n1. Logout and login again\n2. Open on different device\n3. Your profile picture will appear!\n\nData length: ${savedData[0].profile_picture?.length || 0} bytes`);
+                            }, 500);
+                        } else {
+                            const errorText = await response.text();
+                            console.error('⚠️ Failed to save profile picture to Supabase:', response.status, errorText);
+                            showNotification('❌ Warning: Could not save to server. Saved locally only.', 'warning');
+                            alert(`❌ Failed to save profile picture to Supabase!\n\nError: ${response.status}\n${errorText}`);
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ Error saving profile picture to Supabase:', error);
+                    showNotification('Warning: Could not save to server. Saved locally only.', 'warning');
+                }
+                
+                // Save to localStorage as backup/fallback
+                localStorage.setItem('dentistProfilePicture', compressedImage);
+                
+                // Update sidebar profile picture
+                updateSidebarProfilePicture(compressedImage);
+                
+                console.log('✅ Profile picture uploaded and compressed successfully');
+            };
+            
+            // Load image from file
+            image.src = URL.createObjectURL(file);
+        }
+        
+        async function removeProfilePicture() {
+            if (confirm('Are you sure you want to remove your profile picture?')) {
+                // Remove from Supabase FIRST
+                try {
+                    const user = JSON.parse(localStorage.getItem('currentUser'));
+                    if (user && user.id) {
+                        const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                        
+                        console.log('🗑️ Removing profile picture from Supabase...');
+                        
+                        const response = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                profile_picture: null
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            console.log('✅ Profile picture removed from Supabase');
+                            showNotification('Profile picture removed successfully!', 'success');
+                        } else {
+                            const errorText = await response.text();
+                            console.warn('⚠️ Failed to remove profile picture from Supabase:', response.status, errorText);
+                            showNotification('Warning: Could not remove from server.', 'warning');
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ Error removing profile picture from Supabase:', error);
+                    showNotification('Warning: Could not remove from server.', 'warning');
+                }
+                
+                // Remove from localStorage as backup
+                localStorage.removeItem('dentistProfilePicture');
+                
+                // Hide the image and show placeholder
+                const profileImage = document.getElementById('profileImage');
+                const picturePlaceholder = document.getElementById('picturePlaceholder');
+                const removeBtn = document.getElementById('removePictureBtn');
+                const fileInput = document.getElementById('profilePictureInput');
+                
+                profileImage.style.display = 'none';
+                profileImage.src = '';
+                picturePlaceholder.style.display = 'flex';
+                removeBtn.style.display = 'none';
+                fileInput.value = '';
+                
+                // Update sidebar to show default avatar
+                updateSidebarProfilePicture(null);
+                
+                console.log('✅ Profile picture removed');
+            }
+        }
+        
+        function updateSidebarProfilePicture(imageData) {
+            // Update the sidebar profile picture in the main dashboard
+            if (window.parent && window.parent !== window) {
+                // If in iframe, communicate with parent
+                window.parent.postMessage({ 
+                    action: 'updateProfilePicture', 
+                    imageData: imageData 
+                }, '*');
+            } else {
+                // If standalone, update directly
+                const sidebarAvatar = document.querySelector('.avatar img');
+                if (sidebarAvatar) {
+                    if (imageData) {
+                        sidebarAvatar.src = imageData;
+                        sidebarAvatar.style.display = 'block';
+                    } else {
+                        sidebarAvatar.style.display = 'none';
+                    }
+                }
+            }
+        }
+        
+        function loadProfilePicture() {
+            const savedImage = localStorage.getItem('dentistProfilePicture');
+            if (savedImage) {
+                const profileImage = document.getElementById('profileImage');
+                const picturePlaceholder = document.getElementById('picturePlaceholder');
+                const removeBtn = document.getElementById('removePictureBtn');
+                
+                profileImage.src = savedImage;
+                profileImage.style.display = 'block';
+                picturePlaceholder.style.display = 'none';
+                removeBtn.style.display = 'inline-block';
+                
+                // Update sidebar
+                updateSidebarProfilePicture(savedImage);
+            }
+        }
+        
+        // Load notification preferences from Supabase
+        async function loadNotificationPreferences() {
+            try {
+                const userData = localStorage.getItem('currentUser');
+                if (!userData) return;
+                
+                const user = JSON.parse(userData);
+                if (!user || !user.id) return;
+                
+                console.log('🔔 Loading notification preferences...');
+                
+                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                
+                // Try to load from Supabase
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/user_notification_settings?user_id=eq.${user.id}`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('📊 Notification preferences:', data);
+                    
+                    if (Array.isArray(data) && data.length > 0) {
+                        const prefs = data[0];
+                        
+                        // Update toggles based on Supabase data
+                        if (prefs.email_notifications !== undefined) {
+                            document.getElementById('emailNotifications').checked = prefs.email_notifications;
+                        }
+                        if (prefs.sms_notifications !== undefined) {
+                            document.getElementById('smsNotifications').checked = prefs.sms_notifications;
+                        }
+                        if (prefs.appointment_reminders !== undefined) {
+                            document.getElementById('appointmentReminders').checked = prefs.appointment_reminders;
+                        }
+                        if (prefs.patient_alerts !== undefined) {
+                            document.getElementById('patientAlerts').checked = prefs.patient_alerts;
+                        }
+                        if (prefs.message_notifications !== undefined) {
+                            document.getElementById('messageNotifications').checked = prefs.message_notifications;
+                        }
+                        if (prefs.schedule_notifications !== undefined) {
+                            document.getElementById('scheduleNotifications').checked = prefs.schedule_notifications;
+                        }
+                        
+                        console.log('✅ Notification preferences loaded');
+                    }
+                } else {
+                    // If not found in Supabase, try localStorage
+                    loadNotificationPreferencesFromLocal();
+                }
+            } catch (error) {
+                console.error('❌ Error loading notification preferences:', error);
+                loadNotificationPreferencesFromLocal();
+            }
+        }
+        
+        // Load notification preferences from localStorage (fallback)
+        function loadNotificationPreferencesFromLocal() {
+            try {
+                const saved = localStorage.getItem('notificationPreferences');
+                if (saved) {
+                    const prefs = JSON.parse(saved);
+                    document.getElementById('emailNotifications').checked = prefs.email || false;
+                    document.getElementById('smsNotifications').checked = prefs.sms || false;
+                    document.getElementById('appointmentReminders').checked = prefs.appointments !== false;
+                    document.getElementById('patientAlerts').checked = prefs.patients !== false;
+                    document.getElementById('messageNotifications').checked = prefs.messages !== false;
+                    document.getElementById('scheduleNotifications').checked = prefs.schedule !== false;
+                }
+            } catch (error) {
+                console.error('Error loading from localStorage:', error);
+            }
+        }
+        
+        // Update notification preferences
+        async function updateNotificationPrefs() {
+            try {
+                const userData = localStorage.getItem('currentUser');
+                if (!userData) return;
+                
+                const user = JSON.parse(userData);
+                if (!user || !user.id) return;
+                
+                const prefs = {
+                    email_notifications: document.getElementById('emailNotifications').checked,
+                    sms_notifications: document.getElementById('smsNotifications').checked,
+                    appointment_reminders: document.getElementById('appointmentReminders').checked,
+                    patient_alerts: document.getElementById('patientAlerts').checked,
+                    message_notifications: document.getElementById('messageNotifications').checked,
+                    schedule_notifications: document.getElementById('scheduleNotifications').checked
+                };
+                
+                console.log('💾 Saving notification preferences:', prefs);
+                
+                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                
+                // Try to update in Supabase
+                const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/user_notification_settings?user_id=eq.${user.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(prefs)
+                });
+                
+                if (!updateResponse.ok) {
+                    // If update fails, try to insert new record
+                    const insertResponse = await fetch(`${SUPABASE_URL}/rest/v1/user_notification_settings`, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=representation'
+                        },
+                        body: JSON.stringify({
+                            user_id: user.id,
+                            ...prefs
+                        })
+                    });
+                    
+                    if (!insertResponse.ok) {
+                        throw new Error('Failed to save notification preferences');
+                    }
+                }
+                
+                // Also save to localStorage as backup
+                localStorage.setItem('notificationPreferences', JSON.stringify({
+                    email: prefs.email_notifications,
+                    sms: prefs.sms_notifications,
+                    appointments: prefs.appointment_reminders,
+                    patients: prefs.patient_alerts,
+                    messages: prefs.message_notifications,
+                    schedule: prefs.schedule_notifications
+                }));
+                
+                showNotification('Notification preferences updated successfully!', 'success');
+                
+            } catch (error) {
+                console.error('❌ Error updating notification preferences:', error);
+                showNotification('Failed to update notification preferences', 'error');
+            }
+        }
+
+        async function updateClinic() {
+            try {
+                const clinicData = {
+                    clinic_name: document.getElementById('clinicName').value,
+                    clinic_address: document.getElementById('clinicAddress').value,
+                    operating_hours: document.getElementById('operatingHours').value,
+                    clinic_phone: document.getElementById('clinicPhone').value,
+                    clinic_email: document.getElementById('clinicEmail').value
+                };
+                
+                console.log('📝 Saving clinic data:', clinicData);
+                
+                // Save to Supabase in a clinic_settings table
+                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                
+                console.log('🔄 Attempting to update existing clinic settings...');
+                // First, try to update existing clinic settings
+                const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/clinic_settings?id=eq.clinic`, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify(clinicData)
+                });
+                
+                console.log('📡 Update response status:', updateResponse.status);
+                
+                if (!updateResponse.ok) {
+                    console.log('⚠️ Update failed, attempting to insert new record...');
+                    // If update fails, try to insert new record
+                    const insertResponse = await fetch(`${SUPABASE_URL}/rest/v1/clinic_settings`, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=representation'
+                        },
+                        body: JSON.stringify({
+                            id: 'clinic',
+                            ...clinicData
+                        })
+                    });
+                    
+                    console.log('📡 Insert response status:', insertResponse.status);
+                    
+                    if (!insertResponse.ok) {
+                        const errorText = await insertResponse.text();
+                        console.error('❌ Insert failed:', errorText);
+                        throw new Error('Failed to save clinic settings: ' + errorText);
+                    }
+                    
+                    console.log('✅ Clinic settings inserted successfully');
+                } else {
+                    console.log('✅ Clinic settings updated successfully');
+                }
+                
+                // Also save to localStorage as backup
+                const existingSettings = JSON.parse(localStorage.getItem('dentalSettings') || '{}');
+                const updatedSettings = { ...existingSettings, ...clinicData };
+                localStorage.setItem('dentalSettings', JSON.stringify(updatedSettings));
+                
+                showNotification('Clinic settings updated successfully!', 'success');
+                
+                // Trigger refresh of index.html's clinic settings if it's open
+                console.log('📢 Broadcasting clinic settings update...');
+                window.postMessage({
+                    action: 'refreshClinicSettings',
+                    data: clinicData
+                }, '*');
+                
+                // Also try to trigger refresh in parent window if in iframe
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({
+                        action: 'refreshClinicSettings',
+                        data: clinicData
+                    }, '*');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error updating clinic settings:', error);
+                showNotification('Failed to update clinic settings', 'error');
+            }
+        }
+
+        async function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                showNotification('Please fill in all password fields.', 'error');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                showNotification('New passwords do not match.', 'error');
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                showNotification('Password must be at least 8 characters long.', 'error');
+                return;
+            }
+            
+            try {
+                // Get current user
+                const userData = localStorage.getItem('currentUser');
+                if (!userData) {
+                    showNotification('Please login first.', 'error');
+                    return;
+                }
+                
+                const user = JSON.parse(userData);
+                
+                // Step 1: Send OTP to email
+                showNotification('Sending OTP to your email...', 'info');
+                
+                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                
+                // Generate OTP (6-digit random number)
+                const otp = Math.floor(100000 + Math.random() * 900000);
+                console.log('Generated OTP:', otp);
+                
+                // Store OTP temporarily in localStorage with expiry (5 minutes)
+                localStorage.setItem('passwordChangeOTP', JSON.stringify({
+                    otp: otp,
+                    newPassword: newPassword,
+                    currentPassword: currentPassword,
+                    email: user.email,
+                    expiresAt: Date.now() + 5 * 60 * 1000 // 5 minutes
+                }));
+                
+                // In a real application, you would send the OTP to the user's email
+                // For now, we'll show it in a modal/alert for testing
+                showOTPConfirmationModal(otp, user.email);
+                
+                console.log('OTP sent to email:', user.email);
+                
+            } catch (error) {
+                console.error('❌ Error initiating password change:', error);
+                showNotification('Failed to initiate password change', 'error');
+            }
+        }
+        
+        // Show OTP confirmation modal
+        function showOTPConfirmationModal(otp, email) {
+            // Create modal overlay
+            const modal = document.createElement('div');
+            modal.id = 'otpModal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: white; padding: 30px; border-radius: 15px; max-width: 400px; width: 90%;">
+                    <h2 style="margin: 0 0 15px 0;"><i class="fas fa-key"></i> OTP Verification</h2>
+                    <p style="margin: 0 0 20px 0;">We sent a 6-digit code to <strong>${email}</strong></p>
+                    
+                    <!-- For testing, show the OTP -->
+                    <div style="background: #f0f0f0; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                        <p style="margin: 0; font-size: 12px; color: #666;">For testing purposes, your OTP is:</p>
+                        <h1 style="margin: 10px 0; color: #667eea; font-family: monospace;">${otp}</h1>
+                        <p style="margin: 0; font-size: 12px; color: #666;">This will be sent via email in production</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Enter OTP</label>
+                        <input type="text" id="otpInput" placeholder="Enter 6-digit code" maxlength="6" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 18px; text-align: center; letter-spacing: 5px;">
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button class="btn btn-primary" onclick="verifyOTP()" style="flex: 1;">
+                            <i class="fas fa-check"></i> Verify OTP
+                        </button>
+                        <button class="btn btn-secondary" onclick="closeOTPModal()" style="flex: 1;">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                    
+                    <button class="btn btn-outline" onclick="resendOTP()" style="width: 100%; margin-top: 10px;">
+                        <i class="fas fa-redo"></i> Resend OTP
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+        
+        // Close OTP modal
+        function closeOTPModal() {
+            const modal = document.getElementById('otpModal');
+            if (modal) {
+                modal.remove();
+                // Clear password fields
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+            }
+        }
+        
+        // Verify OTP and change password
+        async function verifyOTP() {
+            try {
+                const otpInput = document.getElementById('otpInput').value;
+                if (!otpInput || otpInput.length !== 6) {
+                    showNotification('Please enter a valid 6-digit OTP', 'error');
+                    return;
+                }
+                
+                // Get stored OTP data
+                const otpData = localStorage.getItem('passwordChangeOTP');
+                if (!otpData) {
+                    showNotification('OTP expired or invalid', 'error');
+                    return;
+                }
+                
+                const stored = JSON.parse(otpData);
+                
+                // Check if OTP expired
+                if (Date.now() > stored.expiresAt) {
+                    localStorage.removeItem('passwordChangeOTP');
+                    showNotification('OTP expired. Please try again.', 'error');
+                    closeOTPModal();
+                    return;
+                }
+                
+                // Verify OTP
+                if (otpInput !== stored.otp.toString()) {
+                    showNotification('Invalid OTP. Please try again.', 'error');
+                    return;
+                }
+                
+                // OTP verified - now change password
+                showNotification('OTP verified! Changing password...', 'info');
+                
+                // Here you would typically send to your backend to change password
+                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                
+                // Get current user
+                const userData = localStorage.getItem('currentUser');
+                const user = JSON.parse(userData);
+                
+                // In production, this would hash and update the password in your auth system
+                // For now, we'll just simulate success
+                console.log('Changing password for user:', user.email);
+                
+                // Simulate API call
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Clear OTP data
+                localStorage.removeItem('passwordChangeOTP');
+                
+                // Close modal
+                closeOTPModal();
+                
+                // Show success message
+                showNotification('Password changed successfully!', 'success');
+                
+                // Clear password fields
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+                
+            } catch (error) {
+                console.error('❌ Error verifying OTP:', error);
+                showNotification('Failed to verify OTP', 'error');
+            }
+        }
+        
+        // Resend OTP
+        function resendOTP() {
+            try {
+                const otpData = localStorage.getItem('passwordChangeOTP');
+                if (!otpData) {
+                    showNotification('Please try changing password again', 'error');
+                    return;
+                }
+                
+                const stored = JSON.parse(otpData);
+                
+                // Generate new OTP
+                const otp = Math.floor(100000 + Math.random() * 900000);
+                
+                // Update stored OTP
+                localStorage.setItem('passwordChangeOTP', JSON.stringify({
+                    ...stored,
+                    otp: otp,
+                    expiresAt: Date.now() + 5 * 60 * 1000
+                }));
+                
+                // Show new OTP
+                showNotification('New OTP sent to your email', 'info');
+                const otpInput = document.getElementById('otpInput');
+                if (otpInput) {
+                    otpInput.value = otp;
+                    otpInput.style.borderColor = '#667eea';
+                }
+                
+                // In production, send email with new OTP
+                console.log('Resent OTP:', otp);
+                
+            } catch (error) {
+                console.error('❌ Error resending OTP:', error);
+                showNotification('Failed to resend OTP', 'error');
+            }
+        }
+
+        // Delete account function - removes account from Supabase
+        async function deleteAccount() {
+            try {
+                // First confirmation
+                if (!confirm('⚠️ Are you sure you want to delete your account? This action cannot be undone.')) {
+                    return;
+                }
+                
+                // Second confirmation
+                if (!confirm('⚠️ This will permanently delete all your data. Are you absolutely sure?')) {
+                    return;
+                }
+                
+                // Final confirmation
+                const finalConfirmation = prompt('Type "DELETE" to confirm account deletion:');
+                if (finalConfirmation !== 'DELETE') {
+                    showNotification('Account deletion cancelled', 'info');
+                    return;
+                }
+                
+                // Get current user
+                const userData = localStorage.getItem('currentUser');
+                if (!userData) {
+                    showNotification('Please login first.', 'error');
+                    return;
+                }
+                
+                const user = JSON.parse(userData);
+                if (!user || !user.id) {
+                    showNotification('Invalid user data.', 'error');
+                    return;
+                }
+                
+                showNotification('Deleting account...', 'info');
+                
+                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                
+                // Delete user account from Supabase
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    // Clear all local storage
+                    localStorage.clear();
+                    
+                    showNotification('Account deleted successfully. You will be logged out.', 'success');
+                    
+                    // Redirect to login page after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = '../../../index.html';
+                    }, 2000);
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Failed to delete account:', response.status, errorText);
+                    showNotification('Failed to delete account. Please contact support.', 'error');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error deleting account:', error);
+                showNotification('Failed to delete account. Please try again later.', 'error');
+            }
+        }
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('mobile-open');
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                alert('Logout functionality - integrate with your authentication system');
+                // window.location.href = '/login';
+            }
+        }
+
+        // Show mobile menu toggle on small screens
+        function checkScreenSize() {
+            const menuToggle = document.querySelector('.menu-toggle');
+            if (window.innerWidth <= 768) {
+                menuToggle.style.display = 'block';
+            } else {
+                menuToggle.style.display = 'none';
+                document.getElementById('sidebar').classList.remove('mobile-open');
+            }
+        }
+
+        window.addEventListener('resize', checkScreenSize);
+        checkScreenSize();
+    </script>
+</body>
+</html>

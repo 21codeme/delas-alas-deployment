@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedule - Delas Alas Dental Clinic</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦷</text></svg>">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../images/tooth.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../images/tooth.png">
+    <link rel="shortcut icon" href="../../../images/tooth.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../images/tooth.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+
+        .clinic-title h2 {
+            color: #ffd700;
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .user-profile {
+            padding: 25px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 32px;
+        }
+
+        .user-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 18px;
+        }
+
+        .user-info p {
+            margin: 0;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 25px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 4px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            border-left-color: #ffd700;
+        }
+
+        .nav-item.active {
+            background: rgba(255,255,255,0.2);
+            border-left-color: #ffd700;
+        }
+
+        .nav-item i {
+            font-size: 18px;
+            width: 20px;
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: none;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,0,0,0.2);
+            border-left-color: #ff6b6b;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            background: #f5f5f5;
+            padding: 30px;
+        }
+
+        /* Iframe Mode - Hide sidebar when loaded in iframe */
+        .iframe-mode .sidebar {
+            display: none;
+        }
+
+        .iframe-mode .main-content {
+            margin-left: 0;
+            padding: 0;
+        }
+
+        .iframe-mode .menu-toggle {
+            display: none !important;
+        }
+
+        /* Schedule Styles */
+        .schedule-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .schedule-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .header-left h1 {
+            margin: 0 0 5px 0;
+            color: #2c3e50;
+            font-size: 28px;
+        }
+
+        .header-left p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        /* Schedule Section */
+        .schedule-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .schedule-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .time-slots-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .time-slot {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .time-slot:hover {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+
+        .time-slot.booked {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .time-slot.available {
+            background: #e8f5e8;
+            border-color: #4caf50;
+            cursor: pointer;
+        }
+
+        .time-slot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .time-slot-time {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .time-slot-status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-available {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-booked {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .time-slot-details {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .loading {
+            color: #666;
+            font-style: italic;
+            text-align: center;
+            padding: 40px;
+        }
+
+        /* Calendar Section */
+        .calendar-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-header h3 {
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .calendar-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .calendar-day {
+            background: white;
+            padding: 10px;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .calendar-day:hover {
+            background: #f8f9fa;
+        }
+
+        .calendar-day.today {
+            background: #e3f2fd;
+            font-weight: bold;
+        }
+
+        .calendar-day.has-appointments {
+            background: #fff3e0;
+        }
+
+        /* Day is fully booked (>=5 bookings) */
+        .calendar-day.full {
+            background: #f0f0f0;
+            color: #9ca3af;
+            position: relative;
+        }
+
+        .calendar-day.full::after {
+            content: 'FULL';
+            position: absolute;
+            bottom: 6px;
+            right: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #ef4444;
+        }
+
+        .calendar-day .day-number {
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .calendar-day .appointment-indicator {
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            margin: 2px 2px 0 2px;
+        }
+
+        .indicator-confirmed { background: #667eea; }
+        .indicator-pending { background: #ff9800; }
+
+        .calendar-day-header {
+            background: #667eea;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .schedule-header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+
+            .time-slots-container {
+                grid-template-columns: 1fr;
+            }
+
+            .calendar-grid {
+                grid-template-columns: repeat(7, 1fr);
+            }
+
+            .calendar-day {
+                min-height: 60px;
+                padding: 5px;
+            }
+
+            .menu-toggle {
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 1001;
+                background: #667eea;
+                color: white;
+                border: none;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                font-size: 20px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="clinic-title">
+                    <h2>🦷 Delas Alas Dental Clinic</h2>
+                </div>
+            </div>
+            
+            <div class="user-profile">
+                <div class="avatar">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <div class="user-info">
+                    <h3 id="dentistName">Dr. Delas Alas</h3>
+                    <p id="dentistEmail">delas.alas@clinic.com</p>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a class="nav-item" onclick="navigateToSection('dashboard')">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a class="nav-item active" onclick="navigateToSection('schedule')">
+                    <i class="fas fa-calendar"></i>
+                    <span>Schedule</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('appointments')">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Appointments</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('patients')">
+                    <i class="fas fa-users"></i>
+                    <span>Patients</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('services')">
+                    <i class="fas fa-tools"></i>
+                    <span>Services</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('dentist-list')">
+                    <i class="fas fa-user-md"></i>
+                    <span>Dentist List</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('messages')">
+                    <i class="fas fa-comments"></i>
+                    <span>Messages</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('settings')">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <button class="nav-item logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="schedule-content">
+                <div class="schedule-header">
+                    <div class="header-left">
+                        <h1>📅 Schedule Management</h1>
+                        <p>View and manage your daily schedule</p>
+                    </div>
+                    <div class="header-right">
+                        <button class="btn btn-primary" onclick="addTimeSlot()">
+                            <i class="fas fa-plus"></i> Add Time Slot
+                        </button>
+                        <button class="btn btn-secondary" onclick="viewCalendar()">
+                            <i class="fas fa-calendar"></i> Calendar View
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Today's Schedule -->
+                <div class="schedule-section">
+                    <h2>🕐 Today's Schedule</h2>
+                    <div class="time-slots-container" id="todaySchedule">
+                        <div style="padding: 40px; color: #666; text-align: center;">
+                            <i class="fas fa-calendar-alt" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                            <h3 style="margin: 0 0 10px 0;">No schedule yet</h3>
+                            <p style="margin: 0;">Schedule slots will appear here when appointments are booked</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calendar View -->
+                <div class="calendar-section">
+                    <div class="calendar-header">
+                        <h3>📅 Monthly Calendar</h3>
+                        <div class="calendar-controls">
+                            <button class="btn btn-sm btn-secondary" onclick="previousMonth()">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <span id="currentMonth">January 2025</span>
+                            <button class="btn btn-sm btn-secondary" onclick="nextMonth()">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- Calendar will be generated here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Mobile Menu Toggle (visible on mobile only) -->
+        <button class="menu-toggle" onclick="toggleMobileMenu()" style="display: none;">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <!-- Add Time Slot Modal -->
+    <div id="addTimeSlotModal" class="modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000;">
+        <div class="modal-content" style="background:#fff; width:90%; max-width:720px; margin:40px auto; border-radius:12px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.2);">
+            <div style="background:#5f65e0; color:#fff; padding:16px 24px; display:flex; align-items:center; gap:10px;">
+                <i class="fas fa-plus"></i>
+                <h3 style="margin:0; font-weight:600;">Add Time Slot</h3>
+                <button onclick="closeAddTimeSlot()" style="margin-left:auto; background:transparent; border:none; color:#fff; font-size:22px; cursor:pointer;">&times;</button>
+            </div>
+            <form id="addTimeSlotForm" style="padding:24px; background:#f7f9fc;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div>
+                        <label style="display:block; font-size:13px; color:#6b7280; margin-bottom:6px;">Date</label>
+                        <input type="date" id="slotDate" required style="width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:8px;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:13px; color:#6b7280; margin-bottom:6px;">Time</label>
+                        <input type="time" id="slotTime" required style="width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:8px;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:13px; color:#6b7280; margin-bottom:6px;">Duration (minutes)</label>
+                        <input type="number" id="slotDuration" value="60" min="10" step="5" required style="width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:8px;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:13px; color:#6b7280; margin-bottom:6px;">Service</label>
+                        <input type="text" id="slotService" placeholder="General" style="width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:8px;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:13px; color:#6b7280; margin-bottom:6px;">Status</label>
+                        <select id="slotStatus" style="width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:8px;">
+                            <option value="available">Available</option>
+                            <option value="booked">Booked (pending)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:13px; color:#6b7280; margin-bottom:6px;">Notes</label>
+                        <input type="text" id="slotNotes" placeholder="Optional notes" style="width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:8px;">
+                    </div>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddTimeSlot()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Slot</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Day Schedule Modal -->
+    <div id="dayScheduleModal" class="modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000;">
+        <div class="modal-content" style="background:#fff; width:90%; max-width:720px; margin:40px auto; border-radius:12px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.2);">
+            <div style="background:#5f65e0; color:#fff; padding:16px 24px; display:flex; align-items:center; gap:10px;">
+                <i class="fas fa-calendar-day"></i>
+                <h3 id="dayScheduleTitle" style="margin:0; font-weight:600;">Day Schedule</h3>
+                <button onclick="closeDaySchedule()" style="margin-left:auto; background:transparent; border:none; color:#fff; font-size:22px; cursor:pointer;">&times;</button>
+            </div>
+            <div id="dayScheduleBody" style="padding:24px; background:#f7f9fc;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let schedule = [];
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if loaded in iframe
+            if (window !== window.top) {
+                document.body.classList.add('iframe-mode');
+            }
+            loadSchedule();
+            generateCalendar();
+            
+            // Check for today's appointments and show notification
+            checkTodaysAppointments();
+            
+            // Check for QR code appointment ID and highlight it
+            checkQRCodeAppointment();
+        });
+
+        // Load schedule data from Supabase appointments
+        async function loadSchedule() {
+            try {
+                console.log('🔄 Loading schedule from database...');
+            schedule = [];
+
+                // Load appointments from Supabase
+                console.log('📡 Fetching appointments from Supabase...');
+                const appointments = await callSupabaseAPI('GET', 'appointments?select=id,patient_name,patient_email,patient_phone,service_type,appointment_date,appointment_time,status&order=appointment_date.asc');
+                console.log('📊 Raw appointments data:', appointments);
+
+                if (Array.isArray(appointments)) {
+                    console.log('📋 Processing', appointments.length, 'appointments...');
+                    
+                    const filteredAppointments = appointments.filter(a => {
+                        // Include today and future appointments, but also include past appointments for calendar display
+                        const appointmentDate = new Date(a.appointment_date);
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0); // Start of today
+                        const isFutureOrToday = appointmentDate >= today;
+                        console.log(`📅 Appointment ${a.id}: ${a.appointment_date} (${appointmentDate.toDateString()}) - ${isFutureOrToday ? 'INCLUDED' : 'FILTERED OUT'}`);
+                        return true; // Include ALL appointments for calendar display
+                    });
+                    
+                    console.log('📋 After filtering:', filteredAppointments.length, 'appointments');
+                    
+                    schedule = filteredAppointments.map(a => ({
+                        id: a.id,
+                        date: a.appointment_date,
+                        time: a.appointment_time || '10:00:00',
+                        status: (a.status === 'confirmed' || a.status === 'pending' || a.status === 'completed') ? 'booked' : 'available',
+                        _srcStatus: a.status || 'pending',
+                        patientName: a.patient_name || 'Patient',
+                        service: a.service_type || 'General',
+                        contact: a.patient_phone || a.patient_email || ''
+                    }));
+                    
+                    console.log('✅ Schedule loaded:', schedule.length, 'appointments');
+                    console.log('📅 Schedule data:', schedule);
+                } else {
+                    console.log('⚠️ No appointments found or invalid data format:', appointments);
+                }
+            
+            displayTodaySchedule();
+                generateCalendar();
+            } catch (err) {
+                console.error('❌ Error loading schedule:', err);
+                // Fallback to any local data
+                loadFromLocalStorage();
+                displayTodaySchedule();
+                generateCalendar();
+            }
+        }
+
+        // Load data from localStorage (temporary - replace with your real-time source)
+        function loadFromLocalStorage() {
+            try {
+                const storedSchedule = localStorage.getItem('dentalSchedule');
+                
+                if (storedSchedule) {
+                    schedule = JSON.parse(storedSchedule);
+                }
+            } catch (error) {
+                console.log('No existing schedule found or error loading from storage');
+            }
+        }
+
+        // Set up real-time listeners (replace with your Firebase/WebSocket implementation)
+        function setupRealtimeListeners() {
+            // Example: Listen for schedule updates
+            // firebase.firestore().collection('schedule').onSnapshot((snapshot) => {
+            //     schedule = [];
+            //     snapshot.forEach(doc => {
+            //         schedule.push({ id: doc.id, ...doc.data() });
+            //     });
+            //     displayTodaySchedule();
+            //     generateCalendar();
+            // });
+            
+            // Real-time listeners will be implemented here when connecting to Firebase/WebSocket
+            console.log('Schedule section initialized - ready for real-time data');
+        }
+
+        // Display today's schedule
+        function displayTodaySchedule() {
+            const container = document.getElementById('todaySchedule');
+            const today = new Date();
+            const todayStr = today.toDateString();
+            
+            console.log('🔄 Displaying today\'s schedule for:', todayStr);
+            console.log('📅 Total schedule items:', schedule.length);
+            
+            const todaySlots = schedule.filter(slot => {
+                const slotDate = new Date(slot.date);
+                const slotDateStr = slotDate.toDateString();
+                console.log(`📅 Checking slot: ${slot.date} (${slotDateStr}) vs today (${todayStr})`);
+                return slotDateStr === todayStr;
+            });
+
+            console.log('📅 Today\'s slots found:', todaySlots.length);
+            console.log('📅 Today\'s slots data:', todaySlots);
+
+            if (todaySlots.length === 0) {
+                container.innerHTML = `
+                    <div style="padding: 40px; color: #666; text-align: center;">
+                        <i class="fas fa-calendar-alt" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                        <h3 style="margin: 0 0 10px 0;">No schedule yet</h3>
+                        <p style="margin: 0;">Schedule slots will appear here when appointments are booked</p>
+                        <small style="margin-top: 10px; display: block; opacity: 0.7;">Today: ${todayStr}</small>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort by time
+            todaySlots.sort((a, b) => {
+                const timeA = new Date(`1970-01-01T${a.time}`);
+                const timeB = new Date(`1970-01-01T${b.time}`);
+                return timeA - timeB;
+            });
+
+            container.innerHTML = todaySlots.map(slot => `
+                <div class="time-slot ${slot.status}">
+                    <div class="time-slot-header">
+                        <span class="time-slot-time">${slot.time}</span>
+                        <span class="time-slot-status status-${slot.status}">${slot._srcStatus || slot.status}</span>
+                    </div>
+                    <div class="time-slot-details">
+                        ${slot.status === 'booked' ? `
+                            <strong>${slot.patientName}</strong><br>
+                            <small>${slot.service}</small><br>
+                            <small>📞 ${slot.contact}</small>
+                        ` : `
+                            <strong>Available Slot</strong><br>
+                            <small>Click to book</small>
+                        `}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Generate calendar
+        function generateCalendar() {
+            const calendarGrid = document.getElementById('calendarGrid');
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            document.getElementById('currentMonth').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+            
+            console.log('🔄 Generating calendar for:', `${monthNames[currentMonth]} ${currentYear}`);
+            console.log('📅 Schedule data for calendar:', schedule);
+            
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDay = firstDay.getDay();
+            
+            let calendarHTML = '';
+            
+            // Day headers
+            const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayHeaders.forEach(day => {
+                calendarHTML += `<div class="calendar-day-header">${day}</div>`;
+            });
+            
+            // Empty cells for days before month starts
+            for (let i = 0; i < startingDay; i++) {
+                calendarHTML += '<div class="calendar-day"></div>';
+            }
+            
+            // Days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(currentYear, currentMonth, day);
+                const dateStr = date.toDateString();
+                
+                // Count appointments for this day
+                const dayAppointments = schedule.filter(slot => {
+                    const slotDate = new Date(slot.date);
+                    const matches = slotDate.toDateString() === dateStr;
+                    if (matches) {
+                        console.log(`📅 Found appointment for day ${day}:`, slot);
+                    }
+                    return matches;
+                });
+                
+                const confirmedCount = dayAppointments.filter(slot => 
+                    slot.status === 'booked' && (slot._srcStatus === 'confirmed' || slot._srcStatus === 'completed')
+                ).length;
+                
+                const pendingCount = dayAppointments.filter(slot => 
+                    slot.status === 'booked' && slot._srcStatus === 'pending'
+                ).length;
+                
+                const totalCount = confirmedCount + pendingCount;
+                const isFull = totalCount >= 5;
+                const hasAppointments = totalCount > 0;
+                const isToday = dateStr === new Date().toDateString();
+                
+                console.log(`📅 Day ${day}: ${totalCount} appointments (${confirmedCount} confirmed, ${pendingCount} pending)`);
+                
+                calendarHTML += `
+                    <div class="calendar-day ${isToday ? 'today' : ''} ${hasAppointments ? 'has-appointments' : ''} ${isFull ? 'full' : ''}" 
+                         onclick="viewDaySchedule(${day})" title="${totalCount} appointment${totalCount !== 1 ? 's' : ''} (${confirmedCount} confirmed, ${pendingCount} pending)">
+                        <div class="day-number">${day}</div>
+                        ${totalCount > 0 ? `<div class="day-indicators">
+                            ${confirmedCount > 0 ? `<span class="appointment-indicator indicator-confirmed" title="${confirmedCount} confirmed">${confirmedCount}</span>` : ''}
+                            ${pendingCount > 0 ? `<span class="appointment-indicator indicator-pending" title="${pendingCount} pending">${pendingCount}</span>` : ''}
+                        </div>` : ''}
+                        ${isFull ? '<div class="full-indicator">FULL</div>' : ''}
+                    </div>
+                `;
+            }
+            
+            calendarGrid.innerHTML = calendarHTML;
+            console.log('✅ Calendar generated successfully');
+        }
+
+        // Navigation function
+        function navigateToSection(section) {
+            // If loaded in iframe, communicate with parent
+            if (window !== window.top) {
+                window.parent.postMessage({ action: 'loadSection', section: section }, '*');
+            } else {
+                // If standalone, navigate directly
+                window.location.href = `../${section}/${section}-standalone.html`;
+            }
+        }
+
+        // Calendar controls
+        function previousMonth() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            generateCalendar();
+        }
+
+        function nextMonth() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            generateCalendar();
+        }
+
+        function viewDaySchedule(day) {
+            const date = new Date(currentYear, currentMonth, day);
+            const dateStr = date.toDateString();
+            const slots = schedule
+                .filter(s => new Date(s.date).toDateString() === dateStr)
+                .sort((a,b) => new Date(`1970-01-01T${a.time}`) - new Date(`1970-01-01T${b.time}`));
+            document.getElementById('dayScheduleTitle').textContent = `Schedule for ${dateStr}`;
+            const body = document.getElementById('dayScheduleBody');
+            const bookedCount = slots.filter(s => s.status === 'booked').length;
+            const isFull = bookedCount >= 5;
+            if (slots.length === 0) {
+                body.innerHTML = '<div style="padding:24px; color:#6b7280;">No appointments for this day.</div>';
+            } else {
+                body.innerHTML = slots.map(s => `
+                    <div style="background:#fff; border:1px solid #eef1f6; border-radius:10px; padding:14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-weight:600; color:#111827;">${new Date('1970-01-01T' + s.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+                            <div style="font-size:12px; color:#6b7280;">${s.status === 'booked' ? `${s.patientName} • ${s.service}` : 'Available slot'}</div>
+                            ${s.status === 'booked' ? `<div style="font-size:12px; color:#6b7280;">📞 ${s.contact || 'no contact'} • ${s._srcStatus}</div>` : ''}
+                        </div>
+                        <div>
+                            ${s.status === 'available' && !isFull ? `<button class="btn btn-primary btn-sm" onclick="quickCreateSlot('${date.toISOString().slice(0,10)}','${s.time}')">Book</button>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+                if (isFull) {
+                    body.innerHTML = `<div style="padding:10px 0; color:#ef4444; font-weight:600;">This day is FULL (5 bookings). No more bookings allowed.</div>` + body.innerHTML;
+                }
+            }
+            document.getElementById('dayScheduleModal').style.display = 'block';
+        }
+
+        function closeDaySchedule() {
+            document.getElementById('dayScheduleModal').style.display = 'none';
+        }
+
+        // Action functions
+        function addTimeSlot() {
+            // set default date to today
+            const d = new Date();
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth()+1).padStart(2,'0');
+            const dd = String(d.getDate()).padStart(2,'0');
+            document.getElementById('slotDate').value = `${yyyy}-${mm}-${dd}`;
+            document.getElementById('slotTime').value = '10:00';
+            document.getElementById('addTimeSlotModal').style.display = 'block';
+        }
+
+        function closeAddTimeSlot() {
+            document.getElementById('addTimeSlotModal').style.display = 'none';
+        }
+
+        document.getElementById('addTimeSlotForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const date = document.getElementById('slotDate').value;
+            const time = document.getElementById('slotTime').value + ':00';
+            const duration = parseInt(document.getElementById('slotDuration').value) || 60;
+            const service = document.getElementById('slotService').value || 'General';
+            const status = document.getElementById('slotStatus').value;
+            const notes = document.getElementById('slotNotes').value || '';
+
+            // For available slots, we create a lightweight local slot; for booked, we create an appointment record
+            try {
+                // Enforce 5 bookings/day cap when creating booked entries
+                if (status === 'booked') {
+                    const bookedCount = schedule.filter(s => new Date(s.date).toDateString() === new Date(date).toDateString() && s.status === 'booked').length;
+                    if (bookedCount >= 5) {
+                        alert('This day is already FULL (5 bookings).');
+                        return;
+                    }
+                }
+                if (status === 'available') {
+                    const newSlot = { id: 'slot-' + Date.now(), date, time, status: 'available', _srcStatus: 'available', patientName: '', service, contact: '', notes, duration };
+                    schedule.push(newSlot);
+                    localStorage.setItem('dentalSchedule', JSON.stringify(schedule));
+                } else {
+                    const created = await callSupabaseAPI('POST', 'appointments', [{
+                        appointment_date: date,
+                        appointment_time: time,
+                        service_type: service,
+                        status: 'pending',
+                        notes
+                    }]);
+                    if (Array.isArray(created) && created[0]) {
+                        schedule.push({ id: created[0].id, date, time, status: 'booked', _srcStatus: 'pending', patientName: 'TBD', service, contact: '' });
+                    }
+                }
+                closeAddTimeSlot();
+                updateScheduleData();
+            } catch (err) {
+                alert('Failed to save time slot: ' + err.message);
+            }
+        }
+
+        // Quick create helper from day dialog
+        function quickCreateSlot(date, time) {
+            document.getElementById('slotDate').value = date;
+            document.getElementById('slotTime').value = time.slice(0,5);
+            closeDaySchedule();
+            document.getElementById('addTimeSlotModal').style.display = 'block';
+        }
+
+        function viewCalendar() {
+            alert('Calendar view functionality - integrate with your calendar system');
+        }
+
+        // Real-time update functions (for integration with your backend)
+        function updateScheduleData() {
+            displayTodaySchedule();
+            generateCalendar();
+        }
+
+        function addNewScheduleSlot(slotData) {
+            schedule.push(slotData);
+            localStorage.setItem('dentalSchedule', JSON.stringify(schedule));
+            updateScheduleData();
+        }
+
+        function bookAvailableSlot(slotId) {
+            const slot = schedule.find(s => s.id === slotId);
+            if (slot && slot.status === 'available') {
+                slot.status = 'booked';
+                localStorage.setItem('dentalSchedule', JSON.stringify(schedule));
+                updateScheduleData();
+                alert('Slot booked successfully!');
+            }
+        }
+
+        // Direct API call function (shared approach)
+        async function callSupabaseAPI(method, endpoint, body = null) {
+            const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+
+            const headers = {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'
+            };
+
+            const options = { method, headers };
+            if (body) options.body = JSON.stringify(body);
+
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/${endpoint}`, options);
+            const contentType = response.headers.get('content-type') || '';
+            const text = await response.text();
+            const data = contentType.includes('application/json') && text ? JSON.parse(text) : (text ? { message: text } : []);
+            if (!response.ok) throw new Error(data.message || data.msg || `HTTP ${response.status}`);
+            return data;
+        }
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('mobile-open');
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                alert('Logout functionality - integrate with your authentication system');
+                // window.location.href = '/login';
+            }
+        }
+
+        // Check for today's appointments and show notification
+        async function checkTodaysAppointments() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                console.log('🔔 Checking appointments for today:', today);
+                
+                const appointments = await callSupabaseAPI('GET', `appointments?appointment_date=eq.${today}&select=id,patient_name,service_type,appointment_time,status`);
+                
+                if (Array.isArray(appointments) && appointments.length > 0) {
+                    console.log('🔔 Found', appointments.length, 'appointments for today');
+                    
+                    // Show notification
+                    showTodaysAppointmentsNotification(appointments);
+                    
+                    // Notify parent dashboard
+                    if (window.parent && window.parent.loadNotifications) {
+                        window.parent.loadNotifications();
+                    }
+                } else {
+                    console.log('🔔 No appointments found for today');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error checking today\'s appointments:', error);
+            }
+        }
+
+        // Show notification for today's appointments
+        function showTodaysAppointmentsNotification(appointments) {
+            const notificationHTML = `
+                <div class="todays-appointments-notification" style="
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 15px;
+                    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+                    z-index: 10000;
+                    max-width: 350px;
+                    animation: slideInRight 0.5s ease-out;
+                ">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <i class="fas fa-calendar-check" style="font-size: 1.5rem;"></i>
+                        <h3 style="margin: 0; font-size: 1.2rem;">Today's Appointments</h3>
+                        <button onclick="closeTodaysNotification()" style="
+                            background: none;
+                            border: none;
+                            color: white;
+                            font-size: 1.2rem;
+                            cursor: pointer;
+                            margin-left: auto;
+                        ">&times;</button>
+                    </div>
+                    <p style="margin: 0 0 15px 0; opacity: 0.9;">You have ${appointments.length} appointment${appointments.length > 1 ? 's' : ''} scheduled for today:</p>
+                    <div style="max-height: 200px; overflow-y: auto;">
+                        ${appointments.map(apt => `
+                            <div style="
+                                background: rgba(255,255,255,0.1);
+                                padding: 10px;
+                                border-radius: 8px;
+                                margin-bottom: 8px;
+                                font-size: 0.9rem;
+                            ">
+                                <div style="font-weight: 600;">${apt.patient_name}</div>
+                                <div style="opacity: 0.8;">${apt.service_type} at ${apt.appointment_time}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <style>
+                    @keyframes slideInRight {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                </style>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', notificationHTML);
+            
+            // Auto-close after 10 seconds
+            setTimeout(() => {
+                closeTodaysNotification();
+            }, 10000);
+        }
+
+        // Close today's appointments notification
+        function closeTodaysNotification() {
+            const notification = document.querySelector('.todays-appointments-notification');
+            if (notification) {
+                notification.style.animation = 'slideInRight 0.3s ease-out reverse';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }
+        }
+
+        // Check for QR code appointment ID and highlight it
+        function checkQRCodeAppointment() {
+            try {
+                const qrAppointmentId = localStorage.getItem('qrAppointmentId');
+                if (qrAppointmentId) {
+                    console.log('🔍 QR Code appointment ID found:', qrAppointmentId);
+                    
+                    // Find the appointment in the schedule
+                    const appointment = schedule.find(slot => slot.id === qrAppointmentId);
+                    if (appointment) {
+                        console.log('✅ Found QR appointment in schedule:', appointment);
+                        
+                        // Navigate to the appointment's month
+                        const appointmentDate = new Date(appointment.date);
+                        currentMonth = appointmentDate.getMonth();
+                        currentYear = appointmentDate.getFullYear();
+                        
+                        // Regenerate calendar with the appointment's month
+                        generateCalendar();
+                        
+                        // Show a notification about the QR appointment
+                        showQRAppointmentNotification(appointment);
+                        
+                        // Auto-open the day schedule for the appointment
+                        setTimeout(() => {
+                            viewDaySchedule(appointmentDate.getDate());
+                        }, 1000);
+                    } else {
+                        console.log('⚠️ QR appointment not found in current schedule');
+                    }
+                    
+                    // Clear the QR appointment ID from localStorage
+                    localStorage.removeItem('qrAppointmentId');
+                }
+            } catch (error) {
+                console.error('❌ Error checking QR code appointment:', error);
+            }
+        }
+
+        // Show notification for QR code appointment
+        function showQRAppointmentNotification(appointment) {
+            const notificationHTML = `
+                <div class="qr-appointment-notification" style="
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 15px;
+                    box-shadow: 0 4px 20px rgba(40, 167, 69, 0.3);
+                    z-index: 10000;
+                    max-width: 350px;
+                    animation: slideInRight 0.5s ease-out;
+                ">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <i class="fas fa-qrcode" style="font-size: 1.5rem;"></i>
+                        <h3 style="margin: 0; font-size: 1.2rem;">QR Code Appointment</h3>
+                        <button onclick="closeQRNotification()" style="
+                            background: none;
+                            border: none;
+                            color: white;
+                            font-size: 1.2rem;
+                            cursor: pointer;
+                            margin-left: auto;
+                        ">&times;</button>
+                    </div>
+                    <p style="margin: 0 0 15px 0; opacity: 0.9;">Appointment found from QR code:</p>
+                    <div style="
+                        background: rgba(255,255,255,0.1);
+                        padding: 15px;
+                        border-radius: 8px;
+                        font-size: 0.9rem;
+                    ">
+                        <div style="font-weight: 600; margin-bottom: 5px;">${appointment.patientName || 'Unknown Patient'}</div>
+                        <div style="opacity: 0.8; margin-bottom: 3px;">📅 ${new Date(appointment.date).toLocaleDateString()}</div>
+                        <div style="opacity: 0.8; margin-bottom: 3px;">🕐 ${new Date('1970-01-01T' + appointment.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+                        <div style="opacity: 0.8;">🦷 ${appointment.service || 'General Consultation'}</div>
+                    </div>
+                </div>
+                <style>
+                    @keyframes slideInRight {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                </style>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', notificationHTML);
+            
+            // Auto-close after 8 seconds
+            setTimeout(() => {
+                closeQRNotification();
+            }, 8000);
+        }
+
+        // Close QR appointment notification
+        function closeQRNotification() {
+            const notification = document.querySelector('.qr-appointment-notification');
+            if (notification) {
+                notification.style.animation = 'slideInRight 0.3s ease-out reverse';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }
+        }
+
+        // Show mobile menu toggle on small screens
+        function checkScreenSize() {
+            const menuToggle = document.querySelector('.menu-toggle');
+            if (window.innerWidth <= 768) {
+                menuToggle.style.display = 'block';
+            } else {
+                menuToggle.style.display = 'none';
+                document.getElementById('sidebar').classList.remove('mobile-open');
+            }
+        }
+
+        window.addEventListener('resize', checkScreenSize);
+        checkScreenSize();
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages - Delas Alas Dental Clinic</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦷</text></svg>">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .messages-container {
+            display: flex;
+            height: calc(100vh - 0px);
+            background: white;
+        }
+
+        /* Conversations Sidebar */
+        .conversations-sidebar {
+            width: 350px;
+            border-right: 1px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .conversations-header {
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .conversations-header h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.5rem;
+        }
+
+        .conversations-header p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .conversations-controls {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px 10px 40px;
+            border: 1px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 14px;
+            background: #f8f9fa;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+
+        .new-conversation-btn {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .new-conversation-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .conversations-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+
+        .conversation-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .conversation-item:hover {
+            background: #f8f9fa;
+        }
+
+        .conversation-item.active {
+            background: #e3f2fd;
+            border-left: 4px solid #667eea;
+        }
+
+        .conversation-avatar {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .conversation-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .conversation-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .conversation-preview {
+            font-size: 13px;
+            color: #6c757d;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .conversation-time {
+            font-size: 12px;
+            color: #adb5bd;
+            margin-top: 4px;
+        }
+
+        .unread-badge {
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        /* Chat Area */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .chat-header {
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+            background: white;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .chat-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .chat-info h3 {
+            margin: 0 0 5px 0;
+            color: #2c3e50;
+            font-size: 1.2rem;
+        }
+
+        .chat-info p {
+            margin: 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .chat-status {
+            margin-left: auto;
+            padding: 5px 10px;
+            background: #d4edda;
+            color: #155724;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .chat-status.offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .message.sent {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .message.sent .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .message.received .message-avatar {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            position: relative;
+        }
+
+        .message.sent .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.received .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #e9ecef;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #adb5bd;
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        .message.received .message-time {
+            text-align: left;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 10px 20px;
+            color: #6c757d;
+            font-style: italic;
+            font-size: 14px;
+        }
+
+        .typing-indicator.show {
+            display: block;
+        }
+
+        .message-input-area {
+            padding: 20px;
+            border-top: 1px solid #e9ecef;
+            background: white;
+        }
+
+        .message-input-container {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #e9ecef;
+            border-radius: 25px;
+            resize: none;
+            font-family: inherit;
+            font-size: 14px;
+            max-height: 100px;
+            min-height: 40px;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .send-btn {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Empty States */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #6c757d;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            margin: 0 0 10px 0;
+            color: #495057;
+        }
+
+        .empty-state p {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        /* Patient Selection Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 0;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.3rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-body {
+            padding: 20px 30px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .patient-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .patient-item {
+            padding: 15px;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .patient-item:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .patient-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .patient-info h4 {
+            margin: 0 0 5px 0;
+            color: #2c3e50;
+        }
+
+        .patient-info p {
+            margin: 0;
+            color: #6c757d;
+            font-size: 13px;
+        }
+
+        .patient-status {
+            margin-left: auto;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .patient-status.online {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .patient-status.offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .messages-container {
+                flex-direction: column;
+            }
+            
+            .conversations-sidebar {
+                width: 100%;
+                height: 40vh;
+            }
+            
+            .chat-area {
+                height: 60vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="messages-container">
+        <!-- Conversations Sidebar -->
+        <div class="conversations-sidebar">
+            <div class="conversations-header">
+                <h2><i class="fas fa-comments"></i> Messages</h2>
+                <p>Chat with your patients</p>
+            </div>
+            
+            <div class="conversations-controls">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchConversations" placeholder="Search conversations...">
+                </div>
+                <button class="new-conversation-btn" onclick="openPatientSelection()">
+                    <i class="fas fa-plus"></i> New Conversation
+                </button>
+            </div>
+            
+            <div class="conversations-list" id="conversationsList">
+                <div class="empty-state">
+                    <i class="fas fa-comments"></i>
+                    <h3>No conversations yet</h3>
+                    <p>Messages will appear here when patients contact you</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-area">
+            <div class="chat-header" id="chatHeader" style="display: none;">
+                <div class="chat-avatar" id="chatAvatar">P</div>
+                <div class="chat-info">
+                    <h3 id="chatName">Select a conversation</h3>
+                    <p id="chatSubtitle">Choose a conversation to start chatting</p>
+                </div>
+                <div class="chat-status" id="chatStatus">Online</div>
+            </div>
+            
+            <div class="messages-area" id="messagesArea">
+                <div class="empty-state">
+                    <i class="fas fa-comment"></i>
+                    <h3>No conversation selected</h3>
+                    <p>Select a conversation from the list to start chatting</p>
+                </div>
+            </div>
+            
+            <div class="typing-indicator" id="typingIndicator">
+                <i class="fas fa-circle"></i> Patient is typing...
+            </div>
+            
+            <div class="message-input-area" id="messageInputArea" style="display: none;">
+                <div class="message-input-container">
+                    <textarea class="message-input" id="messageInput" placeholder="Type a message..." rows="1"></textarea>
+                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                    <button class="test-btn" id="testBtn" onclick="createTestMessage()" style="background: #ff9800; margin-left: 10px;" title="Create Test Message">
+                        <i class="fas fa-flask"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Patient Selection Modal -->
+    <div id="patientSelectionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Select Patient</h3>
+                <button class="close-btn" onclick="closePatientSelection()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="patient-list" id="patientList">
+                    <div class="empty-state">
+                        <i class="fas fa-user"></i>
+                        <h3>Loading patients...</h3>
+                        <p>Please wait while we fetch available patients</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentUser = null;
+        let currentConversation = null;
+        let conversations = [];
+        let patients = [];
+        let messages = [];
+        let realtimeSubscription = null;
+
+        // Supabase configuration
+        const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Dentist Messages page initialized');
+            loadUserData();
+            loadConversations();
+            loadPatients();
+            setupRealtimeSubscription();
+            setupEventListeners();
+        });
+
+        // Global cache for profile pictures
+        const profilePictureCache = {};
+        
+        // Load profile pictures from Supabase for users in conversations
+        async function loadProfilePicturesForUsers() {
+            try {
+                // Get unique user IDs from conversations
+                const userIds = new Set();
+                if (currentConversation) {
+                    userIds.add(currentConversation.patient_id);
+                    userIds.add(currentUser?.id);
+                }
+                
+                // Get current user's profile picture from localStorage first
+                const currentUserId = currentUser?.id;
+                if (currentUserId) {
+                    const key = currentUser?.user_type === 'dentist' ? 'dentistProfilePicture' : 'patientProfilePicture';
+                    const currentPic = localStorage.getItem(key);
+                    if (currentPic) {
+                        profilePictureCache[currentUserId] = currentPic;
+                    }
+                }
+                
+                // Fetch other users' profile pictures from Supabase
+                const uniqueIds = Array.from(userIds).filter(id => id && id !== currentUserId);
+                if (uniqueIds.length === 0) return;
+                
+                console.log('🖼️ Loading profile pictures for users:', uniqueIds);
+                
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/users?id=in.(${uniqueIds.join(',')})&select=id,profile_picture`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const users = await response.json();
+                    users.forEach(user => {
+                        if (user.profile_picture) {
+                            profilePictureCache[user.id] = user.profile_picture;
+                        }
+                    });
+                    console.log('✅ Profile pictures loaded:', Object.keys(profilePictureCache).length);
+                } else {
+                    console.warn('⚠️ Failed to load profile pictures from Supabase');
+                }
+            } catch (error) {
+                console.error('❌ Error loading profile pictures:', error);
+            }
+        }
+        
+        // Helper function to get profile picture from localStorage by user ID
+        function getProfilePicture(userId, userType) {
+            try {
+                // Check cache first
+                if (profilePictureCache[userId]) {
+                    return profilePictureCache[userId];
+                }
+                
+                // First, try to get from current user's localStorage (for own profile)
+                const currentUserId = currentUser?.id;
+                if (userId === currentUserId) {
+                    const key = userType === 'dentist' ? 'dentistProfilePicture' : 'patientProfilePicture';
+                    const currentPic = localStorage.getItem(key);
+                    if (currentPic) {
+                        profilePictureCache[userId] = currentPic;
+                        return currentPic;
+                    }
+                }
+                
+                // Return null to show initials
+                return null;
+            } catch (e) {
+                console.warn('Error getting profile picture:', e);
+                return null;
+            }
+        }
+        
+        // Function to set profile picture in cache (called when profile picture is uploaded)
+        function setProfilePictureCache(userId, imageData) {
+            profilePictureCache[userId] = imageData;
+        }
+
+        // Helper function to get other user's profile picture
+        function getOtherUserProfilePicture(otherUserId) {
+            // In a production app, you'd fetch this from Supabase
+            // For now, we'll use a generic placeholder
+            return null;
+        }
+
+        // Create avatar element with profile picture or initial
+        function createAvatarHTML(profilePicture, initial, size = '45px', isCurrentUser = false) {
+            const color = isCurrentUser ? 
+                'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 
+                'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+            
+            if (profilePicture) {
+                return `
+                    <div style="width: ${size}; height: ${size}; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: ${color}; border: 2px solid white;">
+                        <img src="${profilePicture}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;" />
+                    </div>
+                `;
+            } else {
+                return `
+                    <div class="conversation-avatar" style="width: ${size}; height: ${size}; background: ${color};">
+                        ${initial}
+                    </div>
+                `;
+            }
+        }
+
+        // Load user data
+        function loadUserData() {
+            const userData = localStorage.getItem('currentUser');
+            if (userData) {
+                currentUser = JSON.parse(userData);
+                console.log('✅ Loaded dentist user data:', currentUser);
+            } else {
+                console.error('No user data found');
+                alert('Please login first');
+                window.location.href = '../../../index.html';
+            }
+        }
+
+        // Load conversations
+        async function loadConversations() {
+            try {
+                console.log('🔄 Loading conversations for dentist:', currentUser.id);
+                
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/conversations?dentist_id=eq.${currentUser.id}&select=*,patient:patient_id(name,email),last_message_sender:last_message_sender_id(name)`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+
+                console.log('📡 Conversations response status:', response.status);
+                
+                if (response.ok) {
+                    conversations = await response.json();
+                    console.log('✅ Conversations loaded:', conversations);
+                    displayConversations();
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Failed to load conversations:', response.status, errorText);
+                    conversations = [];
+                    displayConversations();
+                }
+            } catch (error) {
+                console.error('❌ Error loading conversations:', error);
+                conversations = [];
+                displayConversations();
+            }
+        }
+
+        // Display conversations
+        function displayConversations() {
+            const container = document.getElementById('conversationsList');
+            
+            if (conversations.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-comments"></i>
+                        <h3>No conversations yet</h3>
+                        <p>Messages will appear here when patients contact you</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = conversations.map(conv => {
+                const patient = conv.patient;
+                const patientName = patient?.name || 'Patient Unknown';
+                const patientInitial = patientName.charAt(0).toUpperCase();
+                const lastMessageTime = new Date(conv.last_message_at).toLocaleDateString();
+                const isUnread = conv.last_message_sender_id !== currentUser.id;
+                
+                // Get patient profile picture
+                        const patientProfilePic = getProfilePicture(conv.patient_id, 'patient');
+                        const avatarHTML = createAvatarHTML(patientProfilePic, patientInitial, '45px', false);
+                
+                return `
+                    <div class="conversation-item" onclick="selectConversation('${conv.id}')">
+                        ${avatarHTML}
+                        <div class="conversation-info">
+                            <div class="conversation-name">${patientName}</div>
+                            <div class="conversation-preview">${conv.last_message_content || 'No messages yet'}</div>
+                            <div class="conversation-time">${lastMessageTime}</div>
+                        </div>
+                        ${isUnread ? '<div class="unread-badge">!</div>' : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Load patients
+        async function loadPatients() {
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/users?user_type=eq.patient&select=id,name,email`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+
+                if (response.ok) {
+                    patients = await response.json();
+                    displayPatients();
+                } else {
+                    console.error('Failed to load patients');
+                }
+            } catch (error) {
+                console.error('Error loading patients:', error);
+            }
+        }
+
+        // Display patients in selection modal
+        function displayPatients() {
+            const container = document.getElementById('patientList');
+            
+            if (patients.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-user"></i>
+                        <h3>No patients available</h3>
+                        <p>No patients have registered yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = patients.map(patient => {
+                const patientName = patient.name || 'Patient Unknown';
+                const patientInitial = patientName.charAt(0).toUpperCase();
+                
+                return `
+                    <div class="patient-item" onclick="startConversation('${patient.id}')">
+                        <div class="patient-avatar">${patientInitial}</div>
+                        <div class="patient-info">
+                            <h4>${patientName}</h4>
+                            <p>${patient.email}</p>
+                        </div>
+                        <div class="patient-status online">Online</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Start new conversation
+        async function startConversation(patientId) {
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/conversations`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        patient_id: patientId,
+                        dentist_id: currentUser.id
+                    })
+                });
+
+                if (response.ok) {
+                    closePatientSelection();
+                    loadConversations();
+                    // Auto-select the new conversation
+                    const newConv = await response.json();
+                    selectConversation(newConv.id);
+                } else {
+                    console.error('Failed to create conversation');
+                }
+            } catch (error) {
+                console.error('Error creating conversation:', error);
+            }
+        }
+
+        // Select conversation
+        async function selectConversation(conversationId) {
+            console.log('🔄 Selecting conversation:', conversationId);
+            
+            currentConversation = conversations.find(c => c.id === conversationId);
+            if (!currentConversation) {
+                console.error('❌ Conversation not found:', conversationId);
+                return;
+            }
+            
+            console.log('✅ Found conversation:', currentConversation);
+
+            // Update UI - find the clicked conversation item
+            document.querySelectorAll('.conversation-item').forEach(item => {
+                item.classList.remove('active');
+                // Check if this item has the correct conversation ID
+                if (item.getAttribute('onclick') && item.getAttribute('onclick').includes(conversationId)) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Show chat area
+            document.getElementById('chatHeader').style.display = 'flex';
+            document.getElementById('messageInputArea').style.display = 'block';
+            document.getElementById('messagesArea').innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><h3>Loading messages...</h3></div>';
+
+            // Update chat header
+            const patient = currentConversation.patient;
+            const patientName = patient?.name || 'Patient Unknown';
+            const patientInitial = patientName.charAt(0).toUpperCase();
+            
+            // Get patient profile picture
+            const patientProfilePic = getProfilePicture(currentConversation.patient_id, 'patient');
+            const patientAvatarHTML = createAvatarHTML(patientProfilePic, patientInitial, '60px', false);
+            
+            // Update chat header with profile picture
+            const chatAvatar = document.getElementById('chatAvatar');
+            chatAvatar.innerHTML = patientAvatarHTML;
+            
+            document.getElementById('chatName').textContent = patientName;
+            document.getElementById('chatSubtitle').textContent = patient?.email || '';
+
+            console.log('👤 Patient info:', { patientName, patientInitial, email: patient?.email });
+
+            // Load profile pictures for users in this conversation
+            await loadProfilePicturesForUsers();
+            
+            // Load messages
+            await loadMessages(conversationId);
+        }
+
+        // Test function to create a sample message (for debugging)
+        async function createTestMessage() {
+            if (!currentConversation) {
+                alert('Please select a conversation first');
+                return;
+            }
+            
+            try {
+                console.log('🧪 Creating test message...');
+                
+                const testMessage = {
+                    sender_id: currentUser.id,
+                    receiver_id: currentConversation.patient_id,
+                    content: 'Test message from dentist - ' + new Date().toLocaleTimeString(),
+                    message_type: 'text',
+                    is_read: false
+                };
+                
+                console.log('📡 Test message data:', testMessage);
+                
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify(testMessage)
+                });
+                
+                console.log('📡 Response status:', response.status);
+                
+                if (response.ok) {
+                    const newMessage = await response.json();
+                    console.log('✅ Test message created:', newMessage);
+                    
+                    // Reload messages to show the new one
+                    await loadMessages(currentConversation.id);
+                    await loadConversations(); // Refresh conversation list
+                    
+                    alert('Test message created successfully!');
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Failed to create test message:', response.status, errorText);
+                    alert('Failed to create test message: ' + errorText);
+                }
+            } catch (error) {
+                console.error('❌ Error creating test message:', error);
+                alert('Error creating test message: ' + error.message);
+            }
+        }
+
+        // Load messages for conversation
+        async function loadMessages(conversationId) {
+            try {
+                console.log('🔄 Loading messages for conversation:', conversationId);
+                console.log('👤 Current user:', currentUser);
+                console.log('💬 Current conversation:', currentConversation);
+                
+                if (!currentConversation) {
+                    console.error('❌ No current conversation selected');
+                    return;
+                }
+                
+                // Simplified query: get messages between current user and the other participant
+                const query = `messages?or=(and(sender_id.eq.${currentUser.id},receiver_id.eq.${currentConversation.patient_id}),and(sender_id.eq.${currentConversation.patient_id},receiver_id.eq.${currentUser.id}))&select=*&order=created_at.asc`;
+                
+                console.log('📡 Query:', query);
+                
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/${query}`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+
+                console.log('📡 Response status:', response.status);
+                
+                if (response.ok) {
+                    messages = await response.json();
+                    console.log('✅ Messages loaded:', messages);
+                    displayMessages();
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Failed to load messages:', response.status, errorText);
+                    
+                    // Try alternative query if the first one fails
+                    console.log('🔄 Trying alternative query...');
+                    const altResponse = await fetch(`${SUPABASE_URL}/rest/v1/messages?sender_id=eq.${currentUser.id}&receiver_id=eq.${currentConversation.patient_id}&select=*&order=created_at.asc`, {
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`
+                        }
+                    });
+                    
+                    if (altResponse.ok) {
+                        const altMessages = await altResponse.json();
+                        console.log('✅ Alternative query worked, got messages:', altMessages);
+                        messages = altMessages;
+                        displayMessages();
+                    } else {
+                        console.error('❌ Alternative query also failed');
+                        messages = [];
+                        displayMessages();
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Error loading messages:', error);
+                messages = [];
+                displayMessages();
+            }
+        }
+
+        // Display messages
+        function displayMessages() {
+            const container = document.getElementById('messagesArea');
+            
+            if (messages.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-comment"></i>
+                        <h3>No messages yet</h3>
+                        <p>Start the conversation by sending a message</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = messages.map(msg => {
+                const isSent = msg.sender_id === currentUser.id;
+                const messageTime = new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const senderInitial = isSent ? currentUser.name?.charAt(0)?.toUpperCase() || 'D' : currentConversation.patient?.name?.charAt(0)?.toUpperCase() || 'P';
+                
+                // Get profile pictures
+                const senderProfilePic = isSent ? 
+                    getProfilePicture(currentUser.id, 'dentist') : 
+                    getProfilePicture(msg.sender_id, 'patient');
+                
+                const senderAvatarHTML = createAvatarHTML(senderProfilePic, senderInitial, '35px', isSent);
+                
+                return `
+                    <div class="message ${isSent ? 'sent' : 'received'}">
+                        ${senderAvatarHTML}
+                        <div class="message-content">
+                            <div>${msg.content}</div>
+                            <div class="message-time">${messageTime}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Scroll to bottom
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Send message
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const content = messageInput.value.trim();
+            
+            if (!content || !currentConversation) return;
+
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sender_id: currentUser.id,
+                        receiver_id: currentConversation.patient_id,
+                        content: content
+                    })
+                });
+
+                if (response.ok) {
+                    messageInput.value = '';
+                    loadMessages(currentConversation.id);
+                    loadConversations(); // Refresh conversation list
+                } else {
+                    console.error('Failed to send message');
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+            } finally {
+                sendBtn.disabled = false;
+            }
+        }
+
+        // Setup real-time subscription
+        function setupRealtimeSubscription() {
+            // This would be implemented with Supabase real-time
+            // For now, we'll use polling
+            setInterval(() => {
+                if (currentConversation) {
+                    loadMessages(currentConversation.id);
+                }
+            }, 5000);
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Message input enter key
+            document.getElementById('messageInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // Auto-resize textarea
+            document.getElementById('messageInput').addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+            });
+        }
+
+        // Modal functions
+        function openPatientSelection() {
+            document.getElementById('patientSelectionModal').classList.add('show');
+        }
+
+        function closePatientSelection() {
+            document.getElementById('patientSelectionModal').classList.remove('show');
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('patientSelectionModal');
+            if (e.target === modal) {
+                closePatientSelection();
+            }
+        });
+    </script>
+</body>
+</html>

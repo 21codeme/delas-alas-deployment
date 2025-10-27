@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Dashboard - Delas Alas Dental Clinic</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦷</text></svg>">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../images/tooth.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../images/tooth.png">
+    <link rel="shortcut icon" href="../../images/tooth.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../images/tooth.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar h2 {
+            color: #ffd700;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+
+        .user-info {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 32px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .user-info h3 {
+            margin-bottom: 5px;
+            font-size: 1.2rem;
+        }
+
+        .user-info p {
+            color: #bdc3c7;
+            font-size: 0.9rem;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 10px;
+        }
+
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-item a:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateX(5px);
+        }
+
+        .nav-item a.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-item a i {
+            margin-right: 15px;
+            font-size: 1.2rem;
+            width: 20px;
+        }
+
+        .logout-btn {
+            margin-top: 30px;
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        }
+
+        .notification-btn {
+            margin-bottom: 10px;
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .notification-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(243, 156, 18, 0.4);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            margin-left: 250px;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .content-section {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            min-height: 600px;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title i {
+            margin-right: 15px;
+            color: #667eea;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+            
+            .main-content {
+                margin-left: 200px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        /* Content Frame Styles */
+        .content-frame {
+            width: 100%;
+            height: calc(100vh - 0px);
+            border: none;
+            background: #f5f5f5;
+        }
+
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            z-index: 10000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .toast.success {
+            background: #4caf50;
+        }
+
+        .toast.error {
+            background: #f44336;
+        }
+
+        .toast.info {
+            background: #2196f3;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h2>🦷 Patient Portal</h2>
+            
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h3 id="userName">Patient</h3>
+                <p id="userEmail">patient@email.com</p>
+            </div>
+
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#" onclick="showSection('dashboard')" class="active">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" onclick="showSection('appointments')">
+                        <i class="fas fa-calendar-check"></i>
+                        Appointments
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" onclick="showSection('treatments')">
+                        <i class="fas fa-tooth"></i>
+                        Treatments
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" onclick="showSection('messages')">
+                        <i class="fas fa-comments"></i>
+                        Messages
+                        <span id="messagesBadge" class="notification-badge" style="display: none;">0</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" onclick="showSection('settings')">
+                        <i class="fas fa-cog"></i>
+                        Settings
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Notification Button -->
+            <button class="notification-btn" onclick="showNotifications()">
+                <i class="fas fa-bell"></i> 
+                Notifications
+                <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
+            </button>
+
+            <button class="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+            
+            <!-- Test button for clearing late appointment notifications -->
+            <button onclick="clearLateAppointmentNotifications()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; margin-top: 10px;">
+                Clear Late Notifications
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Content Frame -->
+            <iframe id="contentFrame" class="content-frame" src="sections/dashboard/dashboard-standalone.html"></iframe>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentUser = null;
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load user data
+            loadUserData();
+            
+            // Show welcome message
+            showToast('Welcome to your patient dashboard!', 'success');
+            
+            // Start checking for late appointments
+            checkLateAppointments();
+            // Check every minute
+            setInterval(checkLateAppointments, 60000);
+            
+            // Also check every 10 seconds for testing
+            setInterval(checkLateAppointments, 10000);
+        });
+
+        // Load user data from localStorage and Supabase
+        async function loadUserData() {
+            try {
+                // Get user data from localStorage (set by main app during login)
+                const userData = localStorage.getItem('currentUser');
+                if (userData) {
+                    currentUser = JSON.parse(userData);
+                    
+                    // Also fetch latest profile data from Supabase to get updated name/email
+                    try {
+                        const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                        
+                        const resp = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${currentUser.id}&select=name,email`, {
+                            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                        });
+                        
+                        if (resp.ok) {
+                            const data = await resp.json();
+                            if (Array.isArray(data) && data.length > 0) {
+                                // Update currentUser with latest name and email from Supabase
+                                currentUser.name = data[0].name || currentUser.name;
+                                currentUser.email = data[0].email || currentUser.email;
+                                // Update localStorage with updated data
+                                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                            }
+                        }
+                    } catch (error) {
+                        // Error fetching from Supabase, use localStorage data
+                    }
+                } else {
+                    // Fallback to default if no data found
+                    currentUser = {
+                        name: 'Patient',
+                        email: 'patient@email.com',
+                        phone: '',
+                        avatar: 'fas fa-user'
+                    };
+                }
+                updateUserInfo();
+            } catch (error) {
+                // Fallback to default
+                currentUser = {
+                    name: 'Patient',
+                    email: 'patient@email.com',
+                    phone: '',
+                    avatar: 'fas fa-user'
+                };
+                updateUserInfo();
+            }
+        }
+
+        // Update user info in sidebar
+        async function updateUserInfo() {
+            if (currentUser) {
+                const nameElement = document.querySelector('.user-info h3');
+                const emailElement = document.querySelector('.user-info p');
+                
+                if (nameElement) nameElement.textContent = currentUser.name;
+                if (emailElement) emailElement.textContent = currentUser.email;
+            }
+            
+            // Load profile picture if available
+            await loadSidebarProfilePicture();
+        }
+        
+        // Update sidebar profile picture
+        function updateSidebarProfilePicture(imageData) {
+            const userAvatar = document.querySelector('.user-avatar');
+            if (!userAvatar) return;
+            
+            if (imageData) {
+                // Create or update img element
+                let img = userAvatar.querySelector('img');
+                if (!img) {
+                    img = document.createElement('img');
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.objectFit = 'cover';
+                    img.style.borderRadius = '50%';
+                    userAvatar.appendChild(img);
+                }
+                img.src = imageData;
+                img.style.display = 'block';
+                
+                // Hide the icon
+                const icon = userAvatar.querySelector('i');
+                if (icon) icon.style.display = 'none';
+            } else {
+                // Show default icon
+                const img = userAvatar.querySelector('img');
+                const icon = userAvatar.querySelector('i');
+                
+                if (img) img.style.display = 'none';
+                if (icon) icon.style.display = 'block';
+            }
+        }
+        
+        // Load saved profile picture
+        async function loadSidebarProfilePicture() {
+            // First, try to load from Supabase (primary storage)
+            try {
+                const userData = localStorage.getItem('currentUser');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    if (user && user.id) {
+                        const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                        
+                        const resp = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}&select=profile_picture`, {
+                            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                        });
+                        
+                        if (resp.ok) {
+                            const data = await resp.json();
+                            if (Array.isArray(data) && data.length > 0 && data[0].profile_picture) {
+                                updateSidebarProfilePicture(data[0].profile_picture);
+                                return;
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                // Error loading from Supabase
+            }
+            
+            // Fallback to localStorage if Supabase doesn't have it
+            const savedImage = localStorage.getItem('patientProfilePicture');
+            if (savedImage) {
+                updateSidebarProfilePicture(savedImage);
+            }
+        }
+
+        // Load section content dynamically
+        function loadSection(section, clickedElement = null) {
+            try {
+                const frame = document.getElementById('contentFrame');
+                if (!frame) {
+                    return;
+                }
+                
+                const navItems = document.querySelectorAll('.nav-item a');
+                
+                // Update active nav item
+                navItems.forEach(item => item.classList.remove('active'));
+                
+                // Find and activate the correct nav item
+                if (clickedElement) {
+                    const navItem = clickedElement.closest('.nav-item a');
+                    if (navItem) {
+                        navItem.classList.add('active');
+                    }
+                } else {
+                    // Fallback: find nav item by section name
+                    const targetNavItem = document.querySelector(`[onclick*="${section}"]`);
+                    if (targetNavItem) {
+                        targetNavItem.classList.add('active');
+                    }
+                }
+                
+                // Load section - use standalone version for all sections
+                const sectionUrl = `sections/${section}/${section}-standalone.html`;
+                
+                frame.src = sectionUrl;
+
+                // Close mobile menu if open
+                if (window.innerWidth <= 768) {
+                    const sidebar = document.querySelector('.sidebar');
+                    if (sidebar) {
+                        sidebar.classList.remove('mobile-open');
+                    }
+                }
+            } catch (error) {
+                // Error handling
+            }
+        }
+
+        // Listen for messages from iframe
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.action === 'loadSection') {
+                loadSection(event.data.section);
+            } else if (event.data && event.data.action === 'logout') {
+                logout();
+            } else if (event.data && event.data.action === 'updateProfilePicture') {
+                updateSidebarProfilePicture(event.data.imageData);
+            } else if (event.data && event.data.action === 'updateProfile') {
+                // Reload profile data from Supabase
+                loadUserData();
+            }
+        });
+
+        // Navigation functions
+        function showSection(sectionId) {
+            loadSection(sectionId, event.target);
+        }
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('mobile-open');
+        }
+
+        // Check for late appointments
+        function checkLateAppointments() {
+            const userData = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            if (!userData.id) {
+                return;
+            }
+
+            const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+
+            // Fetch confirmed appointments for today
+            const today = new Date().toISOString().split('T')[0];
+            
+            console.log('Checking late appointments for user:', userData.id);
+            console.log('Today is:', today);
+            
+            fetch(`${SUPABASE_URL}/rest/v1/appointments?patient_id=eq.${userData.id}&appointment_date=eq.${today}&status=eq.confirmed&select=id,appointment_date,appointment_time,service_type`, {
+                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+            })
+            .then(response => response.json())
+            .then(appointments => {
+                console.log('Fetched appointments:', appointments);
+                
+                if (!Array.isArray(appointments) || appointments.length === 0) {
+                    console.log('No appointments found for today');
+                    return;
+                }
+
+                const now = new Date();
+                const currentTime = now.getHours() * 60 + now.getMinutes();
+                console.log('Current time:', now.getHours() + ':' + now.getMinutes(), '(', currentTime, 'minutes)');
+                
+                appointments.forEach(apt => {
+                    const aptTime = apt.appointment_time.split(':');
+                    const aptHour = parseInt(aptTime[0]);
+                    const aptMinute = parseInt(aptTime[1]);
+                    const aptTimeMinutes = aptHour * 60 + aptMinute;
+                    
+                    console.log('Appointment time:', apt.appointment_time, '(', aptTimeMinutes, 'minutes)');
+                    
+                    const timeDifference = aptTimeMinutes - currentTime;
+                    console.log('Time difference:', timeDifference, 'minutes');
+                    
+                    // Check if appointment time has passed (user is late) or is within 30 minutes
+                    // timeDifference < 0 means appointment time has passed
+                    // timeDifference >= 0 && <= 30 means appointment is within 30 minutes
+                    if ((timeDifference < 0 && timeDifference >= -30) || (timeDifference >= 0 && timeDifference <= 30)) {
+                        console.log('Triggering notification for appointment');
+                        
+                        // Check if already notified
+                        const notificationKey = `late_appointment_${apt.id}_${apt.appointment_date}`;
+                        if (localStorage.getItem(notificationKey)) {
+                            console.log('Already notified for this appointment');
+                            return;
+                        }
+                        
+                        // Show notification
+                        const serviceType = apt.service_type || 'General';
+                        const appointmentDateTime = new Date(`${apt.appointment_date}T${apt.appointment_time}`);
+                        
+                        // Check if user is already late
+                        const isLate = timeDifference < 0;
+                        console.log('isLate:', isLate);
+                        
+                        showLateAppointmentModal(serviceType, appointmentDateTime, isLate, apt.id);
+                        
+                        // Mark as notified
+                        localStorage.setItem(notificationKey, 'true');
+                    } else {
+                        console.log('Appointment not within the 30-minute window. Time difference:', timeDifference);
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error checking late appointments:', error);
+            });
+        }
+
+        function showLateAppointmentModal(serviceType, appointmentDateTime, isLate, appointmentId) {
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10001; display: flex; align-items: center; justify-content: center;';
+            
+            // Different messages based on if user is late or approaching
+            let headerColor = isLate ? 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)' : 'linear-gradient(135deg, #f39c12 0%, #e67e22 100%)';
+            let headerTitle = isLate ? '⚠️ Appointment Time Extended!' : '⏰ Appointment Reminder';
+            let warningMessage = isLate 
+                ? '<p style="margin: 0 0 10px 0; color: #721c24;"><i class="fas fa-info-circle" style="margin-right: 8px;"></i><strong>You have 30 minutes extended!</strong></p><p style="margin: 0; color: #721c24;">If you are not attending, your appointment will be cancelled or rescheduled.</p>'
+                : '<p style="margin: 0 0 10px 0; color: #721c24;"><i class="fas fa-info-circle" style="margin-right: 8px;"></i><strong>You have 30 minutes extended.</strong></p><p style="margin: 0; color: #721c24;">If you are not attending, your appointment will be cancelled or rescheduled.</p>';
+            
+            modal.innerHTML = `
+                <div style="background: white; border-radius: 15px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: slideDown 0.3s ease-out;">
+                    <div style="background: ${headerColor}; padding: 20px; border-radius: 15px 15px 0 0; color: white;">
+                        <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-exclamation-triangle"></i> ${headerTitle}
+                        </h2>
+                    </div>
+                    <div style="padding: 25px;">
+                        <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+                            <p style="margin: 0; color: #856404; font-size: 16px; line-height: 1.6;">
+                                <i class="fas fa-clock" style="margin-right: 8px;"></i>
+                                <strong>Your appointment for ${serviceType}</strong> on 
+                                <strong>${appointmentDateTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} 
+                                at ${appointmentDateTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</strong>
+                                ${isLate ? 'has passed!' : 'is approaching!'}
+                            </p>
+                        </div>
+                        <div style="background: #f8d7da; border: 2px solid #f5c6cb; border-radius: 10px; padding: 15px;">
+                            ${warningMessage}
+                        </div>
+                    </div>
+                    <div style="padding: 20px; border-top: 1px solid #eee; display: flex; gap: 10px; justify-content: center;">
+                        <button onclick="handleCancelAppointment('${appointmentId}')" style="padding: 12px 24px; background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 15px;">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button onclick="handleRescheduleAppointment()" style="padding: 12px 24px; background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 15px;">
+                            <i class="fas fa-calendar-alt"></i> Reschedule
+                        </button>
+                        <button onclick="this.closest('div[style*=\\'position: fixed\\']').remove()" style="padding: 12px 24px; background: ${isLate ? 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)' : 'linear-gradient(135deg, #f39c12 0%, #e67e22 100%)'}; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 15px;">
+                            <i class="fas fa-check"></i> Understood
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Add animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideDown {
+                    from {
+                        transform: translateY(-50px);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateY(0);
+                        opacity: 1;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // Handle cancel appointment
+        function handleCancelAppointment(appointmentId) {
+            if (confirm('Are you sure you want to cancel this appointment? This action cannot be undone.')) {
+                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                
+                // Close the modal
+                document.querySelector('div[style*="position: fixed"]').remove();
+                
+                // Delete appointment from database
+                fetch(`${SUPABASE_URL}/rest/v1/appointments?id=eq.${appointmentId}`, {
+                    method: 'DELETE',
+                    headers: { 
+                        'apikey': SUPABASE_KEY, 
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    // Check if response is ok (status 200-299)
+                    if (response.ok) {
+                        // Try to parse JSON response, but handle empty response
+                        return response.text().then(text => {
+                            return text ? JSON.parse(text) : {};
+                        });
+                    } else {
+                        throw new Error('Failed to delete appointment');
+                    }
+                })
+                .then(data => {
+                    showToast('Appointment cancelled successfully!', 'success');
+                    // Refresh appointments
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                })
+                .catch(error => {
+                    console.error('Error cancelling appointment:', error);
+                    showToast('Error cancelling appointment. Please try again.', 'error');
+                });
+            }
+        }
+        
+        // Handle reschedule appointment
+        function handleRescheduleAppointment() {
+            // Close the modal
+            document.querySelector('div[style*="position: fixed"]').remove();
+            
+            // Navigate to appointments section
+            loadSection('appointments');
+            
+            // Show booking form
+            setTimeout(() => {
+                const frame = document.getElementById('contentFrame');
+                if (frame && frame.contentWindow) {
+                    frame.contentWindow.postMessage({ action: 'openBookingForm' }, '*');
+                } else {
+                    showToast('Loading booking form...', 'info');
+                }
+            }, 500);
+        }
+        
+        // Clear late appointment notifications for testing
+        function clearLateAppointmentNotifications() {
+            // Get all localStorage keys
+            const keys = Object.keys(localStorage);
+            
+            // Filter keys that start with 'late_appointment_'
+            const lateNotificationKeys = keys.filter(key => key.startsWith('late_appointment_'));
+            
+            // Remove all late appointment notification keys
+            lateNotificationKeys.forEach(key => {
+                localStorage.removeItem(key);
+            });
+            
+            showToast('Late appointment notifications cleared! Reload the page to test.', 'success');
+        }
+
+        // Notification function
+        function showNotifications() {
+            
+            // Load appointments and messages count
+            const userData = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            if (!userData.id) {
+                alert('Please login first');
+                return;
+            }
+
+            const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+
+            // Fetch appointments - get more and sort by created_at to get newest bookings/confirmations
+            fetch(`${SUPABASE_URL}/rest/v1/appointments?patient_id=eq.${userData.id}&select=id,appointment_date,appointment_time,status,service_type,created_at&order=created_at.desc&limit=20`, {
+                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+            })
+            .then(response => response.json())
+            .then(appointments => {
+                
+                // Fetch unread messages
+                return fetch(`${SUPABASE_URL}/rest/v1/messages?receiver_id=eq.${userData.id}&is_read=eq.false&select=id,sender_id,content,created_at&order=created_at.desc&limit=10`, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                })
+                .then(response => response.json())
+                .then(messages => {
+                    // Ensure messages is an array
+                    const messagesArray = Array.isArray(messages) ? messages : [];
+                    
+                    // Get sender names if there are messages
+                    let senderIds = [];
+                    if (messagesArray.length > 0) {
+                        senderIds = [...new Set(messagesArray.map(msg => msg.sender_id))];
+                    }
+                    
+                    if (senderIds.length === 0) {
+                        return { appointments, messages: messagesArray, senderMap: {} };
+                    }
+                    
+                    return fetch(`${SUPABASE_URL}/rest/v1/users?id=in.(${senderIds.join(',')})&select=id,name`, {
+                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                    })
+                    .then(response => response.json())
+                    .then(senders => {
+                        const senderMap = {};
+                        if (Array.isArray(senders)) {
+                            senders.forEach(sender => {
+                                senderMap[sender.id] = sender.name;
+                            });
+                        }
+                        
+                        return { appointments, messages: messagesArray, senderMap };
+                    });
+                })
+                .then(({ appointments, messages, senderMap }) => {
+                    // Show notifications modal
+                    const notifications = [];
+                    
+                    // Add appointment notifications
+                    appointments.forEach(apt => {
+                        const date = new Date(apt.appointment_date);
+                        const status = apt.status;
+                        const service = apt.service_type || 'General';
+                        
+                        if (status === 'confirmed') {
+                            notifications.push({
+                                type: 'appointment_confirmed',
+                                title: `Appointment Confirmed: ${service}`,
+                                message: `Your appointment on ${date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} has been confirmed.`,
+                                date: apt.created_at || apt.appointment_date,
+                                status: status
+                            });
+                        } else if (status === 'pending') {
+                            notifications.push({
+                                type: 'appointment_pending',
+                                title: `Pending Appointment: ${service}`,
+                                message: `Your appointment on ${date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} is pending confirmation.`,
+                                date: apt.created_at || apt.appointment_date,
+                                status: status
+                            });
+                        }
+                    });
+                    
+                    // Add message notifications
+                    messages.forEach(msg => {
+                        const senderName = senderMap[msg.sender_id] || 'Dentist';
+                        const truncatedContent = msg.content && msg.content.length > 50 ? msg.content.substring(0, 50) + '...' : (msg.content || 'No content');
+                        notifications.push({
+                            type: 'message',
+                            title: `New Message from ${senderName}`,
+                            message: truncatedContent,
+                            date: msg.created_at,
+                            status: 'message'
+                        });
+                    });
+                    
+                    // Create and show modal
+                    const modal = document.createElement('div');
+                    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;';
+                    modal.innerHTML = `
+                        <div style="background: white; border-radius: 15px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                            <div style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); padding: 20px; border-radius: 15px 15px 0 0; color: white;">
+                                <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                                    <i class="fas fa-bell"></i> Notifications
+                                </h2>
+                                <button onclick="this.closest('div[style*=\\'position: fixed\\']').remove()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
+                            </div>
+                            <div style="padding: 20px;">
+                                ${notifications.length === 0 ? `
+                                    <div style="text-align: center; padding: 40px; color: #999;">
+                                        <i class="fas fa-bell-slash" style="font-size: 48px; margin-bottom: 10px;"></i>
+                                        <p>No notifications</p>
+                                    </div>
+                                ` : notifications.map(notif => {
+                                    const borderColor = notif.status === 'confirmed' ? '#28a745' : notif.status === 'message' ? '#667eea' : '#f39c12';
+                                    const icon = notif.status === 'confirmed' ? 'fa-check-circle' : notif.status === 'message' ? 'fa-comment' : 'fa-clock';
+                                    const iconColor = notif.status === 'confirmed' ? '#28a745' : notif.status === 'message' ? '#667eea' : '#f39c12';
+                                    
+                                    return `
+                                        <div style="padding: 15px; border-left: 4px solid ${borderColor}; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: start; gap: 10px;">
+                                            <i class="fas ${icon}" style="color: ${iconColor}; font-size: 24px; margin-top: 5px;"></i>
+                                            <div style="flex: 1;">
+                                                <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${notif.title}</h4>
+                                                <p style="margin: 0; color: #666;">${notif.message}</p>
+                                                <small style="color: #999; display: block; margin-top: 5px;">
+                                                    <i class="fas fa-clock"></i> ${new Date(notif.date).toLocaleDateString()} ${new Date(notif.date).toLocaleTimeString()}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(modal);
+                });
+            })
+            .catch(error => {
+                alert('Unable to load notifications. Please try again.');
+            });
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                showToast('Logged out successfully!', 'success');
+                setTimeout(() => {
+                    window.location.href = '../../index.html';
+                }, 1000);
+            }
+        }
+
+        // Toast notification system
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Show mobile menu toggle on small screens
+        function checkScreenSize() {
+            const menuToggle = document.querySelector('.menu-toggle');
+            if (window.innerWidth <= 768) {
+                if (!menuToggle) {
+                    const toggle = document.createElement('button');
+                    toggle.className = 'menu-toggle';
+                    toggle.innerHTML = '<i class="fas fa-bars"></i>';
+                    toggle.onclick = toggleMobileMenu;
+                    document.body.appendChild(toggle);
+                }
+            } else {
+                const menuToggle = document.querySelector('.menu-toggle');
+                if (menuToggle) {
+                    menuToggle.remove();
+                }
+                document.querySelector('.sidebar').classList.remove('mobile-open');
+            }
+        }
+
+        window.addEventListener('resize', checkScreenSize);
+        checkScreenSize();
+    </script>
+</body>
+</html>

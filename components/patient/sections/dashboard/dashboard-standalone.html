@@ -1,0 +1,1990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Delas Alas Dental Clinic</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦷</text></svg>">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../images/tooth.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../images/tooth.png">
+    <link rel="shortcut icon" href="../../../images/tooth.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../images/tooth.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar h2 {
+            color: #ffd700;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+
+        .user-info {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 32px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .user-info h3 {
+            margin-bottom: 5px;
+            font-size: 1.2rem;
+        }
+
+        .user-info p {
+            color: #bdc3c7;
+            font-size: 0.9rem;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 10px;
+        }
+
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .nav-item a:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateX(5px);
+        }
+
+        .nav-item a.active {
+            background: rgba(255,255,255,0.2);
+            border-left: 4px solid #ffd700;
+        }
+
+        .nav-item a i {
+            margin-right: 15px;
+            font-size: 18px;
+            width: 20px;
+        }
+
+        .logout-btn {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            color: #e74c3c;
+            margin-top: 20px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(231, 76, 60, 0.3);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        /* Iframe Mode - Hide sidebar when loaded in iframe */
+        .iframe-mode .sidebar {
+            display: none;
+        }
+
+        .iframe-mode .main-content {
+            margin-left: 0;
+            padding: 0;
+        }
+
+        .iframe-mode .menu-toggle {
+            display: none !important;
+        }
+
+        /* Dashboard Styles */
+        .dashboard-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            color: white;
+            font-size: 24px;
+        }
+
+        .stat-info h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .stat-change {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .stat-change.positive {
+            color: #27ae60;
+        }
+
+        .stat-change.neutral {
+            color: #f39c12;
+        }
+
+        .section-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .section-header h2 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .appointments-list {
+            padding: 25px;
+        }
+
+        .appointment-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .appointment-item:last-child {
+            border-bottom: none;
+        }
+
+        .appointment-info h4 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .appointment-info p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .appointment-status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-confirmed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .quick-actions {
+            padding: 25px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .action-btn {
+            background: white;
+            border: 2px solid #e9ecef;
+            padding: 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .action-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+        }
+
+        .action-btn i {
+            font-size: 32px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .action-btn span {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            margin: 0 0 10px 0;
+        }
+
+        .empty-state p {
+            margin: 0;
+        }
+
+        /* Monthly Calendar */
+        .calendar-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            border-bottom: 1px solid #eee;
+        }
+        .calendar-header h2 { margin: 0; font-size: 1.4rem; color: #2c3e50; }
+        .cal-controls { display: flex; gap: 10px; align-items: center; }
+        .btn-cal { background: #6c757d; color: #fff; border: none; border-radius: 8px; padding: 6px 10px; cursor: pointer; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #e9ecef; }
+        .calendar-day-header { background: #667eea; color: #fff; text-align: center; padding: 10px; font-weight: 500; }
+        .calendar-day { background: #fff; min-height: 80px; padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .calendar-day.today { background: #e3f2fd; font-weight: bold; }
+        .calendar-day.full { background: #ffebee; border: 2px solid #f44336; }
+        .day-number { font-weight: 600; margin-bottom: 4px; }
+        .day-indicators { display: flex; gap: 4px; }
+        .indicator { color: #fff; border-radius: 50%; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+        .indicator-my { background: #667eea; }
+        .indicator-pending { background: #ff9800; }
+        .indicator-full { background: #f44336; }
+        .indicator-booked { background: #2196f3; }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 0;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            animation: fadeIn 0.3s;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .modal-content h2 {
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            text-align: center;
+        }
+
+        .close-button {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: #ffd700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group input[type="tel"],
+        .form-group input[type="date"],
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 15px 18px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 15px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,249,250,0.9) 100%);
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .form-group input[type="text"]:focus,
+        .form-group input[type="email"]:focus,
+        .form-group input[type="tel"]:focus,
+        .form-group input[type="date"]:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: white;
+        }
+
+        .calendar-container {
+            position: relative;
+        }
+
+        .calendar-info {
+            margin-top: 8px;
+        }
+
+        .calendar-info small {
+            color: #6c757d;
+            font-size: 12px;
+        }
+
+        .availability-status {
+            margin: 15px 0;
+            padding: 12px 16px;
+            border-radius: 8px;
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+
+        .status-message {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #1976d2;
+            font-size: 14px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(240, 240, 240, 0.5);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* QR Code Section */
+        .qr-section {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        .qr-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            border-bottom: 1px solid #eee;
+        }
+        .qr-header h2 { margin: 0; font-size: 1.4rem; color: #2c3e50; }
+        .qr-content {
+            padding: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+        }
+        .qr-code-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        .qr-code-image {
+            width: 200px;
+            height: 200px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+        }
+        .qr-code-image img {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 8px;
+        }
+        .qr-info {
+            flex: 1;
+        }
+        .qr-info h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        .qr-info p {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        .qr-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn-qr {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .btn-qr:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+        }
+        .btn-qr.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .btn-qr.primary:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4092 100%);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-qr.secondary {
+            background: #6c757d;
+        }
+        .btn-qr.secondary:hover {
+            background: #5a6268;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 15px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .menu-toggle {
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 1001;
+                background: #2c3e50;
+                color: white;
+                border: none;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                font-size: 20px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <h2>🦷 Delas Alas Dental Clinic</h2>
+            
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h3 id="patientName">John Doe</h3>
+                <p id="patientEmail">john.doe@email.com</p>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a class="active" onclick="navigateToSection('dashboard')">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a onclick="navigateToSection('appointments')">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>Appointments</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a onclick="navigateToSection('treatments')">
+                        <i class="fas fa-tooth"></i>
+                        <span>Treatments</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a onclick="navigateToSection('messages')">
+                        <i class="fas fa-comments"></i>
+                        <span>Messages</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a onclick="navigateToSection('settings')">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="logout-btn" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="dashboard-content">
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Upcoming Appointments</h3>
+                            <p class="stat-value" id="upcomingAppointments">0</p>
+                            <span class="stat-change positive">Next: Tomorrow</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-tooth"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Completed Treatments</h3>
+                            <p class="stat-value" id="completedTreatments">0</p>
+                            <span class="stat-change positive">This month</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Unread Messages</h3>
+                            <p class="stat-value" id="unreadMessages">0</p>
+                            <span class="stat-change neutral">From dentist</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Next Checkup</h3>
+                            <p class="stat-value" id="nextCheckup">-</p>
+                            <span class="stat-change neutral">Due soon</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2>Quick Actions</h2>
+                    </div>
+                    <div class="quick-actions">
+                        <button class="action-btn" onclick="navigateToSection('appointments')">
+                            <i class="fas fa-calendar-plus"></i>
+                            <span>Book Appointment</span>
+                        </button>
+                        <button class="action-btn" onclick="navigateToSection('messages')">
+                            <i class="fas fa-comment"></i>
+                            <span>Send Message</span>
+                        </button>
+                        <button class="action-btn" onclick="navigateToSection('treatments')">
+                            <i class="fas fa-file-medical"></i>
+                            <span>View Treatments</span>
+                        </button>
+                        <button class="action-btn" onclick="navigateToSection('settings')">
+                            <i class="fas fa-user-edit"></i>
+                            <span>Update Profile</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Appointments -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2>Recent Appointments</h2>
+                        <button class="btn-primary" onclick="navigateToSection('appointments')">
+                            View All
+                        </button>
+                    </div>
+                    <div class="appointments-list" id="recentAppointments">
+                        <div class="empty-state">
+                            <i class="fas fa-calendar-times"></i>
+                            <h3>No appointments yet</h3>
+                            <p>Your appointments will appear here when you book them</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QR Code Section -->
+            <div class="qr-section">
+                <div class="qr-header">
+                    <h2><i class="fas fa-qrcode"></i> My Schedule QR Code</h2>
+                </div>
+                <div class="qr-content">
+                    <div class="qr-code-container">
+                        <div class="qr-code-image" id="patientQRCode">
+                            <i class="fas fa-qrcode" style="font-size: 48px; color: #ccc;"></i>
+                        </div>
+                        <div class="qr-actions">
+                            <button class="btn-qr" onclick="generatePatientQR()">
+                                <i class="fas fa-sync"></i> Generate QR
+                            </button>
+                            <button class="btn-qr primary" onclick="viewPatientQR()">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                            <button class="btn-qr secondary" onclick="downloadPatientQR()">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monthly Calendar -->
+            <div class="calendar-card">
+                <div class="calendar-header">
+                    <h2>Monthly Calendar</h2>
+                    <div class="cal-controls">
+                        <button class="btn-cal" onclick="prevMonth()"><i class="fas fa-chevron-left"></i></button>
+                        <span id="calMonthLabel">Month YYYY</span>
+                        <button class="btn-cal" onclick="nextMonth()"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+                <div class="calendar-grid" id="patientCalendar"></div>
+            </div>
+        </main>
+
+        <!-- Patient QR Code View Modal -->
+        <div id="patientQRModal" class="modal" style="display: none;">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px 25px; border-radius: 15px 15px 0 0;">
+                    <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-qrcode"></i> My Schedule QR Code
+                    </h3>
+                    <span class="close-button" onclick="closePatientQRModal()" style="color: white;">&times;</span>
+                </div>
+                <div class="modal-body" style="padding: 30px; text-align: center;">
+                    <div id="patientQRCodeView"></div>
+                    <p style="margin-top: 15px; font-size: 14px; color: #666;">
+                        <i class="fas fa-mobile-alt"></i> Scan with your phone camera or QR scanner app
+                    </p>
+                </div>
+                <div class="modal-footer" style="padding: 20px; border-top: 1px solid #eee; display: flex; gap: 10px; justify-content: center;">
+                    <button class="btn btn-primary" onclick="downloadPatientQR()">
+                        <i class="fas fa-file-excel"></i> Download
+                    </button>
+                    <button class="btn btn-secondary" onclick="printPatientQR()">
+                        <i class="fas fa-print"></i> Print QR
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Book Appointment Modal -->
+        <div id="bookAppointmentModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Book Your Appointment</h3>
+                    <span class="close-button" onclick="closeBookAppointmentModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="bookAppointmentForm">
+                        <div class="form-group">
+                            <label for="aptName">Full Name</label>
+                            <input type="text" id="aptName" autocomplete="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="aptEmail">Email</label>
+                            <input type="email" id="aptEmail" autocomplete="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="aptPhone">Phone Number</label>
+                            <input type="tel" id="aptPhone" autocomplete="tel" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="aptService">Service Needed</label>
+                            <select id="aptService" autocomplete="off" required>
+                                <option value="">Select Service</option>
+                                <option value="general">General Dentistry</option>
+                                <option value="cosmetic">Cosmetic Dentistry</option>
+                                <option value="restorative">Restorative Dentistry</option>
+                                <option value="pediatric">Pediatric Dentistry</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Calendar Integration -->
+                        <div class="form-group">
+                            <label for="aptDate">Preferred Date</label>
+                            <div class="calendar-container">
+                                <input type="date" id="aptDate" required min="">
+                                <div class="calendar-info">
+                                    <small>Date selected from calendar. Available dates will be highlighted.</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="availability-status" id="availabilityStatus" style="display: none;">
+                            <div class="status-message">
+                                <i class="fas fa-info-circle"></i>
+                                <span id="statusText">Checking availability...</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="aptMessage">Additional Notes</label>
+                            <textarea id="aptMessage" rows="3" placeholder="Any specific concerns or requests..."></textarea>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="btn-secondary" onclick="closeBookAppointmentModal()">Cancel</button>
+                            <button type="submit" class="btn-primary">Book Appointment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Toggle (visible on mobile only) -->
+        <button class="menu-toggle" onclick="toggleMobileMenu()" style="display: none;">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <script>
+        // Global variables
+        let appointments = [];
+        let treatments = [];
+        let messages = [];
+        let currentUser = null;
+        let calMonth = new Date().getMonth();
+        let calYear = new Date().getFullYear();
+
+        // Load unread messages count from Supabase
+        async function loadUnreadMessagesCount() {
+            try {
+                console.log('🔄 Loading unread messages count...');
+                
+                const userData = JSON.parse(localStorage.getItem('currentUser'));
+                if (!userData || !userData.id) {
+                    console.log('⚠️ No user data found for unread messages');
+                    return 0;
+                }
+                
+                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                
+                // Get unread messages where patient is receiver and message is not read
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/messages?receiver_id=eq.${userData.id}&is_read=eq.false&select=id,sender_id,receiver_id,content,is_read,created_at`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+                
+                console.log('📡 Unread messages response status:', response.status);
+                
+                if (response.ok) {
+                    const unreadMessages = await response.json();
+                    console.log('✅ Unread messages loaded:', unreadMessages.length);
+                    
+                    // Update the UI
+                    document.getElementById('unreadMessages').textContent = unreadMessages.length;
+                    
+                    // Update the messages array for stats
+                    messages = unreadMessages;
+                    
+                    return unreadMessages.length;
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Failed to load unread messages:', response.status, errorText);
+                    return 0;
+                }
+            } catch (error) {
+                console.error('❌ Error loading unread messages:', error);
+                return 0;
+            }
+        }
+
+        // Load messages from Supabase
+        async function loadMessagesFromSupabase() {
+            try {
+                console.log('🔄 Loading all messages from Supabase...');
+                
+                const userData = JSON.parse(localStorage.getItem('currentUser'));
+                if (!userData || !userData.id) {
+                    console.log('⚠️ No user data found for messages');
+                    return [];
+                }
+                
+                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                
+                // Get all messages where patient is either sender or receiver
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/messages?or=(sender_id.eq.${userData.id},receiver_id.eq.${userData.id})&select=id,sender_id,receiver_id,content,is_read,created_at&order=created_at.desc`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+                
+                console.log('📡 Messages response status:', response.status);
+                
+                if (response.ok) {
+                    messages = await response.json();
+                    console.log('✅ Messages loaded:', messages.length);
+                    return messages;
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Failed to load messages:', response.status, errorText);
+                    return [];
+                }
+            } catch (error) {
+                console.error('❌ Error loading messages:', error);
+                return [];
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check if loaded in iframe
+            if (window !== window.top) {
+                document.body.classList.add('iframe-mode');
+            }
+            
+            // Load user data from parent or localStorage
+            loadUserData();
+            await loadDashboardData();
+            // Calendar will render after appointments are loaded
+        });
+
+        // Load user data
+        function loadUserData() {
+            const storedUser = localStorage.getItem('currentUser');
+            if (storedUser) {
+                try {
+                    currentUser = JSON.parse(storedUser);
+                    updateUserInfo();
+                } catch (error) {
+                    console.error('Error parsing user data:', error);
+                    currentUser = {
+                        name: 'Patient',
+                        email: 'patient@email.com',
+                        role: 'patient'
+                    };
+                }
+            } else {
+                currentUser = {
+                    name: 'Patient',
+                    email: 'patient@email.com',
+                    role: 'patient'
+                };
+            }
+        }
+
+        // Update user info in sidebar
+        function updateUserInfo() {
+            if (currentUser) {
+                const nameElement = document.getElementById('patientName');
+                const emailElement = document.getElementById('patientEmail');
+                
+                if (nameElement) nameElement.textContent = currentUser.name || 'Patient';
+                if (emailElement) emailElement.textContent = currentUser.email || 'patient@email.com';
+            }
+        }
+
+        // Load dashboard data
+        async function loadDashboardData() {
+            // Initialize empty arrays - data will be populated from real-time sources
+            appointments = [];
+            treatments = [];
+            messages = [];
+
+            // Load appointments from Supabase and wait for completion
+            await loadAppointmentsFromSupabase();
+            
+            // Load unread messages count
+            await loadUnreadMessagesCount();
+            
+            // Set up real-time listeners (replace with your real-time data source)
+            setupRealtimeListeners();
+            
+            // Update UI after data is loaded
+            updateStats();
+            displayRecentAppointments();
+            
+            // Render calendar after appointments are loaded
+            renderCalendar();
+            
+            // Auto-generate QR code if patient has confirmed appointments (immediate)
+            const generateQRForPatient = async () => {
+                try {
+                    const confirmedAppointments = appointments.filter(apt => 
+                        apt.status === 'confirmed'
+                    );
+                    if (confirmedAppointments.length > 0) {
+                        console.log('🔍 Auto-generating QR code with', confirmedAppointments.length, 'confirmed appointments');
+                        await generatePatientQR();
+                    } else {
+                        console.log('⏳ No confirmed appointments found for QR code');
+                        // Show message instead of placeholder
+                        const qrContainer = document.getElementById('patientQRCode');
+                        if (qrContainer) {
+                            qrContainer.innerHTML = `
+                                <div style="text-align: center; color: #999; padding: 20px;">
+                                    <i class="fas fa-calendar-times" style="font-size: 48px; margin-bottom: 10px;"></i>
+                                    <p style="font-size: 14px;">No confirmed appointments yet</p>
+                                </div>
+                            `;
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ Error auto-generating QR code:', error);
+                }
+            };
+            
+            // Generate immediately and also after short delays to ensure data is loaded
+            generateQRForPatient();
+            setTimeout(generateQRForPatient, 500);
+            setTimeout(generateQRForPatient, 1000);
+            setTimeout(generateQRForPatient, 2000);
+        }
+
+        // Load appointments from Supabase
+        async function loadAppointmentsFromSupabase() {
+            try {
+                const userData = localStorage.getItem('currentUser');
+                if (!userData) {
+                    console.log('⚠️ No user data found in localStorage');
+                    return;
+                }
+                
+                const user = JSON.parse(userData);
+                console.log('👤 Loading appointments for user:', user.id, user.name);
+                
+                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                
+                const url = `${SUPABASE_URL}/rest/v1/appointments?patient_id=eq.${user.id}&select=*`;
+                console.log('🔗 Fetching from URL:', url);
+                
+                // Load patient's own appointments
+                const response = await fetch(url, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+                
+                console.log('📡 Response status:', response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    appointments = data || [];
+                    console.log('✅ Loaded patient appointments:', appointments.length);
+                    console.log('📅 Appointments data:', appointments);
+                } else {
+                    const errorText = await response.text();
+                    console.warn('❌ Failed to load appointments from Supabase:', response.status, errorText);
+                    loadFromLocalStorage(); // Fallback
+                }
+            } catch (error) {
+                console.error('❌ Error loading appointments from Supabase:', error);
+                loadFromLocalStorage(); // Fallback
+            }
+        }
+
+        // Load data from localStorage (fallback)
+        function loadFromLocalStorage() {
+            try {
+                const storedAppointments = localStorage.getItem('patientAppointments');
+                const storedTreatments = localStorage.getItem('patientTreatments');
+                const storedMessages = localStorage.getItem('patientMessages');
+                
+                if (storedAppointments) {
+                    appointments = JSON.parse(storedAppointments);
+                }
+                if (storedTreatments) {
+                    treatments = JSON.parse(storedTreatments);
+                }
+                if (storedMessages) {
+                    messages = JSON.parse(storedMessages);
+                }
+            } catch (error) {
+                console.log('No existing data found or error loading from storage');
+            }
+        }
+
+        // Set up real-time listeners (replace with your Firebase/WebSocket implementation)
+        function setupRealtimeListeners() {
+            // Example: Listen for patient data updates
+            // firebase.firestore().collection('patients').doc(currentPatientId).collection('appointments').onSnapshot((snapshot) => {
+            //     appointments = [];
+            //     snapshot.forEach(doc => {
+            //         appointments.push({ id: doc.id, ...doc.data() });
+            //     });
+            //     updateStats();
+            //     displayRecentAppointments();
+            // });
+            
+            // Real-time listeners will be implemented here when connecting to Firebase/WebSocket
+            console.log('Dashboard section initialized - ready for real-time data');
+        }
+
+        // Update statistics
+        function updateStats() {
+            const upcomingAppointments = appointments.filter(apt => 
+                new Date(apt.appointment_date) >= new Date() && apt.status !== 'cancelled'
+            ).length;
+            
+            const completedTreatments = treatments.filter(treatment => 
+                treatment.status === 'completed'
+            ).length;
+            
+            const unreadMessages = messages.filter(msg => 
+                !msg.read && msg.sender === 'dentist'
+            ).length;
+            
+            const nextAppointment = appointments
+                .filter(apt => new Date(apt.appointment_date) >= new Date())
+                .sort((a, b) => new Date(a.appointment_date) - new Date(b.appointment_date))[0];
+
+            document.getElementById('upcomingAppointments').textContent = upcomingAppointments;
+            document.getElementById('completedTreatments').textContent = completedTreatments;
+            document.getElementById('unreadMessages').textContent = unreadMessages;
+            document.getElementById('nextCheckup').textContent = nextAppointment ? 
+                new Date(nextAppointment.appointment_date).toLocaleDateString() : '-';
+        }
+
+        // Display recent appointments
+        function displayRecentAppointments() {
+            const container = document.getElementById('recentAppointments');
+            
+            console.log('📅 Displaying recent appointments. Total appointments:', appointments.length);
+            console.log('📅 Appointments data:', appointments);
+            
+            if (appointments.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-times"></i>
+                        <h3>No appointments yet</h3>
+                        <p>Your appointments will appear here when you book them</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Show recent appointments (last 3) - use correct field names from Supabase
+            const recentAppointments = appointments
+                .sort((a, b) => new Date(b.appointment_date) - new Date(a.appointment_date))
+                .slice(0, 3);
+
+            container.innerHTML = recentAppointments.map(appointment => {
+                const appointmentDate = new Date(appointment.appointment_date);
+                const appointmentTime = appointment.appointment_time || '10:00:00';
+                const [hours, minutes] = appointmentTime.split(':');
+                const timeString = `${hours}:${minutes}`;
+                
+                return `
+                    <div class="appointment-item">
+                        <div class="appointment-info">
+                            <h4>${appointment.service_type || 'Dental Service'}</h4>
+                            <p>${appointmentDate.toLocaleDateString()} at ${timeString}</p>
+                        </div>
+                        <div class="appointment-status status-${appointment.status}">${appointment.status}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Patient Monthly Calendar with Real-time Availability
+        async function renderCalendar() {
+            const grid = document.getElementById('patientCalendar');
+            const label = document.getElementById('calMonthLabel');
+            if (!grid || !label) return;
+
+            const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+            label.textContent = `${months[calMonth]} ${calYear}`;
+
+            const firstDay = new Date(calYear, calMonth, 1);
+            const lastDay = new Date(calYear, calMonth + 1, 0);
+            const startDow = firstDay.getDay();
+            const daysInMonth = lastDay.getDate();
+
+            // Load all appointments for this month to check availability
+            const allAppointments = await loadAllAppointmentsForMonth(calYear, calMonth);
+
+            let html = '';
+            const headers = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+            headers.forEach(h => { html += `<div class="calendar-day-header">${h}</div>`; });
+
+            for (let i=0;i<startDow;i++) html += '<div class="calendar-day"></div>';
+
+            for (let d=1; d<=daysInMonth; d++) {
+                const date = new Date(calYear, calMonth, d);
+                const isToday = date.toDateString() === new Date().toDateString();
+                const dateStr = date.toDateString();
+                
+                // Patient's own appointments
+                const myAppointments = appointments.filter(a => new Date(a.appointment_date).toDateString() === dateStr);
+                const myPending = myAppointments.filter(a => a.status === 'pending').length;
+                const myConfirmed = myAppointments.filter(a => a.status === 'confirmed').length;
+                
+                // Debug logging for date 21
+                if (d === 21) {
+                    console.log(`📅 Date 21 appointments:`, {
+                        dateStr,
+                        myAppointments,
+                        myPending,
+                        myConfirmed,
+                        totalAppointments: appointments.length
+                    });
+                }
+                
+                // All appointments on this date (for availability check) - only future appointments
+                const dayAppointments = allAppointments.filter(a => {
+                    const aptDate = new Date(a.appointment_date);
+                    return aptDate.toDateString() === dateStr && aptDate >= new Date();
+                });
+                const totalBookings = dayAppointments.length;
+                const isFull = totalBookings >= 5; // 5 booking limit per day
+                const isAvailable = totalBookings < 5 && date >= new Date(); // Available if less than 5 bookings and not past
+
+                // Determine calendar day class
+                let dayClass = '';
+                if (isToday) dayClass += 'today ';
+                if (isFull) dayClass += 'full ';
+
+                // Show indicators - prioritize patient's own appointments
+                let indicator = '';
+                
+                // Show patient's own appointments first (can show both pending and confirmed)
+                if (myPending > 0) {
+                    indicator += `<span class="indicator indicator-pending" title="Your pending appointments">${myPending}</span>`;
+                }
+                if (myConfirmed > 0) {
+                    indicator += `<span class="indicator indicator-my" title="Your confirmed appointments">${myConfirmed}</span>`;
+                }
+                
+                // If patient has no appointments on this date, show availability info
+                if (myPending === 0 && myConfirmed === 0) {
+                    if (isFull) {
+                        indicator = `<span class="indicator indicator-full" title="Day is full (5 bookings)">FULL</span>`;
+                    } else if (totalBookings > 0) {
+                        // Show count of booked users
+                        indicator = `<span class="indicator indicator-booked" title="${totalBookings} bookings today">${totalBookings}</span>`;
+                    }
+                }
+
+                // Make calendar day clickable only if available and not full
+                // Compare dates without time (only date components)
+                const today = new Date();
+                const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                
+                const isPastDate = dateOnly < todayDateOnly;
+                const isClickable = !isFull && !isPastDate;
+                const dateString = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const clickHandler = isClickable ? `onclick="openBookAppointmentModal('${dateString}')"` : '';
+                
+                html += `
+                    <div class="calendar-day ${dayClass.trim()}" ${clickHandler} style="cursor: ${isClickable ? 'pointer' : 'default'}">
+                        <div class="day-number">${d}</div>
+                        <div class="day-indicators">
+                            ${indicator}
+                        </div>
+                    </div>`;
+            }
+
+            grid.innerHTML = html;
+        }
+
+        // Load all appointments for a specific month to check availability
+        async function loadAllAppointmentsForMonth(year, month) {
+            try {
+                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                
+                const startDate = new Date(year, month, 1).toISOString().split('T')[0];
+                const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0];
+                
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/appointments?appointment_date=gte.${startDate}&appointment_date=lte.${endDate}&select=*`, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    return data || [];
+                }
+                return [];
+            } catch (error) {
+                console.error('Error loading appointments for month:', error);
+                return [];
+            }
+        }
+
+        // Open booking modal for available dates
+        async function openBookAppointmentModal(selectedDate) {
+            const modal = document.getElementById('bookAppointmentModal');
+            const aptDateInput = document.getElementById('aptDate');
+            const userData = JSON.parse(localStorage.getItem('currentUser'));
+            
+            console.log('📅 Opening booking modal for date:', selectedDate);
+            
+            // Set the selected date - ensure it's in YYYY-MM-DD format
+            aptDateInput.value = selectedDate;
+            
+            // Pre-fill user data if available
+            if (userData) {
+                document.getElementById('aptName').value = userData.name || '';
+                document.getElementById('aptEmail').value = userData.email || '';
+                document.getElementById('aptPhone').value = userData.phone || '';
+            }
+            
+            // Show modal
+            modal.classList.add('show');
+            
+            // Verify the date was set correctly
+            console.log('✅ Date input value set to:', aptDateInput.value);
+        }
+
+        // Close booking modal
+        // View Patient QR Code in Modal
+        function viewPatientQR() {
+            console.log('👁️ Viewing patient QR code in modal...');
+            
+            if (!window.patientQRUrl) {
+                alert('Please generate QR code first');
+                return;
+            }
+
+            const modal = document.getElementById('patientQRModal');
+            const qrViewContainer = document.getElementById('patientQRCodeView');
+            
+            if (!modal || !qrViewContainer) {
+                console.error('❌ Modal or container not found');
+                return;
+            }
+
+            // Create large QR code image
+            qrViewContainer.innerHTML = `
+                <div style="background: white; padding: 20px; border: 4px solid #28a745; border-radius: 15px; display: inline-block;">
+                    <img src="${window.patientQRUrl}" alt="Patient Schedule QR Code" style="width: 300px; height: 300px; border-radius: 10px;">
+                </div>
+            `;
+
+            // Show modal
+            modal.style.display = 'block';
+            
+            console.log('✅ Patient QR code modal opened');
+        }
+
+        function closePatientQRModal() {
+            const modal = document.getElementById('patientQRModal');
+            if (modal) {
+                modal.style.display = 'none';
+                console.log('✅ Patient QR code modal closed');
+            }
+        }
+
+        function printPatientQR() {
+            if (!window.patientQRUrl) {
+                alert('No QR code to print');
+                return;
+            }
+
+            console.log('🖨️ Printing patient QR code...');
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>My Schedule QR Code</title>
+                    <style>
+                        body { margin: 0; padding: 40px; text-align: center; font-family: Arial, sans-serif; }
+                        .qr-container { display: inline-block; padding: 40px; border: 5px solid #28a745; border-radius: 20px; }
+                        img { width: 400px; height: 400px; }
+                        h1 { color: #333; }
+                        p { color: #666; margin-top: 20px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>My Schedule QR Code</h1>
+                    <div class="qr-container">
+                        <img src="${window.patientQRUrl}" alt="QR Code">
+                    </div>
+                    <p>Scan with your phone to view your appointment schedule</p>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.focus();
+            
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
+        }
+
+        function closeBookAppointmentModal() {
+            const modal = document.getElementById('bookAppointmentModal');
+            modal.classList.remove('show');
+        }
+
+        function prevMonth() {
+            calMonth--;
+            if (calMonth < 0) { calMonth = 11; calYear--; }
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            calMonth++;
+            if (calMonth > 11) { calMonth = 0; calYear++; }
+            renderCalendar();
+        }
+
+        // Patient QR Code Functions
+        async function generatePatientQR() {
+            console.log('🔍 Generating patient QR code...');
+            
+            if (!currentUser) {
+                console.log('❌ No current user');
+                return;
+            }
+
+            // Get patient's confirmed appointments (including past appointments for display)
+            const confirmedAppointments = appointments.filter(apt => 
+                apt.status === 'confirmed'
+            );
+
+            console.log('📋 Confirmed appointments found:', confirmedAppointments.length);
+            console.log('📅 First appointment:', confirmedAppointments[0]);
+
+            if (confirmedAppointments.length === 0) {
+                console.log('❌ No confirmed appointments');
+                const qrContainer = document.getElementById('patientQRCode');
+                if (qrContainer) {
+                    qrContainer.innerHTML = `
+                        <div style="text-align: center; color: #999; padding: 20px;">
+                            <i class="fas fa-calendar-times" style="font-size: 48px; margin-bottom: 10px;"></i>
+                            <p style="font-size: 14px;">No confirmed appointments yet</p>
+                        </div>
+                    `;
+                }
+                return;
+            }
+
+            // Create base URL - fetch from Supabase clinic_settings
+            let baseUrl = '/appointment-schedule.html';
+            
+            try {
+                console.log('🔍 Fetching deployment URL from Supabase...');
+                // Fetch deployment URL from Supabase
+                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                
+                const settingsResponse = await fetch(`${SUPABASE_URL}/rest/v1/clinic_settings?id=eq.clinic&select=deployment_url`, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+                
+                if (settingsResponse.ok) {
+                    const settingsData = await settingsResponse.json();
+                    console.log('📊 Settings data from Supabase:', settingsData);
+                    if (Array.isArray(settingsData) && settingsData.length > 0 && settingsData[0].deployment_url) {
+                        baseUrl = settingsData[0].deployment_url;
+                        console.log('✅ Using deployment URL from Supabase:', baseUrl);
+                    } else {
+                        console.log('⚠️ No deployment URL found in Supabase, using default');
+                    }
+                } else {
+                    console.log('⚠️ Failed to fetch from Supabase, using default');
+                }
+            } catch (error) {
+                console.warn('⚠️ Could not fetch deployment URL from Supabase:', error);
+            }
+            
+            console.log('📍 Final base URL for QR code:', baseUrl);
+
+            // Get the first confirmed appointment's ID
+            const firstAppointmentId = confirmedAppointments[0].id;
+            console.log('🆔 First appointment ID:', firstAppointmentId);
+            
+            // Generate QR code URL matching dentist format: appointment-schedule.html?id={id}
+            const qrData = `${baseUrl}?id=${firstAppointmentId}`;
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData)}&ecc=H&margin=15`;
+            
+            console.log('🔗 QR code URL:', qrData);
+            console.log('🖼️ QR code image URL:', qrUrl);
+            
+            const qrContainer = document.getElementById('patientQRCode');
+            if (!qrContainer) {
+                console.error('❌ QR container not found!');
+                return;
+            }
+            
+            console.log('📦 QR container found, updating...');
+            
+            // Clear the container first
+            qrContainer.innerHTML = '<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #667eea;"></i></div>';
+            
+            // Create the image element
+            const img = document.createElement('img');
+            img.src = qrUrl;
+            img.alt = 'Patient Schedule QR Code';
+            img.style.cssText = 'width: 100%; height: 100%; object-fit: contain; border-radius: 8px;';
+            
+            img.onload = () => {
+                console.log('🖼️ QR code image loaded successfully');
+                qrContainer.innerHTML = '';
+                qrContainer.appendChild(img);
+            };
+            
+            img.onerror = () => {
+                console.error('❌ Failed to load QR code image');
+                qrContainer.innerHTML = `<div style="text-align: center; color: #999; padding: 20px;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 10px; color: #f39c12;"></i>
+                    <p style="font-size: 14px;">Unable to load QR code. Please try clicking Generate QR button.</p>
+                </div>`;
+            };
+            
+            // Append the image to start loading
+            qrContainer.appendChild(img);
+            
+            // Store QR data for download
+            window.patientQRData = qrData;
+            window.patientQRUrl = qrUrl;
+            
+            console.log('✅ Patient QR code element created');
+        }
+
+        function downloadPatientQR() {
+            if (!window.patientQRData) {
+                alert('Please generate QR code first');
+                return;
+            }
+
+            const patientName = currentUser?.name || 'Patient';
+            const fileName = `Patient_Schedule_${patientName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.txt`;
+            
+            const blob = new Blob([window.patientQRData], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            console.log('✅ Patient QR data downloaded');
+        }
+
+        // Enhanced navigation function with loading feedback
+        function navigateToSection(section) {
+            console.log('🔄 Navigating to section:', section);
+            
+            // Show loading feedback
+            showToast(`Loading ${section}...`, 'info');
+            
+            // If loaded in iframe, communicate with parent
+            if (window !== window.top) {
+                window.parent.postMessage({ action: 'loadSection', section: section }, '*');
+            } else {
+                // If standalone, navigate directly
+                window.location.href = `../${section}/${section}-standalone.html`;
+            }
+        }
+
+        // Enhanced logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                showToast('Logging out...', 'info');
+                
+                // Clear user data
+                localStorage.removeItem('currentUser');
+                
+                // If in iframe, communicate with parent
+                if (window !== window.top) {
+                    window.parent.postMessage({ action: 'logout' }, '*');
+                } else {
+                    // If standalone, redirect to main page
+                    setTimeout(() => {
+                        window.location.href = '../../../index.html';
+                    }, 1000);
+                }
+            }
+        }
+
+        // downloadPatientQR is already implemented above
+
+        // Enhanced calendar navigation
+        function prevMonth() {
+            console.log('🔄 Going to previous month...');
+            calMonth--;
+            if (calMonth < 0) {
+                calMonth = 11;
+                calYear--;
+            }
+            renderCalendar();
+            showToast(`Viewing ${getMonthName(calMonth)} ${calYear}`, 'info');
+        }
+
+        function nextMonth() {
+            console.log('🔄 Going to next month...');
+            calMonth++;
+            if (calMonth > 11) {
+                calMonth = 0;
+                calYear++;
+            }
+            renderCalendar();
+            showToast(`Viewing ${getMonthName(calMonth)} ${calYear}`, 'info');
+        }
+
+        // Helper function for month names
+        function getMonthName(monthIndex) {
+            const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                           'July', 'August', 'September', 'October', 'November', 'December'];
+            return months[monthIndex];
+        }
+
+        // Enhanced modal functions
+        function openBookAppointmentModal(selectedDate = '') {
+            console.log('🔄 Opening book appointment modal...');
+            
+            // Pre-fill date if provided
+            if (selectedDate) {
+                document.getElementById('aptDate').value = selectedDate;
+            }
+            
+            // Pre-fill user data if available
+            const userData = JSON.parse(localStorage.getItem('currentUser'));
+            if (userData) {
+                document.getElementById('aptName').value = userData.name || '';
+                document.getElementById('aptEmail').value = userData.email || '';
+                document.getElementById('aptPhone').value = userData.phone || '';
+            }
+            
+            document.getElementById('bookAppointmentModal').style.display = 'flex';
+            showToast('Appointment booking form opened', 'info');
+        }
+
+        function closeBookAppointmentModal() {
+            console.log('🔄 Closing book appointment modal...');
+            document.getElementById('bookAppointmentModal').style.display = 'none';
+            
+            // Clear form
+            document.getElementById('bookAppointmentForm').reset();
+        }
+
+        // Toast notification system
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            // Add toast styles if not already added
+            if (!document.getElementById('toast-styles')) {
+                const style = document.createElement('style');
+                style.id = 'toast-styles';
+                style.textContent = `
+                    .toast {
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        padding: 15px 20px;
+                        border-radius: 8px;
+                        color: white;
+                        font-weight: bold;
+                        z-index: 10000;
+                        animation: slideIn 0.3s ease-out;
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                    }
+                    .toast-success { background: #4caf50; }
+                    .toast-error { background: #f44336; }
+                    .toast-info { background: #2196f3; }
+                    @keyframes slideIn {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Real-time update functions (for integration with your backend)
+        function updateDashboardData() {
+            updateStats();
+            displayRecentAppointments();
+        }
+
+        function addNewAppointment(appointmentData) {
+            appointments.push(appointmentData);
+            localStorage.setItem('patientAppointments', JSON.stringify(appointments));
+            updateDashboardData();
+        }
+
+        function addNewTreatment(treatmentData) {
+            treatments.push(treatmentData);
+            localStorage.setItem('patientTreatments', JSON.stringify(treatments));
+            updateDashboardData();
+        }
+
+        function addNewMessage(messageData) {
+            messages.push(messageData);
+            localStorage.setItem('patientMessages', JSON.stringify(messages));
+            updateDashboardData();
+        }
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('mobile-open');
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('currentUser');
+                
+                // If in iframe, communicate with parent
+                if (window !== window.top) {
+                    window.parent.postMessage({ action: 'logout' }, '*');
+                } else {
+                    // If standalone, redirect to main page
+                    window.location.href = '../../../index.html';
+                }
+            }
+        }
+
+        // Show mobile menu toggle on small screens
+        function checkScreenSize() {
+            const menuToggle = document.querySelector('.menu-toggle');
+            if (window.innerWidth <= 768) {
+                menuToggle.style.display = 'block';
+            } else {
+                menuToggle.style.display = 'none';
+                document.getElementById('sidebar').classList.remove('mobile-open');
+            }
+        }
+
+        // Handle booking form submission
+        document.getElementById('bookAppointmentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const userData = JSON.parse(localStorage.getItem('currentUser'));
+            
+            if (!userData) {
+                alert('Please login first');
+                return;
+            }
+            
+            const appointmentData = {
+                patient_id: userData.id,
+                patient_name: document.getElementById('aptName').value,
+                patient_email: document.getElementById('aptEmail').value,
+                patient_phone: document.getElementById('aptPhone').value,
+                appointment_date: document.getElementById('aptDate').value,
+                appointment_time: '10:00:00', // Default time
+                service_type: document.getElementById('aptService').value,
+                dentist_id: null, // Will be assigned by admin
+                status: 'pending',
+                notes: document.getElementById('aptMessage').value || '',
+                created_at: new Date().toISOString()
+            };
+            
+            try {
+                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/appointments`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(appointmentData)
+                });
+                
+                if (response.ok) {
+                    alert('Appointment booked successfully! You will receive a confirmation soon.');
+                    closeBookAppointmentModal();
+                    // Refresh calendar and appointments
+                    loadAppointmentsFromSupabase();
+                    renderCalendar();
+                } else {
+                    const error = await response.json();
+                    alert('Error booking appointment: ' + (error.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error booking appointment:', error);
+                alert('Error booking appointment. Please try again.');
+            }
+        });
+
+        // Refresh unread messages count (can be called from other pages)
+        async function refreshUnreadMessagesCount() {
+            console.log('🔄 Refreshing unread messages count...');
+            await loadUnreadMessagesCount();
+            updateStats();
+        }
+
+        // Make refresh function globally available
+        window.refreshUnreadMessagesCount = refreshUnreadMessagesCount;
+    </script>
+</body>
+</html>

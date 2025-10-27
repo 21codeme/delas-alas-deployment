@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dentist Dashboard - Delas Alas Dental Clinic</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦷</text></svg>">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../images/tooth.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../images/tooth.png">
+    <link rel="shortcut icon" href="../../images/tooth.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../images/tooth.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+
+        .clinic-title h2 {
+            color: #ffd700;
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .user-profile {
+            padding: 25px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 32px;
+        }
+
+        .user-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 18px;
+        }
+
+        .user-info p {
+            margin: 0;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 25px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 4px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            border-left-color: #ffd700;
+        }
+
+        .nav-item.active {
+            background: rgba(255,255,255,0.2);
+            border-left-color: #ffd700;
+        }
+
+        .nav-item i {
+            font-size: 18px;
+            width: 20px;
+        }
+
+        .notification-badge {
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: auto;
+            min-width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: none;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,0,0,0.2);
+            border-left-color: #ff6b6b;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            background: #f5f5f5;
+        }
+
+        .content-frame {
+            width: 100%;
+            height: 100vh;
+            border: none;
+        }
+
+        /* Loading Animation */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 280px;
+            right: 0;
+            bottom: 0;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e9ecef;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .loading-overlay {
+                left: 0;
+            }
+
+            .menu-toggle {
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 1001;
+                background: #667eea;
+                color: white;
+                border: none;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                font-size: 20px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="clinic-title">
+                    <h2>🦷 Delas Alas Dental Clinic</h2>
+                </div>
+            </div>
+            
+            <div class="user-profile">
+                <div class="avatar">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <div class="user-info">
+                    <h3 id="dentistName">Loading...</h3>
+                    <p id="dentistEmail">Loading...</p>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a class="nav-item active" onclick="loadSection('dashboard', this)">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a class="nav-item" onclick="loadSection('schedule', this)">
+                    <i class="fas fa-calendar"></i>
+                    <span>Schedule</span>
+                </a>
+                <a class="nav-item" onclick="loadSection('appointments', this)">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Appointments</span>
+                </a>
+                <a class="nav-item" onclick="loadSection('patients', this)">
+                    <i class="fas fa-users"></i>
+                    <span>Patients</span>
+                </a>
+                <a class="nav-item" onclick="loadSection('services', this)">
+                    <i class="fas fa-tools"></i>
+                    <span>Services</span>
+                </a>
+                <a class="nav-item" onclick="loadSection('dentist-list', this)">
+                    <i class="fas fa-user-md"></i>
+                    <span>Dentist List</span>
+                </a>
+                <a class="nav-item" onclick="loadSection('messages', this)">
+                    <i class="fas fa-comments"></i>
+                    <span>Messages</span>
+                </a>
+                <a class="nav-item" onclick="loadSection('notifications', this)">
+                    <i class="fas fa-bell"></i>
+                    <span>Notifications</span>
+                    <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                </a>
+                <a class="nav-item" onclick="loadSection('settings', this)">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <button class="nav-item logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="spinner"></div>
+            </div>
+            <iframe id="contentFrame" class="content-frame" src="sections/dashboard/dashboard-standalone.html"></iframe>
+        </main>
+
+        <!-- Mobile Menu Toggle (visible on mobile only) -->
+        <button class="menu-toggle" onclick="toggleMobileMenu()" style="display: none;">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <script>
+        // Global variables
+        let currentUser = null;
+        let currentProfile = null;
+        let notifications = [];
+        let notificationCheckInterval = null;
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // Load user data
+            loadUserData();
+            // Also load profile from Supabase for authoritative name/email
+            loadUserProfileFromSupabase();
+
+            // Start Supabase-backed presence heartbeat
+            startPresenceHeartbeat();
+            
+            // Load saved profile picture
+            loadSidebarProfilePicture();
+            
+            // Start notification system
+            loadNotifications();
+            startNotificationChecker();
+            
+            // Clear any duplicate notifications
+            clearDuplicateNotifications();
+            
+            // Fix notification types
+            fixNotificationTypes();
+            
+            // Create daily schedule notifications
+            createDailyScheduleNotifications();
+            
+            // Create confirmed appointment notifications for schedule tab
+            createConfirmedAppointmentNotifications();
+            
+            // Check for QR code parameters and redirect to schedule section
+            checkQRCodeParameters();
+        });
+
+        // Helper to turn email into a readable name
+        function formatNameFromEmail(email) {
+            if (!email) return '';
+            const base = String(email).split('@')[0].replace(/\./g, ' ').trim();
+            return base
+                .split(' ')
+                .filter(Boolean)
+                .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+                .join(' ');
+        }
+
+        // Load user data from localStorage (set by main app)
+        async function loadUserData() {
+            try {
+                // Get user data from localStorage (set by main app during login)
+                const userData = localStorage.getItem('currentUser');
+                if (userData) {
+                    currentUser = JSON.parse(userData);
+                    updateUserInfo();
+                } else {
+                    // Fallback to default if no data found
+                    updateUserInfo();
+                }
+            } catch (error) {
+                updateUserInfo();
+            }
+        }
+
+        // Load profile from Supabase `users` by currentUser.id
+        async function loadUserProfileFromSupabase() {
+            try {
+                const userData = localStorage.getItem('currentUser');
+                if (!userData) return;
+                const user = JSON.parse(userData);
+                if (!user || !user.id) return;
+                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                const resp = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    currentProfile = data[0];
+                    // Merge into currentUser for consistency
+                    currentUser = {
+                        ...user,
+                        name: currentProfile.name || user.name,
+                        email: currentProfile.email || user.email
+                    };
+                    // Update UI
+                    updateUserInfo();
+                }
+            } catch (e) {
+                // Error handling
+            }
+        }
+
+        // Update user info in sidebar
+        function updateUserInfo() {
+            const nameElement = document.getElementById('dentistName');
+            const emailElement = document.getElementById('dentistEmail');
+            
+            if (currentUser) {
+                const computedName = (currentProfile && currentProfile.name) || currentUser.name || (currentUser.user_metadata && currentUser.user_metadata.name) || formatNameFromEmail(currentUser.email) || 'Dr. User';
+                if (nameElement) nameElement.textContent = computedName;
+                const computedEmail = (currentProfile && currentProfile.email) || currentUser.email || '';
+                if (emailElement) emailElement.textContent = computedEmail;
+            } else {
+                if (nameElement) nameElement.textContent = 'Dr. User';
+                if (emailElement) emailElement.textContent = 'user@clinic.com';
+            }
+        }
+
+        // Load section
+        function loadSection(section, clickedElement = null) {
+            const frame = document.getElementById('contentFrame');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            if (!frame) {
+                return;
+            }
+            
+            // Show loading
+            loadingOverlay.classList.remove('hidden');
+            
+            // Update active nav item
+            navItems.forEach(item => item.classList.remove('active'));
+            
+            // Find and activate the clicked nav item
+            if (clickedElement) {
+                const navItem = clickedElement.closest('.nav-item');
+                if (navItem) {
+                    navItem.classList.add('active');
+                }
+            } else {
+                // Fallback: find nav item by section name
+                const targetNavItem = document.querySelector(`[onclick*="${section}"]`);
+                if (targetNavItem) {
+                    targetNavItem.classList.add('active');
+                }
+            }
+            
+            // Load section - use standalone version for all sections
+            const sectionUrl = `sections/${section}/${section}-standalone.html`;
+            
+            // Set a timeout to hide loading if frame doesn't load
+            const loadTimeout = setTimeout(() => {
+                loadingOverlay.classList.add('hidden');
+            }, 5000);
+            
+            frame.src = sectionUrl;
+            
+            // Hide loading after frame loads
+            frame.onload = () => {
+                clearTimeout(loadTimeout);
+                setTimeout(() => {
+                    loadingOverlay.classList.add('hidden');
+                }, 300);
+            };
+            
+            // Handle frame load errors
+            frame.onerror = () => {
+                clearTimeout(loadTimeout);
+                loadingOverlay.classList.add('hidden');
+                alert(`Error loading ${section} section. Please check if the file exists.`);
+            };
+
+            // Close mobile menu if open
+            if (window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('mobile-open');
+            }
+        }
+
+        // Listen for messages from iframe
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.action === 'loadSection') {
+                loadSection(event.data.section);
+            } else if (event.data && event.data.action === 'updateProfilePicture') {
+                updateSidebarProfilePicture(event.data.imageData);
+            } else if (event.data && event.data.action === 'updateNotificationBadge') {
+                updateNotificationBadge();
+            } else if (event.data && event.data.action === 'createConfirmedAppointmentNotification') {
+                createConfirmedAppointmentNotification(event.data.appointment);
+            } else if (event.data && event.data.action === 'createMessageNotification') {
+                createMessageNotification(event.data.message);
+            } else if (event.data && event.data.action === 'updateProfile') {
+                // Reload profile data from Supabase
+                loadUserData();
+                loadUserProfileFromSupabase();
+            }
+        });
+
+        // Toggle mobile menu
+        function toggleMobileMenu() {
+            document.getElementById('sidebar').classList.toggle('mobile-open');
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                // Clear any stored data
+                localStorage.removeItem('currentDentist');
+                // Redirect to login page
+                window.location.href = '../../index.html';
+            }
+        }
+
+        // Load dentist info
+        function loadDentistInfo() {
+            // In a real application, load from backend or localStorage
+            const dentistInfo = {
+                name: 'Dr. Delas Alas',
+                email: 'delas.alas@clinic.com'
+            };
+
+            document.getElementById('dentistName').textContent = dentistInfo.name;
+            document.getElementById('dentistEmail').textContent = dentistInfo.email;
+        }
+
+        // Show/hide mobile menu toggle based on screen size
+        function checkScreenSize() {
+            const menuToggle = document.querySelector('.menu-toggle');
+            if (window.innerWidth <= 768) {
+                menuToggle.style.display = 'block';
+            } else {
+                menuToggle.style.display = 'none';
+                document.getElementById('sidebar').classList.remove('mobile-open');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDentistInfo();
+            checkScreenSize();
+            
+            // Hide initial loading after first section loads
+            document.getElementById('contentFrame').onload = () => {
+                setTimeout(() => {
+                    document.getElementById('loadingOverlay').classList.add('hidden');
+                }, 300);
+            };
+        });
+
+        // Check screen size on resize
+        window.addEventListener('resize', checkScreenSize);
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.querySelector('.menu-toggle');
+            
+            if (window.innerWidth <= 768 && 
+                sidebar.classList.contains('mobile-open') &&
+                !sidebar.contains(event.target) &&
+                !menuToggle.contains(event.target)) {
+                sidebar.classList.remove('mobile-open');
+            }
+        });
+
+        // When leaving the dashboard, set the dentist offline in presence
+        window.addEventListener('beforeunload', function() {
+            stopPresenceHeartbeat(true);
+            stopNotificationChecker();
+        });
+
+        // Presence heartbeat using direct Supabase REST API
+        let presenceTimer = null;
+        function startPresenceHeartbeat() {
+            try {
+                const userData = localStorage.getItem('currentUser');
+                if (!userData) return;
+                const user = JSON.parse(userData);
+                if (!user || !user.id) return;
+                // Immediately set online
+                upsertPresence(user.id, 'online');
+                // Refresh every 30s
+                presenceTimer = setInterval(() => upsertPresence(user.id, 'online'), 30000);
+            } catch (e) { }
+        }
+
+        function stopPresenceHeartbeat(setOffline) {
+            try {
+                if (presenceTimer) clearInterval(presenceTimer);
+                const userData = localStorage.getItem('currentUser');
+                const user = userData ? JSON.parse(userData) : null;
+                if (setOffline && user && user.id) upsertPresence(user.id, 'offline');
+            } catch (e) {}
+        }
+
+        async function upsertPresence(userId, status) {
+            const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/presence`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'resolution=merge-duplicates'
+                    },
+                    body: JSON.stringify({ user_id: userId, status, updated_at: new Date().toISOString() })
+                });
+            } catch (e) {
+                // 'Presence update failed', e);
+            }
+        }
+
+        // Update sidebar profile picture
+        function updateSidebarProfilePicture(imageData) {
+            const avatar = document.querySelector('.avatar');
+            if (!avatar) return;
+            
+            if (imageData) {
+                // Create or update img element
+                let img = avatar.querySelector('img');
+                if (!img) {
+                    img = document.createElement('img');
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.objectFit = 'cover';
+                    img.style.borderRadius = '50%';
+                    avatar.appendChild(img);
+                }
+                img.src = imageData;
+                img.style.display = 'block';
+                
+                // Hide the icon
+                const icon = avatar.querySelector('i');
+                if (icon) icon.style.display = 'none';
+                
+                // '✅ Sidebar profile picture updated');
+            } else {
+                // Show default icon
+                const img = avatar.querySelector('img');
+                const icon = avatar.querySelector('i');
+                
+                if (img) img.style.display = 'none';
+                if (icon) icon.style.display = 'block';
+                
+                // '✅ Sidebar profile picture removed, showing default icon');
+            }
+        }
+
+        // Load saved profile picture on dashboard load
+        async function loadSidebarProfilePicture() {
+            // First, try to load from Supabase (primary storage)
+            try {
+                const userData = localStorage.getItem('currentUser');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    if (user && user.id) {
+                        const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                        
+                        const resp = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}&select=profile_picture`, {
+                            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                        });
+                        
+                        if (resp.ok) {
+                            const data = await resp.json();
+                            if (Array.isArray(data) && data.length > 0 && data[0].profile_picture) {
+                                updateSidebarProfilePicture(data[0].profile_picture);
+                                return;
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                // Error loading from Supabase
+            }
+            
+            // Fallback to localStorage if Supabase doesn't have it
+            const savedImage = localStorage.getItem('dentistProfilePicture');
+            if (savedImage) {
+                updateSidebarProfilePicture(savedImage);
+            }
+        }
+
+        // Notification System - Enhanced with Supabase Storage
+        async function loadNotifications() {
+            try {
+                // '🔔 Loading notifications from Supabase...');
+                
+                const userData = localStorage.getItem('currentUser');
+                if (!userData) {
+                    // '⚠️ No user data found for notifications');
+                    return;
+                }
+                
+                const user = JSON.parse(userData);
+                if (!user || !user.id) {
+                    // '⚠️ Invalid user data for notifications');
+                    return;
+                }
+                
+                // Load notifications from Supabase notifications table
+                const notificationsData = await callSupabaseAPI('GET', `notifications?user_id=eq.${user.id}&order=created_at.desc&limit=50`);
+                
+                notifications = [];
+                
+                if (Array.isArray(notificationsData)) {
+                    notifications = notificationsData.map(notif => ({
+                        id: notif.id,
+                        type: notif.type,
+                        title: notif.title,
+                        message: notif.message,
+                        timestamp: notif.created_at,
+                        read: notif.is_read,
+                        priority: notif.priority,
+                        data: notif.data,
+                        expires_at: notif.expires_at,
+                        local: false
+                    }));
+                    
+                    // '🔔 Loaded', notifications.length, 'notifications from Supabase');
+                } else {
+                    // '⚠️ No notifications found or invalid data format');
+                }
+                
+                // Also load local notifications
+                loadLocalNotifications();
+                
+                updateNotificationBadge();
+                
+            } catch (error) {
+                // '❌ Error loading notifications:', error);
+                // Fallback to legacy notification loading
+                await loadLegacyNotifications();
+            }
+        }
+
+        // Load local notifications from localStorage
+        function loadLocalNotifications() {
+            try {
+                const userData = localStorage.getItem('currentUser');
+                if (!userData) return;
+                
+                const user = JSON.parse(userData);
+                if (!user || !user.id) return;
+                
+                const localNotifications = JSON.parse(localStorage.getItem('localNotifications') || '[]');
+                const userLocalNotifications = localNotifications.filter(notif => notif.user_id === user.id);
+                
+                // Add local notifications to the main notifications array
+                userLocalNotifications.forEach(localNotif => {
+                    // Check if this local notification already exists in the main array
+                    const exists = notifications.some(notif => notif.id === localNotif.id);
+                    if (!exists) {
+                        notifications.push({
+                            id: localNotif.id,
+                            type: localNotif.type,
+                            title: localNotif.title,
+                            message: localNotif.message,
+                            timestamp: localNotif.created_at,
+                            read: localNotif.is_read,
+                            priority: localNotif.priority,
+                            data: localNotif.data,
+                            expires_at: localNotif.expires_at,
+                            local: true
+                        });
+                    }
+                });
+                
+                // Sort notifications by timestamp (newest first)
+                notifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                
+                // '🔔 Loaded', userLocalNotifications.length, 'local notifications');
+                
+            } catch (error) {
+                // '❌ Error loading local notifications:', error);
+            }
+        }
+
+        // Legacy notification loading (fallback)
+        async function loadLegacyNotifications() {
+            try {
+                // '🔔 Loading legacy notifications...');
+                
+                const userData = localStorage.getItem('currentUser');
+                if (!userData) {
+                    // '⚠️ No user data found for legacy notifications');
+                    return;
+                }
+                
+                const user = JSON.parse(userData);
+                if (!user || !user.id) {
+                    // '⚠️ Invalid user data for legacy notifications');
+                    return;
+                }
+                
+                // Load PENDING appointments for past 7 days, today, and next 7 days (not confirmed ones)
+                const today = new Date().toISOString().split('T')[0];
+                const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                const weekAhead = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                
+                const appointments = await callSupabaseAPI('GET', `appointments?appointment_date=gte.${weekAgo}&appointment_date=lte.${weekAhead}&status=neq.confirmed&select=id,patient_name,service_type,appointment_date,appointment_time,status`);
+                
+                // Load unread messages for the current dentist
+                const messages = await callSupabaseAPI('GET', `messages?receiver_id=eq.${user.id}&is_read=eq.false&select=id,sender_id,content,created_at`);
+                
+                notifications = [];
+                
+                // Add appointment notifications (past, today, and future)
+                if (Array.isArray(appointments)) {
+                    appointments.forEach(apt => {
+                        const appointmentDate = new Date(apt.appointment_date);
+                        const today = new Date();
+                        const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                        const isToday = appointmentDate.toDateString() === today.toDateString();
+                        const isTomorrow = appointmentDate.toDateString() === tomorrow.toDateString();
+                        const isPast = appointmentDate < today;
+                        const isFuture = appointmentDate > tomorrow;
+                        
+                        let title, priority;
+                        if (isToday) {
+                            title = 'Appointment Today';
+                            priority = 'high';
+                        } else if (isTomorrow) {
+                            title = 'Appointment Tomorrow';
+                            priority = 'normal';
+                        } else if (isPast) {
+                            title = 'Past Appointment';
+                            priority = 'low';
+                        } else if (isFuture) {
+                            title = 'Upcoming Appointment';
+                            priority = 'normal';
+                        } else {
+                            title = 'Appointment';
+                            priority = 'normal';
+                        }
+                        
+                        notifications.push({
+                            id: `apt-${apt.id}`,
+                            type: 'appointment',
+                            title: title,
+                            message: `${apt.patient_name} has an appointment for ${apt.service_type} on ${apt.appointment_date} at ${apt.appointment_time}`,
+                            timestamp: apt.created_at || new Date().toISOString(),
+                            read: false,
+                            priority: priority,
+                            data: apt
+                        });
+                    });
+                }
+                
+                // Add message notifications
+                if (Array.isArray(messages)) {
+                    for (const msg of messages) {
+                        try {
+                            const sender = await callSupabaseAPI('GET', `users?id=eq.${msg.sender_id}&select=name`);
+                            const senderName = Array.isArray(sender) && sender.length > 0 ? sender[0].name : 'Unknown User';
+                            
+                            notifications.push({
+                                id: `msg-${msg.id}`,
+                                type: 'message',
+                                title: 'New Message',
+                                message: `${senderName}`,
+                                timestamp: msg.created_at,
+                                read: false,
+                                priority: 'normal',
+                                data: { ...msg, sender_name: senderName, message_id: msg.id }
+                            });
+                        } catch (error) {
+                            // 'Error getting sender name:', error);
+                            notifications.push({
+                                id: `msg-${msg.id}`,
+                                type: 'message',
+                                title: 'New Message',
+                                message: `User ${msg.sender_id}`,
+                                timestamp: msg.created_at,
+                                read: false,
+                                priority: 'normal',
+                                data: { ...msg, message_id: msg.id }
+                            });
+                        }
+                    }
+                }
+                
+                updateNotificationBadge();
+                // '🔔 Loaded', notifications.length, 'legacy notifications');
+                
+            } catch (error) {
+                // '❌ Error loading legacy notifications:', error);
+            }
+        }
+
+        function updateNotificationBadge() {
+            const badge = document.getElementById('notificationBadge');
+            const unreadCount = notifications.filter(n => !n.read).length;
+            
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function startNotificationChecker() {
+            // Check for notifications every 30 seconds
+            notificationCheckInterval = setInterval(() => {
+                loadNotifications();
+            }, 30000);
+        }
+
+        function stopNotificationChecker() {
+            if (notificationCheckInterval) {
+                clearInterval(notificationCheckInterval);
+                notificationCheckInterval = null;
+            }
+        }
+
+        // Mark message as read in database
+        async function markMessageAsRead(notification) {
+            try {
+                let messageId = null;
+                
+                // Extract message ID from notification data
+                if (notification.data && notification.data.message_id) {
+                    messageId = notification.data.message_id;
+                } else if (notification.id && notification.id.startsWith('msg-')) {
+                    // For legacy notifications, extract ID from notification ID
+                    messageId = notification.id.replace('msg-', '');
+                }
+                
+                if (messageId) {
+                    // Mark message as read in database
+                    await callSupabaseAPI('PATCH', `messages?id=eq.${messageId}`, {
+                        is_read: true,
+                        updated_at: new Date().toISOString()
+                    });
+                    
+                    // '✅ Message marked as read:', messageId);
+                    
+                    // Reload notifications to update the display
+                    await loadNotifications();
+                }
+            } catch (error) {
+                // '❌ Error marking message as read:', error);
+            }
+        }
+
+        // Mark notification as read in Supabase
+        async function markNotificationAsRead(notificationId) {
+            try {
+                await callSupabaseAPI('PATCH', `notifications?id=eq.${notificationId}`, {
+                    is_read: true,
+                    updated_at: new Date().toISOString()
+                });
+                
+                // Update local notifications array
+                const notification = notifications.find(n => n.id === notificationId);
+                if (notification) {
+                    notification.read = true;
+                    updateNotificationBadge();
+                }
+                
+                // '✅ Notification marked as read:', notificationId);
+            } catch (error) {
+                // '❌ Error marking notification as read:', error);
+            }
+        }
+
+        // Create a new notification in Supabase
+        async function createNotification(notificationData) {
+            try {
+                const userData = localStorage.getItem('currentUser');
+                if (!userData) return;
+                
+                const user = JSON.parse(userData);
+                if (!user || !user.id) return;
+                
+                const notification = {
+                    user_id: user.id,
+                    type: notificationData.type,
+                    title: notificationData.title,
+                    message: notificationData.message,
+                    data: notificationData.data || {},
+                    priority: notificationData.priority || 'normal',
+                    expires_at: notificationData.expires_at || null
+                };
+                
+                const result = await callSupabaseAPI('POST', 'notifications', notification);
+                // '✅ Notification created:', result);
+                
+                // Reload notifications to show the new one
+                await loadNotifications();
+                
+                return result;
+            } catch (error) {
+                // '❌ Error creating notification:', error);
+                // Fallback: Store notification locally
+                // '📝 Storing notification locally as fallback');
+                storeNotificationLocally(notificationData);
+            }
+        }
+
+        // Fallback function to store notifications locally
+        function storeNotificationLocally(notificationData) {
+            try {
+                const userData = localStorage.getItem('currentUser');
+                if (!userData) return;
+                
+                const user = JSON.parse(userData);
+                if (!user || !user.id) return;
+                
+                // Check for duplicates before creating notification
+                const localNotifications = JSON.parse(localStorage.getItem('localNotifications') || '[]');
+                const userLocalNotifications = localNotifications.filter(notif => notif.user_id === user.id);
+                
+                // Check if similar notification already exists
+                const duplicateExists = userLocalNotifications.some(existingNotif => {
+                    return existingNotif.title === notificationData.title && 
+                           existingNotif.message === notificationData.message &&
+                           existingNotif.type === notificationData.type;
+                });
+                
+                if (duplicateExists) {
+                    // '⚠️ Duplicate notification prevented:', notificationData.title);
+                    return;
+                }
+                
+                const notification = {
+                    id: `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                    user_id: user.id,
+                    type: notificationData.type,
+                    title: notificationData.title,
+                    message: notificationData.message,
+                    data: notificationData.data || {},
+                    priority: notificationData.priority || 'normal',
+                    expires_at: notificationData.expires_at || null,
+                    created_at: new Date().toISOString(),
+                    is_read: false,
+                    local: true // Mark as local notification
+                };
+                
+                localNotifications.push(notification);
+                
+                // Keep only last 50 local notifications
+                if (localNotifications.length > 50) {
+                    localNotifications.splice(0, localNotifications.length - 50);
+                }
+                
+                localStorage.setItem('localNotifications', JSON.stringify(localNotifications));
+                // '✅ Notification stored locally:', notification.title);
+                
+                // Update notification badge
+                updateNotificationBadge();
+                
+            } catch (error) {
+                // '❌ Error storing notification locally:', error);
+            }
+        }
+
+        // Clear duplicate notifications
+        function clearDuplicateNotifications() {
+            try {
+                const userData = localStorage.getItem('currentUser');
+                if (!userData) return;
+                
+                const user = JSON.parse(userData);
+                if (!user || !user.id) return;
+                
+                const localNotifications = JSON.parse(localStorage.getItem('localNotifications') || '[]');
+                const userLocalNotifications = localNotifications.filter(notif => notif.user_id === user.id);
+                
+                // Remove duplicates based on title and message
+                const uniqueNotifications = [];
+                const seen = new Set();
+                
+                userLocalNotifications.forEach(notif => {
+                    const key = `${notif.title}-${notif.message}-${notif.type}`;
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        uniqueNotifications.push(notif);
+                    }
+                });
+                
+                // Update localStorage with unique notifications
+                const otherUserNotifications = localNotifications.filter(notif => notif.user_id !== user.id);
+                const allUniqueNotifications = [...otherUserNotifications, ...uniqueNotifications];
+                
+                localStorage.setItem('localNotifications', JSON.stringify(allUniqueNotifications));
+                // `✅ Removed ${userLocalNotifications.length - uniqueNotifications.length} duplicate notifications`);
+                
+                // Reload notifications to update the display
+                loadNotifications();
+                
+            } catch (error) {
+                // '❌ Error clearing duplicate notifications:', error);
+            }
+        }
+
+        // Fix existing notifications with wrong types
+        function fixNotificationTypes() {
+            try {
+                const userData = localStorage.getItem('currentUser');
+                if (!userData) return;
+                
+                const user = JSON.parse(userData);
+                if (!user || !user.id) return;
+                
+                const localNotifications = JSON.parse(localStorage.getItem('localNotifications') || '[]');
+                const userLocalNotifications = localNotifications.filter(notif => notif.user_id === user.id);
+                
+                let fixed = false;
+                userLocalNotifications.forEach(notif => {
+                    // Fix schedule notifications that should be appointment notifications
+                    if (notif.type === 'schedule' && (notif.title.includes('Appointment') || notif.title.includes('Schedule'))) {
+                        notif.type = 'appointment';
+                        fixed = true;
+                    }
+                });
+                
+                if (fixed) {
+                    const otherUserNotifications = localNotifications.filter(notif => notif.user_id !== user.id);
+                    const allFixedNotifications = [...otherUserNotifications, ...userLocalNotifications];
+                    localStorage.setItem('localNotifications', JSON.stringify(allFixedNotifications));
+                    // '✅ Fixed notification types');
+                    loadNotifications();
+                }
+                
+            } catch (error) {
+                // '❌ Error fixing notification types:', error);
+            }
+        }
+
+        // Create notifications for confirmed appointments
+        async function createConfirmedAppointmentNotifications() {
+            try {
+                const userData = localStorage.getItem('currentUser');
+                if (!userData) return;
+                
+                const user = JSON.parse(userData);
+                if (!user || !user.id) return;
+                
+                // Load confirmed appointments from the past week and next week
+                const today = new Date().toISOString().split('T')[0];
+                const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                const weekAhead = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                
+                const confirmedAppointments = await callSupabaseAPI('GET', `appointments?appointment_date=gte.${weekAgo}&appointment_date=lte.${weekAhead}&status=eq.confirmed&select=id,patient_name,service_type,appointment_date,appointment_time,status`);
+                
+                if (Array.isArray(confirmedAppointments) && confirmedAppointments.length > 0) {
+                    // '📅 Found', confirmedAppointments.length, 'confirmed appointments');
+                    
+                    for (const apt of confirmedAppointments) {
+                        const appointmentDate = new Date(apt.appointment_date);
+                        const today = new Date();
+                        const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                        const isToday = appointmentDate.toDateString() === today.toDateString();
+                        const isTomorrow = appointmentDate.toDateString() === tomorrow.toDateString();
+                        const isPast = appointmentDate < today;
+                        
+                        let title, priority;
+                        if (isToday) {
+                            title = 'Confirmed Appointment Today';
+                            priority = 'high';
+                        } else if (isTomorrow) {
+                            title = 'Confirmed Appointment Tomorrow';
+                            priority = 'normal';
+                        } else if (isPast) {
+                            title = 'Past Confirmed Appointment';
+                            priority = 'low';
+                        } else {
+                            title = 'Upcoming Confirmed Appointment';
+                            priority = 'normal';
+                        }
+                        
+                        await createNotification({
+                            type: 'schedule',
+                            title: title,
+                            message: `${apt.patient_name} has a confirmed appointment for ${apt.service_type} on ${apt.appointment_date} at ${apt.appointment_time}`,
+                            data: {
+                                appointment_id: apt.id,
+                                patient_name: apt.patient_name,
+                                service_type: apt.service_type,
+                                appointment_date: apt.appointment_date,
+                                appointment_time: apt.appointment_time,
+                                status: apt.status
+                            },
+                            priority: priority,
+                            expires_at: new Date(appointmentDate.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString() // Expire in 1 week
+                        });
+                    }
+                    
+                    // '✅ Confirmed appointment notifications created');
+                } else {
+                    // '📅 No confirmed appointments found');
+                }
+                
+            } catch (error) {
+                // '❌ Error creating confirmed appointment notifications:', error);
+            }
+        }
+
+        // Create notification for individual confirmed appointment
+        async function createConfirmedAppointmentNotification(appointment) {
+            try {
+                const userData = localStorage.getItem('currentUser');
+                if (!userData) return;
+                
+                const user = JSON.parse(userData);
+                if (!user || !user.id) return;
+                
+                const appointmentDate = new Date(appointment.date);
+                const today = new Date();
+                const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                const isToday = appointmentDate.toDateString() === today.toDateString();
+                const isTomorrow = appointmentDate.toDateString() === tomorrow.toDateString();
+                const isPast = appointmentDate < today;
+                
+                let title, priority;
+                if (isToday) {
+                    title = 'Confirmed Appointment Today';
+                    priority = 'high';
+                } else if (isTomorrow) {
+                    title = 'Confirmed Appointment Tomorrow';
+                    priority = 'normal';
+                } else if (isPast) {
+                    title = 'Past Confirmed Appointment';
+                    priority = 'low';
+                } else {
+                    title = 'Upcoming Confirmed Appointment';
+                    priority = 'normal';
+                }
+                
+                await createNotification({
+                    type: 'schedule',
+                    title: title,
+                    message: `${appointment.patientName} has a confirmed appointment for ${appointment.service} on ${appointment.date} at ${appointment.time}`,
+                    data: {
+                        appointment_id: appointment.id,
+                        patient_name: appointment.patientName,
+                        service_type: appointment.service,
+                        appointment_date: appointment.date,
+                        appointment_time: appointment.time,
+                        status: 'confirmed'
+                    },
+                    priority: priority,
+                    expires_at: new Date(appointmentDate.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString() // Expire in 1 week
+                });
+                
+                // '✅ Confirmed appointment notification created for:', appointment.patientName);
+            } catch (error) {
+                // '❌ Error creating confirmed appointment notification:', error);
+            }
+        }
+
+        // Create notification for new message
+        async function createMessageNotification(messageData) {
+            try {
+                const userData = localStorage.getItem('currentUser');
+                if (!userData) return;
+                
+                const user = JSON.parse(userData);
+                if (!user || !user.id) return;
+                
+                // Get sender name
+                const sender = await callSupabaseAPI('GET', `users?id=eq.${messageData.sender_id}&select=name`);
+                const senderName = Array.isArray(sender) && sender.length > 0 ? sender[0].name : 'Unknown User';
+                
+                await createNotification({
+                    type: 'message',
+                    title: 'New Message',
+                    message: senderName,
+                    data: {
+                        message_id: messageData.id,
+                        sender_id: messageData.sender_id,
+                        sender_name: senderName,
+                        content: messageData.content
+                    },
+                    priority: 'high',
+                    expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // Expire in 1 week
+                });
+                
+                // '✅ Message notification created for:', senderName);
+            } catch (error) {
+                // '❌ Error creating message notification:', error);
+            }
+        }
+
+        // Create notification when new appointment is booked
+        async function createAppointmentBookingNotification(appointmentData) {
+            try {
+                const userData = localStorage.getItem('currentUser');
+                if (!userData) return;
+                
+                const user = JSON.parse(userData);
+                if (!user || !user.id) return;
+                
+                const appointmentDate = new Date(appointmentData.appointment_date);
+                const today = new Date();
+                const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                const isToday = appointmentDate.toDateString() === today.toDateString();
+                const isTomorrow = appointmentDate.toDateString() === tomorrow.toDateString();
+                
+                let title, priority, expiresAt;
+                if (isToday) {
+                    title = 'New Appointment Booked for Today';
+                    priority = 'high';
+                    expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+                } else if (isTomorrow) {
+                    title = 'New Appointment Booked for Tomorrow';
+                    priority = 'normal';
+                    expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+                } else {
+                    title = 'New Appointment Booked';
+                    priority = 'normal';
+                    expiresAt = new Date(appointmentDate.getTime() + 24 * 60 * 60 * 1000).toISOString();
+                }
+                
+                await createNotification({
+                    type: 'appointment',
+                    title: title,
+                    message: `${appointmentData.patient_name} has booked an appointment for ${appointmentData.service_type} on ${appointmentData.appointment_date} at ${appointmentData.appointment_time}`,
+                    data: {
+                        appointment_id: appointmentData.id,
+                        patient_name: appointmentData.patient_name,
+                        service_type: appointmentData.service_type,
+                        appointment_date: appointmentData.appointment_date,
+                        appointment_time: appointmentData.appointment_time,
+                        status: appointmentData.status || 'pending'
+                    },
+                    priority: priority,
+                    expires_at: expiresAt
+                });
+                
+                // '✅ Appointment booking notification created');
+            } catch (error) {
+                // '❌ Error creating appointment booking notification:', error);
+            }
+        }
+
+        // Create daily schedule notifications (with duplicate prevention)
+        async function createDailyScheduleNotifications() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                
+                // Check if notifications were already created today
+                const lastNotificationCheck = localStorage.getItem('lastNotificationCheck');
+                const todayCheck = today;
+                
+                if (lastNotificationCheck === todayCheck) {
+                    // '⚠️ Daily notifications already created today, skipping...');
+                    return;
+                }
+                
+                // Load PENDING appointments for today and tomorrow (not confirmed ones)
+                const todayAppointments = await callSupabaseAPI('GET', `appointments?appointment_date=eq.${today}&status=neq.confirmed&select=id,patient_name,service_type,appointment_time,status`);
+                const tomorrowAppointments = await callSupabaseAPI('GET', `appointments?appointment_date=eq.${tomorrow}&status=neq.confirmed&select=id,patient_name,service_type,appointment_time,status`);
+                
+                // Create notifications for today's appointments
+                if (Array.isArray(todayAppointments) && todayAppointments.length > 0) {
+                    // Create summary notification for today
+                    await createNotification({
+                        type: 'appointment',
+                        title: 'Daily Schedule Summary',
+                        message: `You have ${todayAppointments.length} appointment(s) scheduled for today`,
+                        data: {
+                            appointment_count: todayAppointments.length,
+                            date: today
+                        },
+                        priority: 'normal',
+                        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // Expire tomorrow
+                    });
+                    
+                    // Create individual appointment notifications for today
+                    for (const apt of todayAppointments) {
+                        await createNotification({
+                            type: 'appointment',
+                            title: `Appointment Today: ${apt.patient_name}`,
+                            message: `${apt.patient_name} has an appointment for ${apt.service_type} at ${apt.appointment_time}`,
+                            data: {
+                                appointment_id: apt.id,
+                                patient_name: apt.patient_name,
+                                service_type: apt.service_type,
+                                appointment_time: apt.appointment_time,
+                                status: apt.status
+                            },
+                            priority: 'high',
+                            expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+                        });
+                    }
+                }
+                
+                // Create notifications for tomorrow's appointments
+                if (Array.isArray(tomorrowAppointments) && tomorrowAppointments.length > 0) {
+                    // Create summary notification for tomorrow
+                    await createNotification({
+                        type: 'appointment',
+                        title: 'Tomorrow\'s Schedule',
+                        message: `You have ${tomorrowAppointments.length} appointment(s) scheduled for tomorrow`,
+                        data: {
+                            appointment_count: tomorrowAppointments.length,
+                            date: tomorrow
+                        },
+                        priority: 'normal',
+                        expires_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString() // Expire day after tomorrow
+                    });
+                    
+                    // Create individual appointment notifications for tomorrow
+                    for (const apt of tomorrowAppointments) {
+                        await createNotification({
+                            type: 'appointment',
+                            title: `Appointment Tomorrow: ${apt.patient_name}`,
+                            message: `${apt.patient_name} has an appointment for ${apt.service_type} at ${apt.appointment_time}`,
+                            data: {
+                                appointment_id: apt.id,
+                                patient_name: apt.patient_name,
+                                service_type: apt.service_type,
+                                appointment_time: apt.appointment_time,
+                                status: apt.status
+                            },
+                            priority: 'normal',
+                            expires_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString()
+                        });
+                    }
+                }
+                
+                // Mark that notifications were created today
+                localStorage.setItem('lastNotificationCheck', todayCheck);
+                // '✅ Daily schedule notifications created');
+            } catch (error) {
+                // '❌ Error creating daily schedule notifications:', error);
+            }
+        }
+
+        // Check for QR code parameters and redirect to schedule section
+        function checkQRCodeParameters() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const section = urlParams.get('section');
+                const appointmentId = urlParams.get('appointment_id');
+                
+                if (section === 'schedule') {
+                    // '🔍 QR Code detected - redirecting to schedule section');
+                    
+                    // Find the schedule nav item and click it
+                    const scheduleNavItem = document.querySelector('[onclick*="schedule"]');
+                    if (scheduleNavItem) {
+                        // Add a small delay to ensure the dashboard is fully loaded
+                        setTimeout(() => {
+                            scheduleNavItem.click();
+                            // '✅ Redirected to schedule section via QR code');
+                            
+                            // If there's an appointment ID, store it for the schedule section to use
+                            if (appointmentId) {
+                                localStorage.setItem('qrAppointmentId', appointmentId);
+                                // '📋 Stored appointment ID for schedule section:', appointmentId);
+                            }
+                        }, 1000);
+                    }
+                    
+                    // Clean up URL parameters
+                    const newUrl = window.location.pathname;
+                    window.history.replaceState({}, document.title, newUrl);
+                }
+            } catch (error) {
+                // '❌ Error checking QR code parameters:', error);
+            }
+        }
+
+        // Direct API call function (shared approach)
+        async function callSupabaseAPI(method, endpoint, body = null) {
+            const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+
+            const headers = {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'
+            };
+
+            const options = { method, headers };
+            if (body) options.body = JSON.stringify(body);
+
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/${endpoint}`, options);
+            const contentType = response.headers.get('content-type') || '';
+            const text = await response.text();
+            const data = contentType.includes('application/json') && text ? JSON.parse(text) : (text ? { message: text } : []);
+            if (!response.ok) throw new Error(data.message || data.msg || `HTTP ${response.status}`);
+            return data;
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Services - Delas Alas Dental Clinic</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦷</text></svg>">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../images/tooth.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../images/tooth.png">
+    <link rel="shortcut icon" href="../../../images/tooth.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../images/tooth.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+
+        .clinic-title h2 {
+            color: #ffd700;
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .user-profile {
+            padding: 25px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 32px;
+        }
+
+        .user-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 18px;
+        }
+
+        .user-info p {
+            margin: 0;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 25px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 4px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            border-left-color: #ffd700;
+        }
+
+        .nav-item.active {
+            background: rgba(255,255,255,0.2);
+            border-left-color: #ffd700;
+        }
+
+        .nav-item i {
+            font-size: 18px;
+            width: 20px;
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: none;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,0,0,0.2);
+            border-left-color: #ff6b6b;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            background: #f5f5f5;
+            padding: 30px;
+        }
+
+        /* Services Styles */
+        .services-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .services-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .header-left h1 {
+            margin: 0 0 5px 0;
+            color: #2c3e50;
+            font-size: 28px;
+        }
+
+        .header-left p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        /* Services Grid */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .service-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+
+        .service-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .service-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .service-info h3 {
+            color: #2c3e50;
+            margin: 0 0 5px 0;
+            font-size: 18px;
+        }
+
+        .service-category {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .service-features {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0;
+        }
+
+        .service-features li {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .service-features li i {
+            margin-right: 8px;
+            font-size: 12px;
+        }
+
+        .service-description {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .service-duration {
+            color: #888;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+
+        .service-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .loading {
+            color: #666;
+            font-style: italic;
+            text-align: center;
+            padding: 40px;
+        }
+
+        /* Enhanced Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            margin: 3% auto;
+            padding: 0;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 650px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            animation: slideIn 0.3s ease;
+            position: relative;
+        }
+
+        @keyframes slideIn {
+            from { 
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to { 
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 30px;
+            border-radius: 20px 20px 0 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .modal-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .modal-header h2 i {
+            font-size: 20px;
+            opacity: 0.9;
+        }
+
+        .close {
+            color: rgba(255,255,255,0.8);
+            float: right;
+            font-size: 24px;
+            font-weight: bold;
+            position: absolute;
+            right: 25px;
+            top: 25px;
+            cursor: pointer;
+            z-index: 2;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .close:hover {
+            color: white;
+            background: rgba(255,255,255,0.2);
+            transform: rotate(90deg);
+        }
+
+        /* Enhanced Form Styles */
+        .form-container {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        .form-group input[type="number"] {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .form-group select {
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+
+        .form-group .input-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #667eea;
+            font-size: 16px;
+            pointer-events: none;
+        }
+
+        .form-group.price-group .input-icon {
+            top: calc(50% + 12px);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .btn-modal {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 120px;
+            justify-content: center;
+        }
+
+        .btn-modal-secondary {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 2px solid #e9ecef;
+        }
+
+        .btn-modal-secondary:hover {
+            background: #e9ecef;
+            color: #495057;
+            transform: translateY(-1px);
+        }
+
+        .btn-modal-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-modal-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-modal-primary:active {
+            transform: translateY(0);
+        }
+
+        /* Icon Preview */
+        .icon-preview {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .icon-preview i {
+            font-size: 20px;
+            color: #667eea;
+        }
+
+        .icon-preview span {
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .services-header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .menu-toggle {
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 1001;
+                background: #667eea;
+                color: white;
+                border: none;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                font-size: 20px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar (hidden when loaded in iframe) -->
+        <aside class="sidebar" id="sidebar" style="display: none;">
+            <div class="sidebar-header">
+                <div class="clinic-title">
+                    <h2>🦷 Delas Alas Dental Clinic</h2>
+                </div>
+            </div>
+            
+            <div class="user-profile">
+                <div class="avatar">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <div class="user-info">
+                    <h3 id="dentistName">Dr. Delas Alas</h3>
+                    <p id="dentistEmail">delas.alas@clinic.com</p>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a class="nav-item" href="../dashboard/dashboard-standalone.html">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a class="nav-item" href="../schedule/schedule-standalone.html">
+                    <i class="fas fa-calendar"></i>
+                    <span>Schedule</span>
+                </a>
+                <a class="nav-item" href="../appointments/appointments-standalone.html">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Appointments</span>
+                </a>
+                <a class="nav-item" href="../patients/patients-standalone.html">
+                    <i class="fas fa-users"></i>
+                    <span>Patients</span>
+                </a>
+                <a class="nav-item active" href="services-standalone.html">
+                    <i class="fas fa-tools"></i>
+                    <span>Services</span>
+                </a>
+                <a class="nav-item" href="../dentist-list/dentist-list-standalone.html">
+                    <i class="fas fa-user-md"></i>
+                    <span>Dentist List</span>
+                </a>
+                <a class="nav-item" href="../messages/messages-standalone.html">
+                    <i class="fas fa-comments"></i>
+                    <span>Messages</span>
+                </a>
+                <a class="nav-item" href="../settings/settings-standalone.html">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <button class="nav-item logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="services-content">
+                <div class="services-header">
+                    <div class="header-left">
+                        <h1>🦷 Services Management</h1>
+                        <p>Manage clinic services and pricing</p>
+                    </div>
+                    <div class="header-right">
+                        <button class="btn btn-primary" onclick="addNewService()">
+                            <i class="fas fa-plus"></i> Add Custom Service
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Services Grid -->
+                <div class="services-grid" id="servicesGrid">
+                    <div class="loading">Loading services...</div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Mobile Menu Toggle (visible on mobile only) -->
+        <button class="menu-toggle" onclick="toggleMobileMenu()" style="display: none;">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <!-- Service Modal -->
+    <div id="serviceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle"><i class="fas fa-plus"></i> Add New Service</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="form-container" id="modalBody">
+                <!-- Form content will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let services = [];
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if page is loaded in iframe
+            if (window.parent === window) {
+                // Not in iframe - show sidebar and adjust layout
+                document.getElementById('sidebar').style.display = 'block';
+                document.querySelector('.main-content').style.marginLeft = '280px';
+            } else {
+                // In iframe - hide sidebar and use full width
+                document.getElementById('sidebar').style.display = 'none';
+                document.querySelector('.main-content').style.marginLeft = '0';
+            }
+            
+            loadServices();
+        });
+
+        // Load services data from Supabase database
+        async function loadServices() {
+            try {
+                // Initialize empty array
+                services = [];
+
+                // Load services from Supabase database
+                await loadFromDatabase();
+                
+                // Set up real-time listeners for database updates
+                setupRealtimeListeners();
+                
+                displayServices();
+            } catch (error) {
+                console.error('Error loading services:', error);
+                services = [];
+                displayServices();
+            }
+        }
+
+        // Load data from Supabase database
+        async function loadFromDatabase() {
+            try {
+                console.log('📡 Loading services from Supabase...');
+                
+                // Use REST API directly for Supabase
+                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/services?select=*&order=created_at.desc`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ Error loading services from database:', response.status, errorText);
+                    console.log('Falling back to localStorage');
+                    loadFromLocalStorage();
+                } else {
+                    const data = await response.json();
+                    services = data || [];
+                    console.log('✅ Services loaded from database:', services.length);
+                }
+            } catch (error) {
+                console.error('❌ Error loading services from database:', error);
+                console.log('Falling back to localStorage');
+                loadFromLocalStorage();
+            }
+        }
+
+        // Load from localStorage fallback
+        function loadFromLocalStorage() {
+            try {
+                const storedServices = localStorage.getItem('dentalServices');
+                if (storedServices) {
+                    services = JSON.parse(storedServices);
+                    console.log('Services loaded from localStorage:', services.length);
+                } else {
+                    services = [];
+                    console.log('No services found in localStorage');
+                }
+            } catch (error) {
+                console.error('Error loading services from localStorage:', error);
+                services = [];
+            }
+        }
+
+        // Set up real-time listeners for Supabase database
+        function setupRealtimeListeners() {
+            try {
+                if (!window.supabase) {
+                    console.log('Supabase not initialized yet');
+                    return;
+                }
+
+                // Set up real-time subscription for services
+                const servicesSubscription = window.supabase
+                    .channel('services-changes')
+                    .on('postgres_changes', {
+                        event: '*',
+                        schema: 'public',
+                        table: 'services'
+                    }, (payload) => {
+                        console.log('Service data changed:', payload);
+                        // Reload services when data changes
+                        loadFromDatabase().then(() => {
+                            displayServices();
+                        });
+                    })
+                    .subscribe();
+
+                console.log('Real-time services listeners set up');
+            } catch (error) {
+                console.error('Error setting up real-time listeners:', error);
+            }
+        }
+
+        // Display services
+        function displayServices() {
+            console.log('Displaying services:', services);
+            const grid = document.getElementById('servicesGrid');
+            
+            if (services.length === 0) {
+                grid.innerHTML = `
+                    <div style="padding: 40px; color: #666; text-align: center; grid-column: 1 / -1;">
+                        <i class="fas fa-tools" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                        <h3 style="margin: 0 0 10px 0;">No services added yet</h3>
+                        <p style="margin: 0;">Add your clinic services to get started</p>
+                        <button class="btn btn-primary" onclick="addNewService()" style="margin-top: 20px;">
+                            <i class="fas fa-plus"></i> Add First Service
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Group services by category first
+            const groupedServices = groupServicesByCategory(services);
+            
+            grid.innerHTML = Object.keys(groupedServices).map(category => {
+                const categoryServices = groupedServices[category];
+                const categoryIcon = getCategoryIcon(category);
+                
+                return `
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="fas ${categoryIcon}"></i>
+                    </div>
+                    <h3>${category}</h3>
+                    <p>Professional ${category.toLowerCase()} services</p>
+                    <ul class="service-features">
+                        ${categoryServices.slice(0, 4).map(service => `
+                            <li>
+                                <i class="fas fa-check" style="color: #28a745; margin-right: 8px;"></i>
+                                ${service.name}
+                            </li>
+                        `).join('')}
+                    </ul>
+                    <div class="service-actions">
+                        <button class="btn btn-outline" onclick="viewCategoryServices('${category}')">
+                            <i class="fas fa-eye"></i> View All
+                        </button>
+                        <button class="btn btn-primary" onclick="editCategoryServices('${category}')">
+                            <i class="fas fa-edit"></i> Manage
+                        </button>
+                    </div>
+                </div>
+            `;
+            }).join('');
+        }
+
+        // Group services by category (infer from service name/description)
+        function groupServicesByCategory(services) {
+            const categories = {
+                'General Dentistry': [],
+                'Cosmetic Dentistry': [],
+                'Restorative Dentistry': [],
+                'Pediatric Dentistry': [],
+                'Orthodontics': [],
+                'Oral Surgery': []
+            };
+
+            services.forEach(service => {
+                // Infer category from service name/description since DB doesn't have category field
+                let category = 'General Dentistry'; // Default
+                
+                const name = service.name.toLowerCase();
+                const description = service.description.toLowerCase();
+                
+                if (name.includes('bunot') || description.includes('bunot') || name.includes('extraction') || name.includes('surgery') || name.includes('implant') || description.includes('extraction') || description.includes('surgery')) {
+                    category = 'Oral Surgery';
+                } else if (name.includes('cleaning') || name.includes('checkup') || name.includes('examination') || description.includes('cleaning') || description.includes('checkup')) {
+                    category = 'General Dentistry';
+                } else if (name.includes('braces') || description.includes('braces') || name.includes('orthodontic') || name.includes('alignment') || description.includes('orthodontic')) {
+                    category = 'Orthodontics';
+                } else if (name.includes('whitening') || name.includes('veneers') || name.includes('cosmetic')) {
+                    category = 'Cosmetic Dentistry';
+                } else if (name.includes('filling') || name.includes('crown') || name.includes('bridge') || name.includes('root canal')) {
+                    category = 'Restorative Dentistry';
+                } else if (name.includes('child') || name.includes('pediatric') || name.includes('kids')) {
+                    category = 'Pediatric Dentistry';
+                }
+                
+                if (categories[category]) {
+                    categories[category].push(service);
+                } else {
+                    // If category doesn't exist, add it dynamically
+                    if (!categories[category]) {
+                        categories[category] = [];
+                    }
+                    categories[category].push(service);
+                }
+            });
+
+            // Remove empty categories
+            Object.keys(categories).forEach(category => {
+                if (categories[category].length === 0) {
+                    delete categories[category];
+                }
+            });
+
+            return categories;
+        }
+
+        // Get icon for category
+        function getCategoryIcon(category) {
+            const icons = {
+                'General Dentistry': 'fa-tooth',
+                'Cosmetic Dentistry': 'fa-gem',
+                'Restorative Dentistry': 'fa-tools',
+                'Pediatric Dentistry': 'fa-child',
+                'Orthodontics': 'fa-smile',
+                'Oral Surgery': 'fa-cut'
+            };
+            return icons[category] || 'fa-tooth';
+        }
+
+        // View all services in a category
+        function viewCategoryServices(category) {
+            const groupedServices = groupServicesByCategory(services);
+            const categoryServices = groupedServices[category] || [];
+            
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            
+            modalTitle.innerHTML = `<i class="fas fa-list"></i> ${category} Services`;
+            modalBody.innerHTML = `
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; margin: 0 auto 20px;">
+                        <i class="fas ${getCategoryIcon(category)}"></i>
+                    </div>
+                    <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 24px;">${category}</h3>
+                    <p style="color: #666; margin: 0;">Professional ${category.toLowerCase()} services</p>
+                </div>
+                
+                <div class="form-group">
+                    <label>Available Services</label>
+                    <ul style="list-style: none; padding: 0;">
+                        ${categoryServices.map(service => `
+                            <li style="padding: 10px; background: #f8f9fa; border-radius: 8px; margin-bottom: 8px; display: flex; align-items: center;">
+                                <i class="fas fa-check" style="color: #28a745; margin-right: 12px;"></i>
+                                <div style="flex: 1;">
+                                    <strong>${service.name}</strong>
+                                    <div style="color: #666; font-size: 14px; margin-top: 4px;">${service.description}</div>
+                                </div>
+                                <div style="display: flex; gap: 5px;">
+                                    <button class="btn btn-sm btn-outline" onclick="viewService('${service.id}')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    ${parseInt(service.id) > 6 ? `
+                                        <button class="btn btn-sm btn-outline" onclick="editService('${service.id}')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline" onclick="deleteService('${service.id}')" style="color: #dc3545;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+                
+                <div class="form-actions">
+                    <button class="btn-modal btn-modal-secondary" onclick="closeModal()">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                </div>
+            `;
+            document.getElementById('serviceModal').style.display = 'block';
+        }
+
+        // Edit services in a category
+        function editCategoryServices(category) {
+            const groupedServices = groupServicesByCategory(services);
+            const categoryServices = groupedServices[category] || [];
+            
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            
+            modalTitle.innerHTML = `<i class="fas fa-edit"></i> Manage ${category} Services`;
+            modalBody.innerHTML = `
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; margin: 0 auto 20px;">
+                        <i class="fas ${getCategoryIcon(category)}"></i>
+                    </div>
+                    <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 24px;">${category}</h3>
+                    <p style="color: #666; margin: 0;">Manage services in this category</p>
+                </div>
+                
+                <div class="form-group">
+                    <label>Services in ${category}</label>
+                    <ul style="list-style: none; padding: 0;">
+                        ${categoryServices.map(service => `
+                            <li style="padding: 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+                                <div style="flex: 1;">
+                                    <strong>${service.name}</strong>
+                                    <div style="color: #666; font-size: 14px; margin-top: 4px;">${service.description}</div>
+                                </div>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="btn btn-sm btn-outline" onclick="viewService('${service.id}')">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                    ${parseInt(service.id) > 6 ? `
+                                        <button class="btn btn-sm btn-outline" onclick="editService('${service.id}')">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-outline" onclick="deleteService('${service.id}')" style="color: #dc3545;">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+                
+                <div class="form-actions">
+                    <button class="btn-modal btn-modal-secondary" onclick="closeModal()">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                    <button class="btn-modal btn-modal-primary" onclick="addNewService()">
+                        <i class="fas fa-plus"></i> Add Service to ${category}
+                    </button>
+                </div>
+            `;
+            document.getElementById('serviceModal').style.display = 'block';
+        }
+
+        // Action functions
+        function addNewService() {
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            
+            modalTitle.innerHTML = '<i class="fas fa-plus"></i> Add New Service';
+            modalBody.innerHTML = `
+                <form id="serviceForm">
+                    <div class="form-group">
+                        <label for="serviceName">Service Name</label>
+                        <input type="text" id="serviceName" required placeholder="Enter service name">
+                        <i class="fas fa-tools input-icon"></i>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="serviceDescription">Description</label>
+                        <textarea id="serviceDescription" rows="3" required placeholder="Describe the service details..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="serviceCategory">Category</label>
+                        <select id="serviceCategory" required>
+                            <option value="">Select Category</option>
+                            <option value="General Dentistry">General Dentistry</option>
+                            <option value="Cosmetic Dentistry">Cosmetic Dentistry</option>
+                            <option value="Restorative Dentistry">Restorative Dentistry</option>
+                            <option value="Pediatric Dentistry">Pediatric Dentistry</option>
+                            <option value="Orthodontics">Orthodontics</option>
+                            <option value="Oral Surgery">Oral Surgery</option>
+                        </select>
+                        <i class="fas fa-tags input-icon"></i>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="serviceIcon">Icon</label>
+                        <select id="serviceIcon">
+                            <option value="fa-tooth">🦷 Tooth</option>
+                            <option value="fa-star">⭐ Star</option>
+                            <option value="fa-fill-drip">💧 Fill</option>
+                            <option value="fa-syringe">💉 Syringe</option>
+                            <option value="fa-teeth">🦷 Teeth</option>
+                            <option value="fa-stethoscope">🩺 Stethoscope</option>
+                            <option value="fa-heart">❤️ Heart</option>
+                            <option value="fa-shield">🛡️ Shield</option>
+                            <option value="fa-crown">👑 Crown</option>
+                            <option value="fa-gem">💎 Gem</option>
+                            <option value="fa-flask">🧪 Flask</option>
+                            <option value="fa-microscope">🔬 Microscope</option>
+                        </select>
+                        <div class="icon-preview">
+                            <i class="fas fa-tooth"></i>
+                            <span>Preview: Tooth</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn-modal btn-modal-secondary" onclick="closeModal()">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn-modal btn-modal-primary">
+                            <i class="fas fa-plus"></i> Add Service
+                        </button>
+                    </div>
+                </form>
+            `;
+            
+            // Add icon preview functionality
+            const iconSelect = document.getElementById('serviceIcon');
+            const iconPreview = document.querySelector('.icon-preview');
+            
+            iconSelect.addEventListener('change', function() {
+                const selectedIcon = this.value;
+                const iconElement = iconPreview.querySelector('i');
+                const textElement = iconPreview.querySelector('span');
+                
+                iconElement.className = `fas ${selectedIcon}`;
+                textElement.textContent = `Preview: ${this.options[this.selectedIndex].textContent.split(' ')[1]}`;
+            });
+            
+            document.getElementById('serviceForm').onsubmit = function(e) {
+                e.preventDefault();
+                
+                const serviceData = {
+                    name: document.getElementById('serviceName').value,
+                    description: document.getElementById('serviceDescription').value,
+                    price: 100, // Default price since category field doesn't exist in DB
+                    duration: 60 // Default duration since category field doesn't exist in DB
+                };
+                
+                if (serviceData.name && serviceData.description) {
+                    addService(serviceData);
+                    closeModal();
+                } else {
+                    alert('Please fill in all required fields.');
+                }
+            };
+            
+            document.getElementById('serviceModal').style.display = 'block';
+        }
+
+        // Add service to Supabase database
+        async function addService(serviceData) {
+            try {
+                console.log('🔄 Adding service to database:', serviceData);
+                
+                // Use REST API directly for Supabase
+                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                
+                console.log('📡 Inserting service into database using REST API...');
+                
+                // Add service to database using REST API
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/services`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation',
+                        'Prefer': 'resolution=merge-duplicates'
+                    },
+                    body: JSON.stringify({
+                        ...serviceData,
+                        created_at: new Date().toISOString()
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ Error adding service to database:', response.status, errorText);
+                    console.log('Falling back to localStorage');
+                    addServiceToLocalStorage(serviceData);
+                    return;
+                }
+                
+                // Parse response
+                let data;
+                try {
+                    const responseText = await response.text();
+                    console.log('📊 Response text:', responseText);
+                    
+                    if (responseText) {
+                        data = JSON.parse(responseText);
+                    } else {
+                        console.log('⚠️ Empty response, treating as success');
+                        data = [];
+                    }
+                } catch (parseError) {
+                    console.error('❌ Error parsing response:', parseError);
+                    console.log('Treating as success despite parse error');
+                    data = serviceData;
+                }
+                
+                console.log('✅ Service added to database successfully:', data);
+                
+                // Reload services to show the new one
+                await loadFromDatabase();
+                displayServices();
+                alert('Service added successfully!');
+                
+                // Also trigger a refresh on the main page if possible
+                if (window.parent && window.parent !== window) {
+                    try {
+                        window.parent.postMessage({ action: 'refreshServices' }, '*');
+                        console.log('✅ Notified parent window to refresh services');
+                    } catch (e) {
+                        console.log('Could not notify parent window');
+                    }
+                }
+                
+                // Also trigger a refresh on index.html if it's open
+                try {
+                    window.opener?.postMessage({ action: 'refreshServices' }, '*');
+                    console.log('✅ Notified opener window to refresh services');
+                } catch (e) {
+                    console.log('Could not notify opener window');
+                }
+            } catch (error) {
+                console.error('❌ Error adding service:', error);
+                console.log('Falling back to localStorage');
+                addServiceToLocalStorage(serviceData);
+            }
+        }
+
+        // Add service to localStorage fallback
+        async function addServiceToLocalStorage(serviceData) {
+            try {
+                const newService = {
+                    id: Date.now().toString(),
+                    ...serviceData,
+                    created_at: new Date().toISOString()
+                };
+                
+                services.push(newService);
+                localStorage.setItem('dentalServices', JSON.stringify(services));
+                displayServices();
+                alert('Service added successfully! (Saved locally)');
+                
+                // Trigger refresh on index.html even for localStorage
+                if (window.parent && window.parent !== window) {
+                    try {
+                        window.parent.postMessage({ action: 'refreshServices' }, '*');
+                        console.log('✅ Notified parent window to refresh services');
+                    } catch (e) {
+                        console.log('Could not notify parent window');
+                    }
+                }
+                
+                // Also trigger a refresh on index.html if it's open
+                try {
+                    window.opener?.postMessage({ action: 'refreshServices' }, '*');
+                    console.log('✅ Notified opener window to refresh services');
+                } catch (e) {
+                    console.log('Could not notify opener window');
+                }
+            } catch (error) {
+                console.error('Error adding service to localStorage:', error);
+                alert('Error adding service. Please try again.');
+            }
+        }
+
+        function viewService(id) {
+            console.log('View service called with ID:', id);
+            console.log('Available services:', services);
+            const service = services.find(s => String(s.id) === String(id));
+            console.log('Found service:', service);
+            if (service) {
+                const modalTitle = document.getElementById('modalTitle');
+                const modalBody = document.getElementById('modalBody');
+                
+                modalTitle.innerHTML = '<i class="fas fa-eye"></i> Service Details';
+                modalBody.innerHTML = `
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; margin: 0 auto 20px;">
+                            <i class="fas ${service.icon}"></i>
+                        </div>
+                        <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 24px;">${service.name}</h3>
+                        <div style="color: #667eea; font-weight: bold; font-size: 16px;">${service.category || 'General Dentistry'}</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Description</label>
+                        <div style="padding: 15px; background: #f8f9fa; border-radius: 8px; color: #666; line-height: 1.6;">
+                            ${service.description}
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button class="btn-modal btn-modal-secondary" onclick="closeModal()">
+                            <i class="fas fa-times"></i> Close
+                        </button>
+                        ${service.id > 6 ? `
+                            <button class="btn-modal btn-modal-primary" onclick="editService(${service.id})">
+                                <i class="fas fa-edit"></i> Edit Service
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+                document.getElementById('serviceModal').style.display = 'block';
+            } else {
+                console.error('Service not found with ID:', id);
+                alert('Service not found!');
+            }
+        }
+
+        function editService(id) {
+            console.log('Edit service called with ID:', id);
+            console.log('Available services:', services);
+            const service = services.find(s => String(s.id) === String(id));
+            console.log('Found service:', service);
+            if (service) {
+                // Only allow editing of custom services (id > 6)
+                if (id > 6) {
+                    const modalTitle = document.getElementById('modalTitle');
+                    const modalBody = document.getElementById('modalBody');
+                    
+                    modalTitle.innerHTML = '<i class="fas fa-edit"></i> Edit Service';
+                    modalBody.innerHTML = `
+                        <form id="editServiceForm">
+                            <div class="form-group">
+                                <label for="editServiceName">Service Name</label>
+                                <input type="text" id="editServiceName" value="${service.name}" required placeholder="Enter service name">
+                                <i class="fas fa-tools input-icon"></i>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="editServiceDescription">Description</label>
+                                <textarea id="editServiceDescription" rows="3" required placeholder="Describe the service details...">${service.description}</textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="editServiceCategory">Category</label>
+                                <select id="editServiceCategory" required>
+                                    <option value="">Select Category</option>
+                                    <option value="General Dentistry" ${service.category === 'General Dentistry' ? 'selected' : ''}>General Dentistry</option>
+                                    <option value="Cosmetic Dentistry" ${service.category === 'Cosmetic Dentistry' ? 'selected' : ''}>Cosmetic Dentistry</option>
+                                    <option value="Restorative Dentistry" ${service.category === 'Restorative Dentistry' ? 'selected' : ''}>Restorative Dentistry</option>
+                                    <option value="Pediatric Dentistry" ${service.category === 'Pediatric Dentistry' ? 'selected' : ''}>Pediatric Dentistry</option>
+                                    <option value="Orthodontics" ${service.category === 'Orthodontics' ? 'selected' : ''}>Orthodontics</option>
+                                    <option value="Oral Surgery" ${service.category === 'Oral Surgery' ? 'selected' : ''}>Oral Surgery</option>
+                                </select>
+                                <i class="fas fa-tags input-icon"></i>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="editServiceIcon">Icon</label>
+                                <select id="editServiceIcon">
+                                    <option value="fa-tooth" ${service.icon === 'fa-tooth' ? 'selected' : ''}>🦷 Tooth</option>
+                                    <option value="fa-star" ${service.icon === 'fa-star' ? 'selected' : ''}>⭐ Star</option>
+                                    <option value="fa-fill-drip" ${service.icon === 'fa-fill-drip' ? 'selected' : ''}>💧 Fill</option>
+                                    <option value="fa-syringe" ${service.icon === 'fa-syringe' ? 'selected' : ''}>💉 Syringe</option>
+                                    <option value="fa-teeth" ${service.icon === 'fa-teeth' ? 'selected' : ''}>🦷 Teeth</option>
+                                    <option value="fa-stethoscope" ${service.icon === 'fa-stethoscope' ? 'selected' : ''}>🩺 Stethoscope</option>
+                                    <option value="fa-heart" ${service.icon === 'fa-heart' ? 'selected' : ''}>❤️ Heart</option>
+                                    <option value="fa-shield" ${service.icon === 'fa-shield' ? 'selected' : ''}>🛡️ Shield</option>
+                                    <option value="fa-crown" ${service.icon === 'fa-crown' ? 'selected' : ''}>👑 Crown</option>
+                                    <option value="fa-gem" ${service.icon === 'fa-gem' ? 'selected' : ''}>💎 Gem</option>
+                                    <option value="fa-flask" ${service.icon === 'fa-flask' ? 'selected' : ''}>🧪 Flask</option>
+                                    <option value="fa-microscope" ${service.icon === 'fa-microscope' ? 'selected' : ''}>🔬 Microscope</option>
+                                </select>
+                                <div class="icon-preview">
+                                    <i class="fas ${service.icon}"></i>
+                                    <span>Preview: ${service.icon.replace('fa-', '').charAt(0).toUpperCase() + service.icon.replace('fa-', '').slice(1)}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" class="btn-modal btn-modal-secondary" onclick="closeModal()">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                                <button type="submit" class="btn-modal btn-modal-primary">
+                                    <i class="fas fa-save"></i> Update Service
+                                </button>
+                            </div>
+                        </form>
+                    `;
+                    
+                    // Add icon preview functionality
+                    const iconSelect = document.getElementById('editServiceIcon');
+                    const iconPreview = document.querySelector('.icon-preview');
+                    
+                    iconSelect.addEventListener('change', function() {
+                        const selectedIcon = this.value;
+                        const iconElement = iconPreview.querySelector('i');
+                        const textElement = iconPreview.querySelector('span');
+                        
+                        iconElement.className = `fas ${selectedIcon}`;
+                        textElement.textContent = `Preview: ${this.options[this.selectedIndex].textContent.split(' ')[1]}`;
+                    });
+                    
+                    document.getElementById('editServiceForm').onsubmit = function(e) {
+                        e.preventDefault();
+                        
+                        service.name = document.getElementById('editServiceName').value;
+                        service.description = document.getElementById('editServiceDescription').value;
+                        service.category = document.getElementById('editServiceCategory').value;
+                        service.icon = document.getElementById('editServiceIcon').value;
+                        
+                        displayServices();
+                        
+                        // Update localStorage
+                        const customServices = services.filter(s => s.id > 6);
+                        localStorage.setItem('dentalCustomServices', JSON.stringify(customServices));
+                        
+                        alert('Service updated successfully!');
+                        closeModal();
+                    };
+                    
+                    document.getElementById('serviceModal').style.display = 'block';
+                } else {
+                    alert('Cannot edit default services. You can only edit services you added.');
+                }
+            } else {
+                console.error('Service not found with ID:', id);
+                alert('Service not found!');
+            }
+        }
+
+        function deleteService(id) {
+            console.log('Delete service called with ID:', id);
+            console.log('Available services:', services);
+            const service = services.find(s => String(s.id) === String(id));
+            console.log('Found service:', service);
+            if (service && confirm(`Delete service "${service.name}"?`)) {
+                // Only allow deletion of custom services (id > 6)
+                if (id > 6) {
+                    services = services.filter(s => s.id !== id);
+                    displayServices();
+                    
+                    // Update localStorage
+                    const customServices = services.filter(s => s.id > 6);
+                    localStorage.setItem('dentalCustomServices', JSON.stringify(customServices));
+                    
+                    alert('Service deleted successfully.');
+                } else {
+                    alert('Cannot delete default services. You can only delete services you added.');
+                }
+            } else {
+                console.error('Service not found with ID:', id);
+                alert('Service not found!');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('serviceModal').style.display = 'none';
+        }
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('mobile-open');
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                alert('Logout functionality - integrate with your authentication system');
+                // window.location.href = '/login';
+            }
+        }
+
+        // Show mobile menu toggle on small screens
+        function checkScreenSize() {
+            const menuToggle = document.querySelector('.menu-toggle');
+            if (window.innerWidth <= 768) {
+                menuToggle.style.display = 'block';
+            } else {
+                menuToggle.style.display = 'none';
+                document.getElementById('sidebar').classList.remove('mobile-open');
+            }
+        }
+
+        window.addEventListener('resize', checkScreenSize);
+        checkScreenSize();
+    </script>
+</body>
+</html>

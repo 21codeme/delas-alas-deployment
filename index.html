@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delas Alas Clinic - Professional Dental Care</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦷</text></svg>">
+    <link rel="icon" type="image/png" href="images/tooth.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="images/tooth.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="images/tooth.png">
+    <link rel="shortcut icon" href="images/tooth.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="images/tooth.png">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <div class="nav-brand">
+                <i class="fas fa-tooth"></i>
+                <span>Delas Alas Clinic</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#home" class="nav-link active">Home</a></li>
+                <li><a href="#services" class="nav-link">Services</a></li>
+                <li><a href="#about" class="nav-link">About</a></li>
+                <li><a href="#contact" class="nav-link">Contact</a></li>
+            </ul>
+            <div class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </div>
+            <div class="mobile-menu">
+                <ul class="mobile-nav-menu">
+                    <li><button class="btn btn-outline mobile-btn" onclick="showLoginModal()">Login</button></li>
+                    <li><button class="btn btn-primary mobile-btn" onclick="showRegisterModal()">Register</button></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content-centered">
+            <h1 class="hero-title">Professional Dental Care for Your Family</h1>
+            <p class="hero-subtitle">State-of-the-art dental services with compassionate care. Book your appointment today and experience the difference.</p>
+            <div class="hero-actions">
+                <button class="btn btn-primary btn-large" onclick="showAppointmentModal()">
+                    <i class="fas fa-calendar-plus"></i>
+                    Book Appointment
+                </button>
+                <button class="btn btn-outline btn-large" onclick="scrollToSection('services')">
+                    <i class="fas fa-info-circle"></i>
+                    Learn More
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="services">
+        <div class="container">
+            <h2 class="section-title">Our Services</h2>
+            <p class="section-subtitle">Comprehensive dental care for all ages</p>
+            <div class="services-grid" id="servicesGrid">
+                <div class="loading-services">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading services...</p>
+                    <button class="btn btn-outline" onclick="loadServicesFromDatabase()" style="margin-top: 10px;">
+                        <i class="fas fa-refresh"></i> Refresh Services
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-text">
+                    <h2 class="section-title">About Our Dental Clinic</h2>
+                    <p class="about-description">
+                        For over 15 years, we have been providing exceptional dental care to families in our community. 
+                        Our state-of-the-art facility combines advanced technology with compassionate care to ensure 
+                        the best possible outcomes for our patients.
+                    </p>
+                    <div class="about-features">
+                        <div class="feature">
+                            <i class="fas fa-award"></i>
+                            <div>
+                                <h4>Experienced Team</h4>
+                                <p>Licensed professionals with years of experience</p>
+                            </div>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-shield-alt"></i>
+                            <div>
+                                <h4>Safe & Clean</h4>
+                                <p>Strict sterilization and safety protocols</p>
+                            </div>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-clock"></i>
+                            <div>
+                                <h4>Flexible Hours</h4>
+                                <p>Convenient appointment times including evenings</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-image">
+                    <img src="images/clinic-background.png" alt="Dental Clinic Interior" class="about-img">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2 class="section-title">Contact Us</h2>
+            <div class="contact-content">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <h4>Address</h4>
+                            <p id="clinicAddress">123 Main Street, City, State 12345</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <h4>Phone</h4>
+                            <p id="clinicPhone">(555) 123-4567</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <h4>Email</h4>
+                            <p id="clinicEmail">info@delasalasdental.com</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-clock"></i>
+                        <div>
+                            <h4>Hours</h4>
+                            <p id="clinicHours">Mon-Fri: 8AM-6PM<br>Sat: 9AM-3PM</p>
+                        </div>
+                    </div>
+                </div>
+                <form class="contact-form" id="contactForm">
+                    <h3>Send us a Message</h3>
+                    <div class="form-group">
+                        <input type="text" id="contactName" placeholder="Your Name" autocomplete="name" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" id="contactEmail" placeholder="Your Email" autocomplete="email" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="tel" id="contactPhone" placeholder="Your Phone" autocomplete="tel">
+                    </div>
+                    <div class="form-group">
+                        <textarea id="contactMessage" placeholder="Your Message" rows="5" autocomplete="off" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Send Message</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Delas Alas Clinic</h3>
+                    <p>Providing exceptional dental care for over 15 years. Your smile is our priority.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#services">Services</a></li>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Services</h4>
+                    <ul>
+                        <li><a href="#services">General Dentistry</a></li>
+                        <li><a href="#services">Cosmetic Dentistry</a></li>
+                        <li><a href="#services">Restorative Dentistry</a></li>
+                        <li><a href="#services">Pediatric Dentistry</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact Info</h4>
+                    <p><i class="fas fa-map-marker-alt"></i> 123 Main Street, City, State 12345</p>
+                    <p><i class="fas fa-phone"></i> (555) 123-4567</p>
+                    <p><i class="fas fa-envelope"></i> info@delasalasdental.com</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Delas Alas Clinic. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('loginModal')">&times;</span>
+            <h2>Login to Your Account</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" autocomplete="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <div class="password-input-container">
+                        <input type="password" id="loginPassword" autocomplete="current-password" required>
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('loginPassword')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="loginRole">Login As</label>
+                    <select id="loginRole" autocomplete="off" required>
+                        <option value="">Select Role</option>
+                        <option value="patient">Patient</option>
+                        <option value="dentist">Dentist</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Login</button>
+                <p class="modal-footer">
+                    Don't have an account? <a href="#" onclick="showRegisterModal()">Register here</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('registerModal')">&times;</span>
+            <h2>Create Your Account</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="regName">Full Name</label>
+                    <input type="text" id="regName" autocomplete="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="regEmail">Email</label>
+                    <input type="email" id="regEmail" autocomplete="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="regPhone">Phone Number</label>
+                    <input type="tel" id="regPhone" autocomplete="tel" required>
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">Password</label>
+                    <div class="password-input-container">
+                        <input type="password" id="regPassword" autocomplete="new-password" required>
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('regPassword')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="regConfirmPassword">Confirm Password</label>
+                    <div class="password-input-container">
+                        <input type="password" id="regConfirmPassword" autocomplete="new-password" required>
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('regConfirmPassword')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="regRole">Account Type</label>
+                    <select id="regRole" autocomplete="off" required>
+                        <option value="">Select Account Type</option>
+                        <option value="patient">Patient</option>
+                        <option value="dentist">Dentist</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+                <p class="modal-footer">
+                    Already have an account? <a href="#" onclick="showLoginModal()">Login here</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Email Verification Modal -->
+    <div id="emailVerificationModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('emailVerificationModal')">&times;</span>
+            <div class="verification-content">
+                <div class="verification-icon">
+                    <i class="fas fa-envelope-open"></i>
+                </div>
+                <h2>Check Your Email</h2>
+                <p>We've sent a verification link to <strong id="verificationEmail"></strong></p>
+                <p>Please check your email and click the verification link to activate your account.</p>
+                
+                <div class="verification-actions">
+                    <button class="btn btn-primary" onclick="resendVerificationEmail()">
+                        <i class="fas fa-paper-plane"></i>
+                        Resend Email
+                    </button>
+                    <button class="btn btn-outline" onclick="checkEmailVerification()">
+                        <i class="fas fa-check"></i>
+                        I've Verified My Email
+                    </button>
+                </div>
+                
+                <div class="verification-help">
+                    <p><small>
+                        <i class="fas fa-info-circle"></i>
+                        Can't find the email? Check your spam folder or contact support.
+                    </small></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointment Modal -->
+    <div id="appointmentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('appointmentModal')">&times;</span>
+            <h2>Book Your Appointment</h2>
+            <form id="appointmentForm">
+                <div class="form-group">
+                    <label for="aptName">Full Name</label>
+                    <input type="text" id="aptName" autocomplete="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="aptEmail">Email</label>
+                    <input type="email" id="aptEmail" autocomplete="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="aptPhone">Phone Number</label>
+                    <input type="tel" id="aptPhone" autocomplete="tel" required>
+                </div>
+                <div class="form-group">
+                    <label for="aptService">Service Needed</label>
+                    <select id="aptService" autocomplete="off" required>
+                        <option value="">Select Service</option>
+                        <option value="general">General Dentistry</option>
+                        <option value="cosmetic">Cosmetic Dentistry</option>
+                        <option value="restorative">Restorative Dentistry</option>
+                        <option value="pediatric">Pediatric Dentistry</option>
+                    </select>
+                </div>
+                
+                <!-- Calendar Integration -->
+                <div class="form-group">
+                    <label for="aptDate">Preferred Date</label>
+                    <div class="calendar-container">
+                        <input type="date" id="aptDate" required min="">
+                        <div class="calendar-info">
+                            <small>Select your preferred date. Available dates will be highlighted.</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="availability-status" id="availabilityStatus" style="display: none;">
+                    <div class="status-message">
+                        <i class="fas fa-info-circle"></i>
+                        <span id="statusText">Checking availability...</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="aptMessage">Additional Notes</label>
+                    <textarea id="aptMessage" rows="3" placeholder="Any specific concerns or requests..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Book Appointment</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="local-supabase.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

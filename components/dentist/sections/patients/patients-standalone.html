@@ -1,0 +1,2096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patients - Delas Alas Dental Clinic</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦷</text></svg>">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../images/tooth.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../images/tooth.png">
+    <link rel="shortcut icon" href="../../../images/tooth.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../images/tooth.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+
+        .clinic-title h2 {
+            color: #ffd700;
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .user-profile {
+            padding: 25px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 32px;
+        }
+
+        .user-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 18px;
+        }
+
+        .user-info p {
+            margin: 0;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 25px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 4px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            border-left-color: #ffd700;
+        }
+
+        .nav-item.active {
+            background: rgba(255,255,255,0.2);
+            border-left-color: #ffd700;
+        }
+
+        .nav-item i {
+            font-size: 18px;
+            width: 20px;
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: none;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,0,0,0.2);
+            border-left-color: #ff6b6b;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            background: #f5f5f5;
+            padding: 30px;
+        }
+
+        /* Iframe Mode - Hide sidebar when loaded in iframe */
+        .iframe-mode .sidebar {
+            display: none;
+        }
+
+        .iframe-mode .main-content {
+            margin-left: 0;
+            padding: 0;
+        }
+
+        .iframe-mode .menu-toggle {
+            display: none !important;
+        }
+
+        /* Patients Styles */
+        .patients-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .patients-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .header-left h1 {
+            margin: 0 0 5px 0;
+            color: #2c3e50;
+            font-size: 28px;
+        }
+
+        .header-left p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        /* Patient Stats */
+        .patients-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .stat-icon:nth-child(1) { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .stat-icon:nth-child(2) { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .stat-icon:nth-child(3) { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+
+        .stat-info h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .stat-change {
+            font-size: 12px;
+            font-weight: 500;
+            color: #28a745;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-section input,
+        .filter-section select {
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-section input:focus,
+        .filter-section select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* Patients Table */
+        .patients-table-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .patients-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .patients-table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .patients-table td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .patients-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .patient-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .patient-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .patient-details h4 {
+            margin: 0 0 5px 0;
+            color: #2c3e50;
+        }
+
+        .patient-details p {
+            margin: 0;
+            color: #666;
+            font-size: 12px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .modal-content h2 {
+            padding: 25px 25px 0 25px;
+            margin: 0 0 20px 0;
+            color: #2c3e50;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .patients-header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+
+            .patients-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-section {
+                flex-direction: column;
+            }
+
+            .patients-table-container {
+                overflow-x: auto;
+            }
+
+            .menu-toggle {
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 1001;
+                background: #667eea;
+                color: white;
+                border: none;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                font-size: 20px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            }
+        }
+
+        /* Enhanced Patient Details Modal Styles */
+        .patient-details-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .patient-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .patient-avatar-large {
+            flex-shrink: 0;
+        }
+
+        .avatar-circle {
+            width: 100px;
+            height: 100px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: bold;
+            color: white;
+            border: 4px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .patient-header-info {
+            flex: 1;
+        }
+
+        .patient-name {
+            font-size: 2.2rem;
+            margin: 0 0 8px 0;
+            font-weight: 600;
+        }
+
+        .patient-id {
+            font-size: 1rem;
+            margin: 0 0 15px 0;
+            opacity: 0.9;
+            font-family: 'Courier New', monospace;
+        }
+
+        .patient-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .patient-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card-header i {
+            font-size: 1.5rem;
+            color: #667eea;
+        }
+
+        .card-header h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .card-content {
+            padding: 25px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .info-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .info-item label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .info-item span {
+            font-size: 1rem;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .visit-count {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+        }
+
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 15px 10px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .action-btn i {
+            font-size: 1.5rem;
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .action-btn.secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
+        }
+
+        .action-btn.secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+        }
+
+        .action-btn.info {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+        }
+
+        .action-btn.info:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(23, 162, 184, 0.4);
+        }
+
+        .action-btn.success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .action-btn.success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .modal-footer {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+        }
+
+        .modal-footer .btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .modal-footer .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .modal-footer .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .modal-footer .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .modal-footer .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Responsive Design for Patient Details */
+        @media (max-width: 768px) {
+            .patient-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+
+            .patient-info-grid {
+                grid-template-columns: 1fr;
+                padding: 20px;
+                gap: 20px;
+            }
+
+            .action-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .modal-footer {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="clinic-title">
+                    <h2>🦷 Delas Alas Dental Clinic</h2>
+                </div>
+            </div>
+            
+            <div class="user-profile">
+                <div class="avatar">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <div class="user-info">
+                    <h3 id="dentistName">Dr. Delas Alas</h3>
+                    <p id="dentistEmail">delas.alas@clinic.com</p>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a class="nav-item" onclick="navigateToSection('dashboard')">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('schedule')">
+                    <i class="fas fa-calendar"></i>
+                    <span>Schedule</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('appointments')">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Appointments</span>
+                </a>
+                <a class="nav-item active" onclick="navigateToSection('patients')">
+                    <i class="fas fa-users"></i>
+                    <span>Patients</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('services')">
+                    <i class="fas fa-tools"></i>
+                    <span>Services</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('dentist-list')">
+                    <i class="fas fa-user-md"></i>
+                    <span>Dentist List</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('messages')">
+                    <i class="fas fa-comments"></i>
+                    <span>Messages</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('settings')">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <button class="nav-item logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="patients-content">
+                <div class="patients-header">
+                    <div class="header-left">
+                        <h1>👥 Patient Management</h1>
+                        <p>Manage patient records and information</p>
+                    </div>
+                    <div class="header-right">
+                        <button class="btn btn-primary" onclick="addNewPatient()">
+                            <i class="fas fa-user-plus"></i> Add Patient
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportPatients()">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Patient Stats -->
+                <div class="patients-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Patients</h3>
+                            <p class="stat-value" id="totalPatients">0</p>
+                            <span class="stat-change positive">+12 this month</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Active Patients</h3>
+                            <p class="stat-value" id="activePatients">0</p>
+                            <span class="stat-change positive">+5 this week</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-user-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>New This Week</h3>
+                            <p class="stat-value" id="newThisWeek">0</p>
+                            <span class="stat-change positive">Growing steadily</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter and Search -->
+                <div class="filter-section">
+                    <input type="text" id="patientSearch" placeholder="Search patients by name, email..." oninput="filterPatients()">
+                    <select id="statusFilter" onchange="filterPatients()">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                    <select id="sortBy" onchange="sortPatients()">
+                        <option value="name">Sort by Name</option>
+                        <option value="lastVisit">Sort by Last Visit</option>
+                        <option value="totalVisits">Sort by Total Visits</option>
+                    </select>
+                </div>
+
+                <!-- Patients Table -->
+                <div class="patients-table-container">
+                    <table class="patients-table">
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Contact</th>
+                                <th>Last Visit</th>
+                                <th>Total Visits</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="patientsTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center">
+                                    <div style="padding: 40px; color: #666;">
+                                        <i class="fas fa-users" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                                        <h3 style="margin: 0 0 10px 0;">No patients registered yet</h3>
+                                        <p style="margin: 0;">Patient records will appear here when they register</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <!-- Mobile Menu Toggle (visible on mobile only) -->
+        <button class="menu-toggle" onclick="toggleMobileMenu()" style="display: none;">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <!-- Patient Details Modal -->
+    <div id="patientModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let patients = [];
+        let filteredPatients = [];
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if loaded in iframe
+            if (window !== window.top) {
+                document.body.classList.add('iframe-mode');
+            }
+            loadPatients();
+        });
+
+        // Load patients data
+        async function loadPatients() {
+            console.log('🔄 Loading patients data...');
+            
+            // Initialize empty array
+            patients = [];
+
+            // Load patients from Supabase database
+            await loadPatientsFromDatabase();
+            
+            // Update the UI
+            updateStats();
+            filterPatients();
+            
+            console.log('✅ Patients data loaded successfully');
+        }
+
+        // Load patients from Supabase database
+        async function loadPatientsFromDatabase() {
+            try {
+                console.log('🔄 Loading patients from database...');
+                
+                // Direct API call to Supabase
+                const data = await callSupabaseAPI('GET', 'users?user_type=eq.patient');
+                
+                console.log('📊 Raw data from API:', data);
+                
+                if (data && data.length > 0) {
+                    // Convert Supabase data to the format expected by the UI
+                    patients = data.map(user => ({
+                        id: user.id,
+                        name: user.name || 'Unknown Patient',
+                        email: user.email || 'No email',
+                        phone: user.phone || 'No phone',
+                        status: 'active', // Default status for registered patients
+                        registeredDate: user.created_at || new Date().toISOString(),
+                        totalVisits: 0, // This would need to be calculated from appointments
+                        lastVisit: null // This would need to be calculated from appointments
+                    }));
+                    console.log('✅ Loaded', patients.length, 'patients from database:', patients);
+                } else {
+                    console.log('ℹ️ No patients found in database');
+                    console.log('🔍 API Response:', data);
+                    patients = [];
+                }
+            } catch (error) {
+                console.error('❌ Error loading patients from database:', error);
+                console.error('❌ Error details:', error.message);
+                patients = [];
+            }
+        }
+
+        // Direct API call function (no CDN required)
+        async function callSupabaseAPI(method, endpoint, body = null) {
+            const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+            
+            const headers = {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'
+            };
+
+            const options = {
+                method: method,
+                headers: headers
+            };
+
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+
+            try {
+                console.log('🌐 Making API call to:', `${SUPABASE_URL}/rest/v1/${endpoint}`);
+                
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/${endpoint}`, options);
+                
+                console.log('📥 Response status:', response.status);
+                
+                // Check if response has content
+                const contentType = response.headers.get('content-type');
+                let data;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    const text = await response.text();
+                    console.log('📥 Raw response:', text);
+                    
+                    if (text.trim() === '') {
+                        data = [];
+                    } else {
+                        data = JSON.parse(text);
+                    }
+                } else {
+                    const text = await response.text();
+                    data = text ? { message: text } : {};
+                }
+
+                if (!response.ok) {
+                    console.error('❌ API Error:', data);
+                    throw new Error(data.message || data.msg || `HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                console.log('✅ API Success:', data);
+                return data;
+                
+            } catch (error) {
+                console.error('❌ API Call Error:', error);
+                throw new Error(`API call failed: ${error.message}`);
+            }
+        }
+
+        // Set up real-time listeners (replace with your Firebase/WebSocket implementation)
+        function setupRealtimeListeners() {
+            // Example: Listen for patient updates
+            // firebase.firestore().collection('patients').onSnapshot((snapshot) => {
+            //     patients = [];
+            //     snapshot.forEach(doc => {
+            //         patients.push({ id: doc.id, ...doc.data() });
+            //     });
+            //     updateStats();
+            //     filterPatients();
+            // });
+            
+            // Real-time listeners will be implemented here when connecting to Firebase/WebSocket
+            console.log('Patients section initialized - ready for real-time data');
+        }
+
+        // Update statistics
+        function updateStats() {
+            const totalPatients = patients.length;
+            const activePatients = patients.filter(p => (p.status || 'active') === 'active').length;
+            const newThisWeek = patients.filter(p => {
+                const weekAgo = new Date();
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                return new Date(p.registeredDate || p.createdAt || new Date()) > weekAgo;
+            }).length;
+
+            document.getElementById('totalPatients').textContent = totalPatients;
+            document.getElementById('activePatients').textContent = activePatients;
+            document.getElementById('newThisWeek').textContent = newThisWeek;
+        }
+
+        // Filter patients
+        function filterPatients() {
+            const searchTerm = document.getElementById('patientSearch').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            filteredPatients = patients.filter(patient => {
+                const matchesSearch = !searchTerm || 
+                    patient.name.toLowerCase().includes(searchTerm) ||
+                    patient.email.toLowerCase().includes(searchTerm);
+                const matchesStatus = !statusFilter || patient.status === statusFilter;
+                
+                return matchesSearch && matchesStatus;
+            });
+
+            sortPatients();
+        }
+
+        // Sort patients
+        function sortPatients() {
+            const sortBy = document.getElementById('sortBy').value;
+            
+            filteredPatients.sort((a, b) => {
+                switch(sortBy) {
+                    case 'name':
+                        return a.name.localeCompare(b.name);
+                    case 'lastVisit':
+                        return new Date(b.lastVisit) - new Date(a.lastVisit);
+                    case 'totalVisits':
+                        return b.totalVisits - a.totalVisits;
+                    default:
+                        return 0;
+                }
+            });
+
+            displayPatients();
+        }
+
+        // Display patients
+        function displayPatients() {
+            const tbody = document.getElementById('patientsTableBody');
+            
+            if (filteredPatients.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center">
+                            <div style="padding: 40px; color: #666;">
+                                <i class="fas fa-users" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                                <h3 style="margin: 0 0 10px 0;">No patients registered yet</h3>
+                                <p style="margin: 0;">Patient records will appear here when they register</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filteredPatients.map(patient => `
+                <tr>
+                    <td>
+                        <div class="patient-info">
+                            <div class="patient-avatar">
+                                ${patient.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div class="patient-details">
+                                <h4>${patient.name}</h4>
+                                <p>ID: ${patient.id}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div>
+                            <small>📞 ${patient.phone}</small><br>
+                            <small>📧 ${patient.email}</small>
+                        </div>
+                    </td>
+                    <td>${patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString() : 'Never'}</td>
+                    <td>${patient.totalVisits || 0}</td>
+                    <td><span class="status-badge status-${patient.status}">${patient.status}</span></td>
+                    <td>
+                        <div style="display: flex; gap: 5px;">
+                            <button class="btn btn-sm btn-primary" onclick="viewPatient('${patient.id}')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-secondary" onclick="editPatient('${patient.id}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-secondary" onclick="updatePatientVisit('${patient.id}')">
+                                <i class="fas fa-calendar-plus"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Navigation function
+        function navigateToSection(section) {
+            // If loaded in iframe, communicate with parent
+            if (window !== window.top) {
+                window.parent.postMessage({ action: 'loadSection', section: section }, '*');
+            } else {
+                // If standalone, navigate directly
+                window.location.href = `../${section}/${section}-standalone.html`;
+            }
+        }
+
+        // Action functions
+        function addNewPatient() {
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <h2>Add New Patient</h2>
+                <form id="patientForm" style="padding: 20px 0;">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Full Name:</label>
+                        <input type="text" id="patientName" required style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Email:</label>
+                        <input type="email" id="patientEmail" required style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Phone:</label>
+                        <input type="tel" id="patientPhone" required style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Date of Birth:</label>
+                        <input type="date" id="patientDOB" required style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Address:</label>
+                        <textarea id="patientAddress" rows="3" required style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px;"></textarea>
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Patient</button>
+                    </div>
+                </form>
+            `;
+            
+            document.getElementById('patientForm').onsubmit = function(e) {
+                e.preventDefault();
+                
+                const patientData = {
+                    name: document.getElementById('patientName').value,
+                    email: document.getElementById('patientEmail').value,
+                    phone: document.getElementById('patientPhone').value,
+                    dob: document.getElementById('patientDOB').value,
+                    address: document.getElementById('patientAddress').value,
+                    status: 'active',
+                    registeredDate: new Date().toISOString(),
+                    totalVisits: 0
+                };
+                
+                if (patientData.name && patientData.email && patientData.phone) {
+                    addPatient(patientData);
+                    alert('Patient added successfully!');
+                    closeModal();
+                } else {
+                    alert('Please fill in all required fields.');
+                }
+            };
+            
+            document.getElementById('patientModal').style.display = 'block';
+        }
+
+        function addPatient(patientData) {
+            const newPatient = {
+                id: Date.now().toString(),
+                ...patientData
+            };
+            
+            patients.push(newPatient);
+            localStorage.setItem('dentalPatients', JSON.stringify(patients));
+            updateStats();
+            filterPatients();
+            
+            return newPatient;
+        }
+
+        function exportPatients() {
+            alert('Export patients functionality - integrate with your export system');
+        }
+
+        function viewPatient(id) {
+            const patient = patients.find(p => p.id === id);
+            if (patient) {
+                const modalBody = document.getElementById('modalBody');
+                
+                // Calculate age from date of birth
+                const calculateAge = (dob) => {
+                    if (!dob || dob === 'Invalid Date') return 'N/A';
+                    const today = new Date();
+                    const birthDate = new Date(dob);
+                    let age = today.getFullYear() - birthDate.getFullYear();
+                    const monthDiff = today.getMonth() - birthDate.getMonth();
+                    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                        age--;
+                    }
+                    return age;
+                };
+                
+                const age = calculateAge(patient.dob);
+                const dobDisplay = patient.dob && patient.dob !== 'Invalid Date' ? new Date(patient.dob).toLocaleDateString() : 'Not provided';
+                const addressDisplay = patient.address && patient.address !== 'undefined' ? patient.address : 'Not provided';
+                
+                modalBody.innerHTML = `
+                    <div class="patient-details-container">
+                        <!-- Header Section -->
+                        <div class="patient-header">
+                            <div class="patient-avatar-large">
+                                <div class="avatar-circle">
+                                    ${patient.name.charAt(0).toUpperCase()}
+                                </div>
+                            </div>
+                            <div class="patient-header-info">
+                                <h2 class="patient-name">${patient.name}</h2>
+                                <p class="patient-id">ID: ${patient.id}</p>
+                                <div class="patient-status">
+                                    <span class="status-badge status-${patient.status}">${patient.status}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Information Grid -->
+                        <div class="patient-info-grid">
+                            <!-- Personal Information Card -->
+                            <div class="info-card">
+                                <div class="card-header">
+                                    <i class="fas fa-user"></i>
+                                    <h3>Personal Information</h3>
+                                </div>
+                                <div class="card-content">
+                                    <div class="info-item">
+                                        <label>Full Name</label>
+                                        <span>${patient.name}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Email Address</label>
+                                        <span>${patient.email}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Phone Number</label>
+                                        <span>${patient.phone || 'Not provided'}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Date of Birth</label>
+                                        <span>${dobDisplay}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Age</label>
+                                        <span>${age} years old</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Address</label>
+                                        <span>${addressDisplay}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Medical Information Card -->
+                            <div class="info-card">
+                                <div class="card-header">
+                                    <i class="fas fa-stethoscope"></i>
+                                    <h3>Medical Information</h3>
+                                </div>
+                                <div class="card-content">
+                                    <div class="info-item">
+                                        <label>Patient Status</label>
+                                        <span class="status-badge status-${patient.status}">${patient.status}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Registration Date</label>
+                                        <span>${new Date(patient.registeredDate).toLocaleDateString()}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Last Visit</label>
+                                        <span>${patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString() : 'Never'}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Total Visits</label>
+                                        <span class="visit-count">${patient.totalVisits || 0}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Days Since Last Visit</label>
+                                        <span>${patient.lastVisit ? Math.floor((new Date() - new Date(patient.lastVisit)) / (1000 * 60 * 60 * 24)) : 'N/A'} days</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Quick Actions Card -->
+                            <div class="info-card">
+                                <div class="card-header">
+                                    <i class="fas fa-bolt"></i>
+                                    <h3>Quick Actions</h3>
+                                </div>
+                                <div class="card-content">
+                                    <div class="action-buttons">
+                                        <button class="action-btn primary" onclick="updatePatientVisit('${patient.id}')">
+                                            <i class="fas fa-calendar-plus"></i>
+                                            <span>Schedule Visit</span>
+                                        </button>
+                                        <button class="action-btn secondary" onclick="editPatient('${patient.id}')">
+                                            <i class="fas fa-edit"></i>
+                                            <span>Edit Patient</span>
+                                        </button>
+                                        <button class="action-btn info" onclick="viewPatientHistory('${patient.id}')">
+                                            <i class="fas fa-history"></i>
+                                            <span>View History</span>
+                                        </button>
+                                        <button class="action-btn success" onclick="sendPatientMessage('${patient.id}')">
+                                            <i class="fas fa-envelope"></i>
+                                            <span>Send Message</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Footer Actions -->
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" onclick="closeModal()">
+                                <i class="fas fa-times"></i>
+                                Close
+                            </button>
+                            <button class="btn btn-primary" onclick="editPatient('${patient.id}')">
+                                <i class="fas fa-edit"></i>
+                                Edit Patient
+                            </button>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('patientModal').style.display = 'block';
+            }
+        }
+
+        function editPatient(id) {
+            const patient = patients.find(p => p.id === id);
+            if (patient) {
+                // Close the current modal first
+                closeModal();
+                
+                // Show edit patient modal
+                showEditPatientModal(patient);
+            }
+        }
+
+        function showEditPatientModal(patient) {
+            // Create modal HTML
+            const modalHTML = `
+                <div id="editPatientModal" class="modal" style="display: block;">
+                    <div class="modal-content" style="max-width: 700px;">
+                        <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px;">
+                            <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                                <i class="fas fa-edit"></i>
+                                Edit Patient: ${patient.name}
+                            </h3>
+                            <span class="close" onclick="closeEditPatientModal()" style="color: white;">&times;</span>
+                        </div>
+                        <div class="modal-body" style="padding: 30px;">
+                            <form id="editPatientForm">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                                    <div class="form-group">
+                                        <label for="editName" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Full Name *</label>
+                                        <input type="text" id="editName" value="${patient.name}" required style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="editEmail" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Email Address *</label>
+                                        <input type="email" id="editEmail" value="${patient.email}" required style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                                    </div>
+                                </div>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                                    <div class="form-group">
+                                        <label for="editPhone" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Phone Number</label>
+                                        <input type="tel" id="editPhone" value="${patient.phone || ''}" style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="editDob" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Date of Birth</label>
+                                        <input type="date" id="editDob" value="${patient.dob || ''}" style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label for="editAddress" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Address</label>
+                                    <textarea id="editAddress" rows="3" style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem; resize: vertical;">${patient.address || ''}</textarea>
+                                </div>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                                    <div class="form-group">
+                                        <label for="editStatus" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Patient Status</label>
+                                        <select id="editStatus" style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                                            <option value="active" ${patient.status === 'active' ? 'selected' : ''}>Active</option>
+                                            <option value="inactive" ${patient.status === 'inactive' ? 'selected' : ''}>Inactive</option>
+                                            <option value="suspended" ${patient.status === 'suspended' ? 'selected' : ''}>Suspended</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Patient ID (Read-only)</label>
+                                        <input type="text" value="${patient.id}" readonly style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem; background: #f8f9fa; color: #6c757d;">
+                                    </div>
+                                </div>
+                                
+                                <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 30px;">
+                                    <button type="button" class="btn btn-secondary" onclick="closeEditPatientModal()" style="padding: 12px 24px; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                                        Cancel
+                                    </button>
+                                    <button type="submit" class="btn btn-primary" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                                        <i class="fas fa-save"></i> Save Changes
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            // Handle form submission
+            document.getElementById('editPatientForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                savePatientChanges(patient);
+            });
+        }
+
+        function savePatientChanges(patient) {
+            // Get form data
+            const updatedData = {
+                name: document.getElementById('editName').value,
+                email: document.getElementById('editEmail').value,
+                phone: document.getElementById('editPhone').value,
+                dob: document.getElementById('editDob').value,
+                address: document.getElementById('editAddress').value,
+                status: document.getElementById('editStatus').value,
+                updatedAt: new Date().toISOString()
+            };
+            
+            // Update patient data
+            Object.assign(patient, updatedData);
+            
+            // Save to localStorage
+            localStorage.setItem('dentalPatients', JSON.stringify(patients));
+            
+            // Update UI
+            updateStats();
+            filterPatients();
+            
+            // Close modal and show success
+            closeEditPatientModal();
+            showSuccessMessage(`Patient ${patient.name} updated successfully!`);
+        }
+
+        function closeEditPatientModal() {
+            const modal = document.getElementById('editPatientModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function updatePatientVisit(id) {
+            const patient = patients.find(p => p.id === id);
+            if (patient) {
+                // Close the current modal first
+                closeModal();
+                
+                // Show appointment scheduling modal
+                showScheduleAppointmentModal(patient);
+            }
+        }
+
+        function showScheduleAppointmentModal(patient) {
+            // Create modal HTML
+            const modalHTML = `
+                <div id="scheduleModal" class="modal" style="display: block;">
+                    <div class="modal-content" style="max-width: 600px;">
+                        <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px;">
+                            <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                                <i class="fas fa-calendar-plus"></i>
+                                Schedule Appointment for ${patient.name}
+                            </h3>
+                            <span class="close" onclick="closeScheduleModal()" style="color: white;">&times;</span>
+                        </div>
+                        <div class="modal-body" style="padding: 30px;">
+                            <form id="scheduleForm">
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Patient Information</label>
+                                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #667eea;">
+                                        <p style="margin: 0; font-weight: 600;">${patient.name}</p>
+                                        <p style="margin: 5px 0 0 0; color: #6c757d; font-size: 0.9rem;">${patient.email}</p>
+                                        <p style="margin: 5px 0 0 0; color: #6c757d; font-size: 0.9rem;">${patient.phone || 'No phone provided'}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label for="appointmentDate" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Appointment Date *</label>
+                                    <input type="date" id="appointmentDate" required style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label for="appointmentTime" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Appointment Time *</label>
+                                    <select id="appointmentTime" required style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                                        <option value="">Select Time</option>
+                                        <option value="09:00">9:00 AM</option>
+                                        <option value="09:30">9:30 AM</option>
+                                        <option value="10:00">10:00 AM</option>
+                                        <option value="10:30">10:30 AM</option>
+                                        <option value="11:00">11:00 AM</option>
+                                        <option value="11:30">11:30 AM</option>
+                                        <option value="14:00">2:00 PM</option>
+                                        <option value="14:30">2:30 PM</option>
+                                        <option value="15:00">3:00 PM</option>
+                                        <option value="15:30">3:30 PM</option>
+                                        <option value="16:00">4:00 PM</option>
+                                        <option value="16:30">4:30 PM</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label for="serviceType" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Service Type *</label>
+                                    <select id="serviceType" required style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                                        <option value="">Select Service</option>
+                                        <option value="General Checkup">General Checkup</option>
+                                        <option value="Teeth Cleaning">Teeth Cleaning</option>
+                                        <option value="Dental Filling">Dental Filling</option>
+                                        <option value="Tooth Extraction">Tooth Extraction</option>
+                                        <option value="Root Canal">Root Canal</option>
+                                        <option value="Crown">Crown</option>
+                                        <option value="Orthodontics">Orthodontics</option>
+                                        <option value="Emergency">Emergency</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label for="appointmentNotes" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Notes</label>
+                                    <textarea id="appointmentNotes" rows="3" placeholder="Any special notes or requirements..." style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem; resize: vertical;"></textarea>
+                                </div>
+                                
+                                <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 30px;">
+                                    <button type="button" class="btn btn-secondary" onclick="closeScheduleModal()" style="padding: 12px 24px; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                                        Cancel
+                                    </button>
+                                    <button type="submit" class="btn btn-primary" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                                        <i class="fas fa-calendar-plus"></i> Schedule Appointment
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            // Set minimum date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('appointmentDate').min = today;
+            
+            // Handle form submission
+            document.getElementById('scheduleForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                scheduleAppointment(patient);
+            });
+        }
+
+        function scheduleAppointment(patient) {
+            const formData = {
+                patientId: patient.id,
+                patientName: patient.name,
+                patientEmail: patient.email,
+                patientPhone: patient.phone,
+                appointmentDate: document.getElementById('appointmentDate').value,
+                appointmentTime: document.getElementById('appointmentTime').value,
+                serviceType: document.getElementById('serviceType').value,
+                notes: document.getElementById('appointmentNotes').value,
+                status: 'pending',
+                dentistId: null // Will be assigned by admin
+            };
+            
+            // Here you would typically send to your backend
+            console.log('Scheduling appointment:', formData);
+            
+            // For now, update local data and show success
+            patient.lastVisit = new Date().toISOString();
+            patient.totalVisits = (patient.totalVisits || 0) + 1;
+            localStorage.setItem('dentalPatients', JSON.stringify(patients));
+            
+            // Update UI
+            updateStats();
+            filterPatients();
+            
+            // Close modal and show success
+            closeScheduleModal();
+            showSuccessMessage(`Appointment scheduled successfully for ${patient.name}!`);
+        }
+
+        function closeScheduleModal() {
+            const modal = document.getElementById('scheduleModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('patientModal').style.display = 'none';
+        }
+
+        // Real-time update functions (for integration with your backend)
+        function updatePatientsData() {
+            updateStats();
+            filterPatients();
+        }
+
+        function addNewPatient(patientData) {
+            patients.push(patientData);
+            localStorage.setItem('dentalPatients', JSON.stringify(patients));
+            updatePatientsData();
+        }
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('mobile-open');
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                alert('Logout functionality - integrate with your authentication system');
+                // window.location.href = '/login';
+            }
+        }
+
+        // Show mobile menu toggle on small screens
+        function checkScreenSize() {
+            const menuToggle = document.querySelector('.menu-toggle');
+            if (window.innerWidth <= 768) {
+                menuToggle.style.display = 'block';
+            } else {
+                menuToggle.style.display = 'none';
+                document.getElementById('sidebar').classList.remove('mobile-open');
+            }
+        }
+
+        window.addEventListener('resize', checkScreenSize);
+        checkScreenSize();
+
+        // Additional functions for enhanced Patient Details form
+        function viewPatientHistory(id) {
+            const patient = patients.find(p => p.id === id);
+            if (patient) {
+                // Close the current modal first
+                closeModal();
+                
+                // Show patient history modal
+                showPatientHistoryModal(patient);
+            }
+        }
+
+        function showPatientHistoryModal(patient) {
+            // Generate sample history data (in real app, this would come from backend)
+            const historyData = generateSampleHistory(patient);
+            
+            // Create modal HTML
+            const modalHTML = `
+                <div id="historyModal" class="modal" style="display: block;">
+                    <div class="modal-content" style="max-width: 900px;">
+                        <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px;">
+                            <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                                <i class="fas fa-history"></i>
+                                Medical History: ${patient.name}
+                            </h3>
+                            <span class="close" onclick="closeHistoryModal()" style="color: white;">&times;</span>
+                        </div>
+                        <div class="modal-body" style="padding: 30px;">
+                            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px;">
+                                <!-- Patient Summary -->
+                                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; border-left: 4px solid #667eea;">
+                                    <h4 style="margin: 0 0 15px 0; color: #2c3e50;">Patient Summary</h4>
+                                    <div style="margin-bottom: 10px;">
+                                        <strong>Total Visits:</strong> ${patient.totalVisits || 0}
+                                    </div>
+                                    <div style="margin-bottom: 10px;">
+                                        <strong>Last Visit:</strong> ${patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString() : 'Never'}
+                                    </div>
+                                    <div style="margin-bottom: 10px;">
+                                        <strong>Status:</strong> <span class="status-badge status-${patient.status}">${patient.status}</span>
+                                    </div>
+                                    <div style="margin-bottom: 10px;">
+                                        <strong>Registered:</strong> ${new Date(patient.registeredDate).toLocaleDateString()}
+                                    </div>
+                                </div>
+                                
+                                <!-- History Timeline -->
+                                <div>
+                                    <h4 style="margin: 0 0 20px 0; color: #2c3e50;">Visit History</h4>
+                                    <div class="history-timeline">
+                                        ${historyData.map(visit => `
+                                            <div class="history-item" style="margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid ${visit.type === 'emergency' ? '#dc3545' : visit.type === 'routine' ? '#28a745' : '#ffc107'}; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                                <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 10px;">
+                                                    <h5 style="margin: 0; color: #2c3e50;">${visit.service}</h5>
+                                                    <span style="background: ${visit.type === 'emergency' ? '#dc3545' : visit.type === 'routine' ? '#28a745' : '#ffc107'}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; text-transform: uppercase;">${visit.type}</span>
+                                                </div>
+                                                <div style="color: #6c757d; font-size: 0.9rem; margin-bottom: 8px;">
+                                                    <i class="fas fa-calendar"></i> ${visit.date} at ${visit.time}
+                                                </div>
+                                                <div style="color: #6c757d; font-size: 0.9rem; margin-bottom: 8px;">
+                                                    <i class="fas fa-user-md"></i> Dr. ${visit.dentist}
+                                                </div>
+                                                <div style="color: #495057;">
+                                                    ${visit.notes}
+                                                </div>
+                                                <div style="margin-top: 10px; display: flex; gap: 10px;">
+                                                    <span style="background: #e9ecef; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">Status: ${visit.status}</span>
+                                                    <span style="background: #e9ecef; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">Cost: $${visit.cost}</span>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 30px;">
+                                <button type="button" class="btn btn-secondary" onclick="closeHistoryModal()" style="padding: 12px 24px; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                                    Close
+                                </button>
+                                <button type="button" class="btn btn-primary" onclick="exportPatientHistory('${patient.id}')" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                                    <i class="fas fa-download"></i> Export History
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        function generateSampleHistory(patient) {
+            // Generate sample history data (in real app, this would come from backend)
+            const services = ['General Checkup', 'Teeth Cleaning', 'Dental Filling', 'Tooth Extraction', 'Root Canal', 'Crown', 'Orthodontics'];
+            const dentists = ['Dr. Delas Alas', 'Dr. Smith', 'Dr. Johnson', 'Dr. Williams'];
+            const types = ['routine', 'emergency', 'follow-up'];
+            const statuses = ['completed', 'pending', 'cancelled'];
+            
+            const history = [];
+            const visitCount = Math.min(patient.totalVisits || 0, 10); // Show up to 10 visits
+            
+            for (let i = 0; i < visitCount; i++) {
+                const date = new Date();
+                date.setDate(date.getDate() - (i * 30)); // Spread visits over months
+                
+                history.push({
+                    date: date.toLocaleDateString(),
+                    time: ['09:00', '10:30', '14:00', '15:30'][Math.floor(Math.random() * 4)],
+                    service: services[Math.floor(Math.random() * services.length)],
+                    dentist: dentists[Math.floor(Math.random() * dentists.length)],
+                    type: types[Math.floor(Math.random() * types.length)],
+                    status: statuses[Math.floor(Math.random() * statuses.length)],
+                    notes: `Treatment notes for ${services[Math.floor(Math.random() * services.length)]}. Patient responded well to treatment.`,
+                    cost: Math.floor(Math.random() * 500) + 100
+                });
+            }
+            
+            return history.sort((a, b) => new Date(b.date) - new Date(a.date));
+        }
+
+        function closeHistoryModal() {
+            const modal = document.getElementById('historyModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function exportPatientHistory(patientId) {
+            const patient = patients.find(p => p.id === patientId);
+            if (patient) {
+                showSuccessMessage(`Exporting medical history for ${patient.name}...`);
+                // In real app, this would generate and download a PDF or CSV
+            }
+        }
+
+        function sendPatientMessage(id) {
+            const patient = patients.find(p => p.id === id);
+            if (patient) {
+                // Close the current modal first
+                closeModal();
+                
+                // Show send message modal
+                showSendMessageModal(patient);
+            }
+        }
+
+        function showSendMessageModal(patient) {
+            // Create modal HTML
+            const modalHTML = `
+                <div id="messageModal" class="modal" style="display: block;">
+                    <div class="modal-content" style="max-width: 600px;">
+                        <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px;">
+                            <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                                <i class="fas fa-envelope"></i>
+                                Send Message to ${patient.name}
+                            </h3>
+                            <span class="close" onclick="closeMessageModal()" style="color: white;">&times;</span>
+                        </div>
+                        <div class="modal-body" style="padding: 30px;">
+                            <form id="messageForm">
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Recipient</label>
+                                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #667eea;">
+                                        <p style="margin: 0; font-weight: 600;">${patient.name}</p>
+                                        <p style="margin: 5px 0 0 0; color: #6c757d; font-size: 0.9rem;">${patient.email}</p>
+                                        <p style="margin: 5px 0 0 0; color: #6c757d; font-size: 0.9rem;">${patient.phone || 'No phone provided'}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label for="messageSubject" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Subject *</label>
+                                    <select id="messageSubject" required style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                                        <option value="">Select Subject</option>
+                                        <option value="Appointment Reminder">Appointment Reminder</option>
+                                        <option value="Appointment Confirmation">Appointment Confirmation</option>
+                                        <option value="Treatment Follow-up">Treatment Follow-up</option>
+                                        <option value="Prescription Ready">Prescription Ready</option>
+                                        <option value="Payment Reminder">Payment Reminder</option>
+                                        <option value="General Information">General Information</option>
+                                        <option value="Emergency Contact">Emergency Contact</option>
+                                        <option value="Custom">Custom Subject</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label for="customSubject" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Custom Subject</label>
+                                    <input type="text" id="customSubject" placeholder="Enter custom subject..." style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label for="messageContent" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Message *</label>
+                                    <textarea id="messageContent" rows="6" required placeholder="Type your message here..." style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem; resize: vertical;"></textarea>
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label for="messagePriority" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Priority</label>
+                                    <select id="messagePriority" style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 1rem;">
+                                        <option value="normal">Normal</option>
+                                        <option value="high">High</option>
+                                        <option value="urgent">Urgent</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                        <input type="checkbox" id="sendEmail" checked style="transform: scale(1.2);">
+                                        <span style="font-weight: 600; color: #2c3e50;">Also send via email</span>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                        <input type="checkbox" id="sendSMS" style="transform: scale(1.2);">
+                                        <span style="font-weight: 600; color: #2c3e50;">Also send via SMS (if phone available)</span>
+                                    </label>
+                                </div>
+                                
+                                <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 30px;">
+                                    <button type="button" class="btn btn-secondary" onclick="closeMessageModal()" style="padding: 12px 24px; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                                        Cancel
+                                    </button>
+                                    <button type="submit" class="btn btn-primary" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                                        <i class="fas fa-paper-plane"></i> Send Message
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            // Handle subject change
+            document.getElementById('messageSubject').addEventListener('change', function() {
+                const customSubjectField = document.getElementById('customSubject');
+                if (this.value === 'Custom') {
+                    customSubjectField.style.display = 'block';
+                    customSubjectField.required = true;
+                } else {
+                    customSubjectField.style.display = 'none';
+                    customSubjectField.required = false;
+                }
+            });
+            
+            // Handle form submission
+            document.getElementById('messageForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                sendMessage(patient);
+            });
+        }
+
+        function sendMessage(patient) {
+            const subject = document.getElementById('messageSubject').value;
+            const customSubject = document.getElementById('customSubject').value;
+            const content = document.getElementById('messageContent').value;
+            const priority = document.getElementById('messagePriority').value;
+            const sendEmail = document.getElementById('sendEmail').checked;
+            const sendSMS = document.getElementById('sendSMS').checked;
+            
+            const finalSubject = subject === 'Custom' ? customSubject : subject;
+            
+            const messageData = {
+                patientId: patient.id,
+                patientName: patient.name,
+                patientEmail: patient.email,
+                patientPhone: patient.phone,
+                subject: finalSubject,
+                content: content,
+                priority: priority,
+                sendEmail: sendEmail,
+                sendSMS: sendSMS,
+                timestamp: new Date().toISOString(),
+                status: 'sent'
+            };
+            
+            // Here you would typically send to your backend/messaging system
+            console.log('Sending message:', messageData);
+            
+            // Show success message
+            closeMessageModal();
+            showSuccessMessage(`Message sent successfully to ${patient.name}!`);
+            
+            // Log the message for demo purposes
+            console.log(`Message sent to ${patient.name}:`, {
+                subject: finalSubject,
+                content: content,
+                priority: priority,
+                channels: {
+                    email: sendEmail,
+                    sms: sendSMS && patient.phone
+                }
+            });
+        }
+
+        function closeMessageModal() {
+            const modal = document.getElementById('messageModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // Helper function for success messages
+        function showSuccessMessage(message) {
+            // Create toast notification
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                z-index: 10000;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                animation: slideIn 0.3s ease-out;
+            `;
+            
+            toast.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                <span>${message}</span>
+            `;
+            
+            // Add animation styles if not already added
+            if (!document.getElementById('toast-animations')) {
+                const style = document.createElement('style');
+                style.id = 'toast-animations';
+                style.textContent = `
+                    @keyframes slideIn {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            document.body.appendChild(toast);
+            
+            // Remove toast after 3 seconds
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

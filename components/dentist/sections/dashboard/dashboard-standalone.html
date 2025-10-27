@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Delas Alas Dental Clinic</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦷</text></svg>">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../images/tooth.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../images/tooth.png">
+    <link rel="shortcut icon" href="../../../images/tooth.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../images/tooth.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+
+        .clinic-title h2 {
+            color: #ffd700;
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .user-profile {
+            padding: 25px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 32px;
+        }
+
+        .user-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 18px;
+        }
+
+        .user-info p {
+            margin: 0;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 25px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 4px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            border-left-color: #ffd700;
+        }
+
+        .nav-item.active {
+            background: rgba(255,255,255,0.2);
+            border-left-color: #ffd700;
+        }
+
+        .nav-item i {
+            font-size: 18px;
+            width: 20px;
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: none;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,0,0,0.2);
+            border-left-color: #ff6b6b;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            background: #f5f5f5;
+            padding: 30px;
+        }
+
+        /* Iframe Mode - Hide sidebar when loaded in iframe */
+        .iframe-mode .sidebar {
+            display: none;
+        }
+
+        .iframe-mode .main-content {
+            margin-left: 0;
+            padding: 0;
+        }
+
+        .iframe-mode .menu-toggle {
+            display: none !important;
+        }
+
+        /* Dashboard Styles */
+        .dashboard-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .stat-icon:nth-child(1) { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .stat-icon:nth-child(2) { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .stat-icon:nth-child(3) { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .stat-icon:nth-child(4) { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+
+        .stat-info h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .stat-change {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .stat-change.positive {
+            color: #28a745;
+        }
+
+        .stat-change.warning {
+            color: #ffc107;
+        }
+
+        .appointments-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-header h2 {
+            color: #333;
+            font-size: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .appointments-table {
+            overflow-x: auto;
+        }
+
+        .appointments-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .appointments-table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .appointments-table td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .appointments-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+
+        .quick-actions-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .quick-actions-section h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        .action-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .action-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .action-card:hover {
+            transform: translateY(-5px);
+            border-color: #667eea;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+        }
+
+        .action-card i {
+            font-size: 32px;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .action-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .action-card p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .menu-toggle {
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 1001;
+                background: #667eea;
+                color: white;
+                border: none;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                font-size: 20px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="clinic-title">
+                    <h2>🦷 Delas Alas Dental Clinic</h2>
+                </div>
+            </div>
+            
+            <div class="user-profile">
+                <div class="avatar">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <div class="user-info">
+                    <h3 id="dentistName">Dr. Delas Alas</h3>
+                    <p id="dentistEmail">delas.alas@clinic.com</p>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a class="nav-item active" onclick="navigateToSection('dashboard')">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('schedule')">
+                    <i class="fas fa-calendar"></i>
+                    <span>Schedule</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('appointments')">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Appointments</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('patients')">
+                    <i class="fas fa-users"></i>
+                    <span>Patients</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('services')">
+                    <i class="fas fa-tools"></i>
+                    <span>Services</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('dentist-list')">
+                    <i class="fas fa-user-md"></i>
+                    <span>Dentist List</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('messages')">
+                    <i class="fas fa-comments"></i>
+                    <span>Messages</span>
+                </a>
+                <a class="nav-item" onclick="navigateToSection('settings')">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <button class="nav-item logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="dashboard-content">
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Today's Appointments</h3>
+                            <p class="stat-value" id="todayAppointments">0</p>
+                            <span class="stat-change positive">↑ 12% from yesterday</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Patients</h3>
+                            <p class="stat-value" id="totalPatients">0</p>
+                            <span class="stat-change positive">↑ 8 new this week</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Pending Appointments</h3>
+                            <p class="stat-value" id="pendingAppointments">0</p>
+                            <span class="stat-change warning">⏳ Needs attention</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Monthly Revenue</h3>
+                            <p class="stat-value" id="monthlyRevenue">₱0</p>
+                            <span class="stat-change positive">↑ 15% from last month</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upcoming Appointments -->
+                <div class="appointments-section">
+                    <div class="section-header">
+                        <h2>📅 Upcoming Appointments</h2>
+                        <button class="btn btn-primary" onclick="viewAllAppointments()">
+                            <i class="fas fa-list"></i> View All
+                        </button>
+                    </div>
+
+                    <div class="appointments-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Patient</th>
+                                    <th>Service</th>
+                                    <th>Contact</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="appointmentsTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center">
+                                        <div style="padding: 40px; color: #666;">
+                                            <i class="fas fa-calendar-times" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                                            <h3 style="margin: 0 0 10px 0;">No appointments yet</h3>
+                                            <p style="margin: 0;">Appointments will appear here when patients book online</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions-section">
+                    <h2>⚡ Quick Actions</h2>
+                    <div class="action-cards">
+                        <div class="action-card" onclick="newAppointment()">
+                            <i class="fas fa-calendar-plus"></i>
+                            <h3>New Appointment</h3>
+                            <p>Schedule a new patient visit</p>
+                        </div>
+
+                        <div class="action-card" onclick="addPatient()">
+                            <i class="fas fa-user-plus"></i>
+                            <h3>Add Patient</h3>
+                            <p>Register new patient</p>
+                        </div>
+
+                        <div class="action-card" onclick="viewSchedule()">
+                            <i class="fas fa-calendar-alt"></i>
+                            <h3>View Schedule</h3>
+                            <p>Check daily schedule</p>
+                        </div>
+
+                        <div class="action-card" onclick="viewMessages()">
+                            <i class="fas fa-envelope"></i>
+                            <h3>Messages</h3>
+                            <p>Check patient messages</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Mobile Menu Toggle (visible on mobile only) -->
+        <button class="menu-toggle" onclick="toggleMobileMenu()" style="display: none;">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <!-- View Appointment Details Modal -->
+    <div id="viewAppointmentModal" class="modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000;">
+        <div class="modal-content" style="background:#fff; width:90%; max-width:900px; margin:40px auto; border-radius:12px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.2);">
+            <div style="background:#5f65e0; color:#fff; padding:16px 24px; display:flex; align-items:center; gap:10px;">
+                <i class="fas fa-eye"></i>
+                <h3 style="margin:0; font-weight:600;">View Appointment Details</h3>
+                <button onclick="closeViewAppointment()" style="margin-left:auto; background:transparent; border:none; color:#fff; font-size:22px; cursor:pointer;">&times;</button>
+            </div>
+            <div style="padding:24px; background:#f7f9fc;">
+                <div style="background:#fff; border:1px solid #eef1f6; border-radius:10px; padding:20px;">
+                    <h4 style="margin:0 0 12px 0; color:#333;">Appointment Information</h4>
+                    <div id="viewAppointmentBody" style="display:grid; grid-template-columns: 220px 1fr; row-gap:12px; column-gap:16px;">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if loaded in iframe
+            if (window !== window.top) {
+                document.body.classList.add('iframe-mode');
+            }
+            loadDashboardData();
+        });
+
+        // Global variables
+        let appointments = [];
+        let patients = [];
+
+        // Load dashboard data
+        async function loadDashboardData() {
+            console.log('🔄 Loading dashboard data...');
+            
+            // Initialize empty arrays
+            appointments = [];
+            patients = [];
+
+            // Load appointments from Supabase
+            await loadAppointmentsFromDatabase();
+            
+            // Load patients from Supabase
+            await loadPatientsFromDatabase();
+            
+            // Update the dashboard
+            updateStats();
+            displayAppointments();
+            
+            console.log('✅ Dashboard data loaded successfully');
+        }
+
+        // Load appointments from Supabase database
+        async function loadAppointmentsFromDatabase() {
+            try {
+                console.log('🔄 Loading appointments from database...');
+                
+                // Direct API call to Supabase
+                const data = await callSupabaseAPI('GET', 'appointments?order=appointment_date.desc');
+                
+                if (data && data.length > 0) {
+                    // Convert Supabase data to the format expected by the UI
+                    appointments = data.map(apt => ({
+                        id: apt.id,
+                        patientName: apt.patient_name || 'Unknown Patient',
+                        patientId: apt.patient_id || 'N/A',
+                        service: apt.service_type || 'General Checkup',
+                        date: apt.appointment_date,
+                        time: apt.appointment_time || '10:00:00',
+                        status: apt.status || 'pending',
+                        phone: apt.patient_phone || 'No phone provided',
+                        email: apt.patient_email || 'No email provided',
+                        notes: apt.notes || 'No notes',
+                        createdAt: apt.created_at
+                    }));
+                    console.log('✅ Loaded', appointments.length, 'appointments from database');
+                } else {
+                    console.log('ℹ️ No appointments found in database');
+                    appointments = [];
+                }
+            } catch (error) {
+                console.error('❌ Error loading appointments from database:', error);
+                appointments = [];
+            }
+        }
+
+        // Load patients from Supabase database
+        async function loadPatientsFromDatabase() {
+            try {
+                console.log('🔄 Loading patients from database...');
+                
+                // Direct API call to Supabase
+                const data = await callSupabaseAPI('GET', 'users?user_type=eq.patient');
+                
+                if (data && data.length > 0) {
+                    patients = data.map(user => ({
+                        id: user.id,
+                        name: user.name || 'Unknown Patient',
+                        email: user.email || 'No email',
+                        phone: user.phone || 'No phone',
+                        userType: user.user_type || 'patient'
+                    }));
+                    console.log('✅ Loaded', patients.length, 'patients from database');
+                } else {
+                    console.log('ℹ️ No patients found in database');
+                    patients = [];
+                }
+            } catch (error) {
+                console.error('❌ Error loading patients from database:', error);
+                patients = [];
+            }
+        }
+
+        // Direct API call function (no CDN required)
+        async function callSupabaseAPI(method, endpoint, body = null) {
+            const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+            
+            const headers = {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'
+            };
+
+            const options = {
+                method: method,
+                headers: headers
+            };
+
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+
+            try {
+                console.log('🌐 Making API call to:', `${SUPABASE_URL}/rest/v1/${endpoint}`);
+                
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/${endpoint}`, options);
+                
+                console.log('📥 Response status:', response.status);
+                
+                // Check if response has content
+                const contentType = response.headers.get('content-type');
+                let data;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    const text = await response.text();
+                    console.log('📥 Raw response:', text);
+                    
+                    if (text.trim() === '') {
+                        data = [];
+                    } else {
+                        data = JSON.parse(text);
+                    }
+                } else {
+                    const text = await response.text();
+                    data = text ? { message: text } : {};
+                }
+
+                if (!response.ok) {
+                    console.error('❌ API Error:', data);
+                    throw new Error(data.message || data.msg || `HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                console.log('✅ API Success:', data);
+                return data;
+                
+            } catch (error) {
+                console.error('❌ API Call Error:', error);
+                throw new Error(`API call failed: ${error.message}`);
+            }
+        }
+
+        // Set up real-time listeners (replace with your Firebase/WebSocket implementation)
+        function setupRealtimeListeners() {
+            // Example: Listen for appointment updates
+            // firebase.firestore().collection('appointments').onSnapshot((snapshot) => {
+            //     appointments = [];
+            //     snapshot.forEach(doc => {
+            //         appointments.push({ id: doc.id, ...doc.data() });
+            //     });
+            //     updateStats();
+            //     displayAppointments();
+            // });
+            
+            // Real-time listeners will be implemented here when connecting to Firebase/WebSocket
+            console.log('Dashboard section initialized - ready for real-time data');
+        }
+
+        // Update statistics
+        function updateStats() {
+            const today = new Date().toDateString();
+            const todayAppointments = appointments.filter(apt => 
+                new Date(apt.date).toDateString() === today
+            ).length;
+            
+            const pendingAppointments = appointments.filter(apt => 
+                apt.status === 'pending'
+            ).length;
+            
+            const monthlyRevenue = appointments
+                .filter(apt => apt.status === 'completed')
+                .reduce((total, apt) => total + (apt.price || 0), 0);
+
+            document.getElementById('todayAppointments').textContent = todayAppointments;
+            document.getElementById('totalPatients').textContent = patients.length;
+            document.getElementById('pendingAppointments').textContent = pendingAppointments;
+            document.getElementById('monthlyRevenue').textContent = `₱${monthlyRevenue.toLocaleString()}`;
+        }
+
+        // Display appointments
+        function displayAppointments() {
+            const tbody = document.getElementById('appointmentsTableBody');
+            
+            if (appointments.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center">
+                            <div style="padding: 40px; color: #666;">
+                                <i class="fas fa-calendar-times" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                                <h3 style="margin: 0 0 10px 0;">No appointments yet</h3>
+                                <p style="margin: 0;">Appointments will appear here when patients book online</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Show upcoming appointments (next 5)
+            const upcomingAppointments = appointments
+                .filter(apt => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const apptDay = new Date(apt.date);
+                    apptDay.setHours(0, 0, 0, 0);
+                    return apptDay >= today && apt.status !== 'cancelled';
+                })
+                .sort((a, b) => new Date(`${a.date} ${a.time || '10:00:00'}`) - new Date(`${b.date} ${b.time || '10:00:00'}`))
+                .slice(0, 5);
+
+            tbody.innerHTML = upcomingAppointments.map(appointment => `
+                <tr>
+                    <td>${new Date(`${appointment.date} ${appointment.time || '10:00:00'}`).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</td>
+                    <td>${appointment.patientName}</td>
+                    <td>${appointment.service}</td>
+                    <td>${appointment.phone && appointment.phone !== 'No phone provided' ? appointment.phone : (appointment.email || '')}</td>
+                    <td><span class="status-badge status-${appointment.status}">${appointment.status}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewAppointment('${appointment.id}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Navigation function
+        function navigateToSection(section) {
+            // If loaded in iframe, communicate with parent
+            if (window !== window.top) {
+                window.parent.postMessage({ action: 'loadSection', section: section }, '*');
+            } else {
+                // If standalone, navigate directly
+                window.location.href = `../${section}/${section}-standalone.html`;
+            }
+        }
+
+        // Action functions
+        function viewAllAppointments() {
+            navigateToSection('appointments');
+        }
+
+        function newAppointment() {
+            // Go to Appointments page where creation tools live
+            navigateToSection('appointments');
+        }
+
+        function addPatient() {
+            // Go to Patients page to add/register patient
+            navigateToSection('patients');
+        }
+
+        function viewSchedule() {
+            navigateToSection('schedule');
+        }
+
+        function viewMessages() {
+            navigateToSection('messages');
+        }
+
+        function viewAppointment(id) {
+            const apt = appointments.find(a => String(a.id) === String(id));
+            if (!apt) { return; }
+            const body = document.getElementById('viewAppointmentBody');
+            const rows = [
+                ['Patient Name:', apt.patientName],
+                ['Patient ID:', apt.patientId || '—'],
+                ['Service:', apt.service],
+                ['Date:', apt.date],
+                ['Time:', (apt.time || '10:00:00').slice(0,5)],
+                ['Status:', apt.status?.toUpperCase()],
+                ['Phone:', apt.phone || '—'],
+                ['Email:', apt.email || '—'],
+                ['Notes:', apt.notes || '—']
+            ];
+            body.innerHTML = rows.map(([label, value]) => `
+                <div style="color:#6b7280; font-weight:600;">${label}</div>
+                <div style="color:#111827;">${value}</div>
+            `).join('');
+            document.getElementById('viewAppointmentModal').style.display = 'block';
+        }
+
+        function closeViewAppointment() {
+            document.getElementById('viewAppointmentModal').style.display = 'none';
+        }
+
+        // Real-time update functions (for integration with your backend)
+        function updateDashboardData() {
+            updateStats();
+            displayAppointments();
+        }
+
+        function addNewAppointment(appointmentData) {
+            appointments.push(appointmentData);
+            localStorage.setItem('dentalAppointments', JSON.stringify(appointments));
+            updateDashboardData();
+        }
+
+        function addNewPatient(patientData) {
+            patients.push(patientData);
+            localStorage.setItem('dentalPatients', JSON.stringify(patients));
+            updateDashboardData();
+        }
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('mobile-open');
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                alert('Logout functionality - integrate with your authentication system');
+                // window.location.href = '/login';
+            }
+        }
+
+        // Show mobile menu toggle on small screens
+        function checkScreenSize() {
+            const menuToggle = document.querySelector('.menu-toggle');
+            if (window.innerWidth <= 768) {
+                menuToggle.style.display = 'block';
+            } else {
+                menuToggle.style.display = 'none';
+                document.getElementById('sidebar').classList.remove('mobile-open');
+            }
+        }
+
+        window.addEventListener('resize', checkScreenSize);
+        checkScreenSize();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointments - Delas Alas Dental Clinic</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦷</text></svg>">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../images/tooth.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../images/tooth.png">
+    <link rel="shortcut icon" href="../../../images/tooth.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../images/tooth.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .content-section {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            min-height: 600px;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title i {
+            margin-right: 15px;
+            color: #667eea;
+        }
+
+        /* Appointments Styles */
+        .appointments-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .appointments-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .appointments-title {
+            font-size: 2rem;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+        }
+
+        .appointments-title i {
+            margin-right: 15px;
+            color: #667eea;
+        }
+
+        .book-appointment-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .book-appointment-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            padding: 10px 20px;
+            border: 2px solid #e9ecef;
+            background: white;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #666;
+        }
+
+        .filter-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .filter-tab:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .appointments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .appointment-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .appointment-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .appointment-card.completed {
+            border-color: #4caf50;
+            background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
+        }
+
+        .appointment-card.cancelled {
+            border-color: #f44336;
+            background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%);
+        }
+
+        .appointment-card.pending {
+            border-color: #ff9800;
+            background: linear-gradient(135deg, #fff3e0 0%, #fef7e0 100%);
+        }
+
+        .appointment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .appointment-service {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2c3e50;
+            text-transform: capitalize;
+        }
+
+        .appointment-status {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .appointment-status.completed {
+            background: #4caf50;
+            color: white;
+        }
+
+        .appointment-status.cancelled {
+            background: #f44336;
+            color: white;
+        }
+
+        .appointment-status.pending {
+            background: #ff9800;
+            color: white;
+        }
+
+        .appointment-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .appointment-detail {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #666;
+        }
+
+        .appointment-detail i {
+            color: #667eea;
+            width: 16px;
+        }
+
+        .appointment-notes {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .appointment-notes h4 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .appointment-notes p {
+            color: #666;
+            margin: 0;
+            font-style: italic;
+        }
+
+        .appointment-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+        }
+
+        .action-btn.view {
+            background: #e9ecef;
+            color: #666;
+        }
+
+        .action-btn.view:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .action-btn.cancel {
+            background: #f44336;
+            color: white;
+        }
+
+        .action-btn.cancel:hover {
+            background: #d32f2f;
+        }
+
+        .action-btn.completed {
+            background: #4caf50;
+            color: white;
+        }
+
+        .action-btn.completed:hover {
+            background: #388e3c;
+        }
+
+        .no-appointments {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .no-appointments i {
+            font-size: 4rem;
+            color: #e9ecef;
+            margin-bottom: 20px;
+        }
+
+        .no-appointments h3 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .no-appointments p {
+            margin-bottom: 25px;
+        }
+
+        .no-appointments .book-appointment-btn {
+            margin: 0 auto;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            overflow-y: auto;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 2% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: modalSlideIn 0.3s ease;
+            overflow-y: auto;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .modal-title {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s ease;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e9ecef;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #dee2e6;
+        }
+
+        /* Loading States */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e9ecef;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 15px;
+            }
+
+            .appointments-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .appointments-title {
+                font-size: 1.5rem;
+            }
+
+            .appointment-details {
+                grid-template-columns: 1fr;
+            }
+
+            .appointment-actions {
+                justify-content: stretch;
+            }
+
+            .action-btn {
+                flex: 1;
+                justify-content: center;
+            }
+
+            .modal-content {
+                margin: 5% auto;
+                width: 95%;
+                padding: 20px;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .main-content {
+                padding: 10px;
+            }
+
+            .appointments-container {
+                padding: 20px;
+            }
+
+            .appointment-card {
+                padding: 20px;
+            }
+
+            .appointment-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .appointment-service {
+                font-size: 1.1rem;
+            }
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            z-index: 10000;
+            animation: slideIn 0.3s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            max-width: 400px;
+        }
+
+        .toast-success {
+            background: #4caf50;
+        }
+
+        .toast-error {
+            background: #f44336;
+        }
+
+        .toast-info {
+            background: #2196f3;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="appointments-container">
+                <div class="appointments-header">
+                    <h1 class="appointments-title">
+                        <i class="fas fa-calendar-check"></i>
+                        My Appointments
+                    </h1>
+                    <button class="book-appointment-btn" onclick="openBookAppointmentModal()">
+                        <i class="fas fa-plus"></i>
+                        Book Appointment
+                    </button>
+                </div>
+
+                <div class="filter-tabs">
+                    <div class="filter-tab active" onclick="filterAppointments('all', this)">
+                        <i class="fas fa-list"></i> All
+                    </div>
+                    <div class="filter-tab" onclick="filterAppointments('pending', this)">
+                        <i class="fas fa-clock"></i> Pending
+                    </div>
+                    <div class="filter-tab" onclick="filterAppointments('completed', this)">
+                        <i class="fas fa-check"></i> Completed
+                    </div>
+                    <div class="filter-tab" onclick="filterAppointments('cancelled', this)">
+                        <i class="fas fa-times"></i> Cancelled
+                    </div>
+                </div>
+
+                <div id="appointmentsList" class="appointments-list">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <span style="margin-left: 15px;">Loading appointments...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Book Appointment Modal -->
+    <div id="bookAppointmentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-calendar-plus"></i>
+                    Book New Appointment
+                </h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            
+            <form id="appointmentForm">
+                <div class="form-group">
+                    <label for="aptName">Full Name *</label>
+                    <input type="text" id="aptName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="aptEmail">Email Address *</label>
+                    <input type="email" id="aptEmail" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="aptPhone">Phone Number *</label>
+                    <input type="tel" id="aptPhone" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="aptService">Service Needed *</label>
+                    <select id="aptService" required>
+                        <option value="">Select Service</option>
+                        <option value="general">General Checkup</option>
+                        <option value="cleaning">Teeth Cleaning</option>
+                        <option value="filling">Dental Filling</option>
+                        <option value="extraction">Tooth Extraction</option>
+                        <option value="root-canal">Root Canal</option>
+                        <option value="crown">Dental Crown</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="aptDate">Preferred Date *</label>
+                    <input type="date" id="aptDate" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="aptTime">Preferred Time *</label>
+                    <input type="time" id="aptTime" required min="08:00" max="18:00" step="3600">
+                </div>
+                
+                <div class="form-group">
+                    <label for="aptMessage">Additional Notes</label>
+                    <textarea id="aptMessage" placeholder="Any specific concerns or requests..."></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-calendar-plus"></i> Book Appointment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentUser = null;
+        let appointments = [];
+        let currentFilter = 'all';
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Appointments page initialized');
+            loadUserData();
+            loadAppointments();
+            setMinDate();
+        });
+
+        // Load user data from localStorage
+        function loadUserData() {
+            try {
+                const userData = localStorage.getItem('currentUser');
+                if (userData) {
+                    currentUser = JSON.parse(userData);
+                    console.log('✅ Loaded user data:', currentUser);
+                    
+                    // Update UI with user info
+                    const nameElement = document.getElementById('userName');
+                    const emailElement = document.getElementById('userEmail');
+                    
+                    if (nameElement) nameElement.textContent = currentUser.name || 'Patient';
+                    if (emailElement) emailElement.textContent = currentUser.email || 'patient@email.com';
+                } else {
+                    console.log('⚠️ No user data found');
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+
+        // Load appointments from Supabase
+        async function loadAppointments() {
+            try {
+                console.log('🔄 Loading appointments...');
+                
+                const userData = JSON.parse(localStorage.getItem('currentUser'));
+                if (!userData || !userData.id) {
+                    console.log('⚠️ No user ID found, showing empty state');
+                    showNoAppointments();
+                    return;
+                }
+
+                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+
+                // Load appointments
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/appointments?patient_id=eq.${userData.id}&order=appointment_date.desc`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                console.log('📡 API response status:', response.status);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ Appointments loaded via direct API:', data.length);
+                    console.log('📋 Sample appointment data:', data[0]);
+                    appointments = data || [];
+                    console.log('📋 Loaded', appointments.length, 'appointments');
+                    
+                    // Load dentist names for each appointment
+                    await loadDentistNames();
+                    
+                    // Filter and display appointments after loading names
+                    filterAppointments(currentFilter);
+                    
+                    // Re-display to show dentist names
+                    displayAppointments(appointments);
+                } else {
+                    console.error('❌ Failed to load appointments:', response.status);
+                    const errorText = await response.text();
+                    console.error('❌ Error details:', errorText);
+                    showNoAppointments();
+                }
+            } catch (error) {
+                console.error('❌ Error loading appointments:', error);
+                showNoAppointments();
+            }
+        }
+
+        // Filter appointments by status
+        function filterAppointments(filter, clickedElement = null) {
+            console.log('🔍 Filtering appointments by:', filter);
+            currentFilter = filter;
+            
+            // Update active filter tab
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Only add active class if we have a clicked element
+            if (clickedElement) {
+                clickedElement.classList.add('active');
+            } else {
+                // Fallback: find the tab with matching filter
+                const targetTab = document.querySelector(`[onclick*="${filter}"]`);
+                if (targetTab) {
+                    targetTab.classList.add('active');
+                }
+            }
+            
+            let filteredAppointments = appointments;
+            
+            if (filter !== 'all') {
+                filteredAppointments = appointments.filter(apt => apt.status === filter);
+            }
+            
+            console.log('📊 Filtered', filteredAppointments.length, 'appointments for filter:', filter);
+            displayAppointments(filteredAppointments);
+        }
+
+        // Display appointments in the UI
+        function displayAppointments(appointmentsToShow) {
+            const appointmentsList = document.getElementById('appointmentsList');
+            
+            if (appointmentsToShow.length === 0) {
+                showNoAppointments();
+                return;
+            }
+            
+            appointmentsList.innerHTML = appointmentsToShow.map(appointment => `
+                <div class="appointment-card ${appointment.status}">
+                    <div class="appointment-header">
+                        <div class="appointment-service">${appointment.service_type || 'General Checkup'}</div>
+                        <div class="appointment-status ${appointment.status}">${appointment.status}</div>
+                    </div>
+                    
+                    <div class="appointment-details">
+                        <div class="appointment-detail">
+                            <i class="fas fa-calendar"></i>
+                            <span>${formatAppointmentDate(appointment.appointment_date, appointment.appointment_time)}</span>
+                        </div>
+                        <div class="appointment-detail">
+                            <i class="fas fa-clock"></i>
+                            <span>${formatAppointmentTime(appointment.appointment_time)}</span>
+                        </div>
+                        <div class="appointment-detail">
+                            <i class="fas fa-user-md"></i>
+                            <span>${getDentistName(appointment)}</span>
+                        </div>
+                    </div>
+                    
+                    ${appointment.notes ? `
+                        <div class="appointment-notes">
+                            <h4>Notes</h4>
+                            <p>${appointment.notes}</p>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="appointment-actions">
+                        ${appointment.status === 'confirmed' ? `
+                            <button class="action-btn view" onclick="viewAppointment('${appointment.id}')">
+                                <i class="fas fa-qrcode"></i> View QR Code
+                            </button>
+                        ` : ''}
+                        ${appointment.status === 'pending' ? `
+                            <button class="action-btn cancel" onclick="cancelAppointment(${appointment.id})">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                        ` : ''}
+                        ${appointment.status === 'completed' ? `
+                            <button class="action-btn completed" disabled>
+                                <i class="fas fa-check"></i> Completed
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Show no appointments state
+        function showNoAppointments() {
+            const appointmentsList = document.getElementById('appointmentsList');
+            appointmentsList.innerHTML = `
+                <div class="no-appointments">
+                    <i class="fas fa-calendar-times"></i>
+                    <h3>No Appointments Found</h3>
+                    <p>You don't have any appointments yet. Book your first appointment to get started!</p>
+                </div>
+            `;
+        }
+
+        // Format appointment date
+        function formatAppointmentDate(dateString, timeString) {
+            const date = new Date(dateString);
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        // Format appointment time
+        function formatAppointmentTime(timeString) {
+            const [hours, minutes] = timeString.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:${minutes} ${ampm}`;
+        }
+
+        // Load dentist names for all appointments
+        async function loadDentistNames() {
+            const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+            
+            // Get unique dentist IDs from appointments (check both dentist_id and confirmed_by_dentist_id)
+            const dentistIds = [...new Set(
+                appointments
+                    .filter(apt => apt.dentist_id || apt.confirmed_by_dentist_id)
+                    .map(apt => apt.confirmed_by_dentist_id || apt.dentist_id)
+            )];
+            
+            if (dentistIds.length === 0) {
+                console.log('⚠️ No dentist IDs found in appointments');
+                return;
+            }
+            
+            console.log('🦷 Loading dentist names for IDs:', dentistIds);
+            console.log('📋 Sample appointment data:', appointments[0]);
+            
+            try {
+                // Fetch dentist names
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/users?id=in.(${dentistIds.join(',')})&select=id,name`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const dentists = await response.json();
+                    console.log('✅ Dentists loaded:', dentists);
+                    
+                    // Create a map of dentist ID to name
+                    const dentistMap = {};
+                    dentists.forEach(dentist => {
+                        dentistMap[dentist.id] = dentist.name;
+                    });
+                    
+                    // Attach dentist names to appointments (prioritize confirmed_by_dentist_id)
+                    appointments.forEach(apt => {
+                        const dentistId = apt.confirmed_by_dentist_id || apt.dentist_id;
+                        if (dentistId && dentistMap[dentistId]) {
+                            apt._dentistName = dentistMap[dentistId];
+                        }
+                    });
+                    
+                    console.log('✅ Dentist names attached to appointments');
+                } else {
+                    console.error('❌ Failed to load dentist names:', response.status);
+                }
+            } catch (error) {
+                console.error('❌ Error loading dentist names:', error);
+            }
+        }
+
+        // Get dentist name from appointment
+        function getDentistName(appointment) {
+            // If we have the cached dentist name, use it
+            if (appointment._dentistName) {
+                return appointment._dentistName;
+            }
+            // If dentist_id or confirmed_by_dentist_id exists but no name loaded yet
+            if (appointment.dentist_id || appointment.confirmed_by_dentist_id) {
+                return 'Loading...';
+            }
+            // Default fallback
+            return 'Not Assigned';
+        }
+
+        // Open book appointment modal
+        function openBookAppointmentModal() {
+            document.getElementById('bookAppointmentModal').style.display = 'block';
+            
+            // Pre-fill form with user data if available
+            if (currentUser) {
+                document.getElementById('aptName').value = currentUser.name || '';
+                document.getElementById('aptEmail').value = currentUser.email || '';
+                document.getElementById('aptPhone').value = currentUser.phone || '';
+            }
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('bookAppointmentModal').style.display = 'none';
+            document.getElementById('appointmentForm').reset();
+        }
+
+        // Set minimum date for appointment booking
+        function setMinDate() {
+            const dateInput = document.getElementById('aptDate');
+            if (dateInput) {
+                const today = new Date();
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                
+                const year = tomorrow.getFullYear();
+                const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+                const day = String(tomorrow.getDate()).padStart(2, '0');
+                
+                dateInput.min = `${year}-${month}-${day}`;
+            }
+        }
+
+        // Form submission
+        document.getElementById('appointmentForm').onsubmit = async function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('aptName').value;
+            const email = document.getElementById('aptEmail').value;
+            const phone = document.getElementById('aptPhone').value;
+            const service = document.getElementById('aptService').value;
+            const date = document.getElementById('aptDate').value;
+            const time = document.getElementById('aptTime').value;
+            const message = document.getElementById('aptMessage').value;
+            
+            // Validate form
+            if (!name || !email || !phone || !service || !date || !time) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            // Get current user if logged in
+            let currentUserData = null;
+            try {
+                // Use the logged-in user's data if available
+                if (currentUser && currentUser.id) {
+                    currentUserData = {
+                        id: currentUser.id,
+                        email: currentUser.email,
+                        name: currentUser.name
+                    };
+                    console.log('📝 Using logged-in patient ID:', currentUser.id);
+                } else {
+                    // For guest bookings, set patient_id to null
+                    currentUserData = {
+                        id: null,
+                        email: email,
+                        name: name
+                    };
+                    console.log('📝 Guest booking - patient ID: NULL');
+                }
+            } catch (error) {
+                console.log('No current user found, using guest mode');
+                currentUserData = {
+                    id: null,
+                    email: email,
+                    name: name
+                };
+            }
+            
+            try {
+                // Use direct API call instead of CDN
+                console.log('🚀 Attempting to save using direct API...');
+                
+                const appointmentData = {
+                    patient_id: currentUserData?.id || null,
+                    dentist_id: null, // Will be assigned by dentist later
+                    service_type: service,
+                    appointment_date: date,
+                    appointment_time: time + ':00', // Use actual time from form (add seconds)
+                    duration: 60, // Default duration in minutes
+                    notes: message,
+                    patient_name: name,
+                    patient_email: email,
+                    patient_phone: phone,
+                    status: 'pending'
+                };
+                
+                console.log('📝 Appointment data to save:', appointmentData);
+                
+                // Create appointment using direct API
+                const data = await callSupabaseAPI('POST', 'appointments', [appointmentData]);
+                
+                console.log('✅ Appointment saved via direct API:', data);
+                alert('Appointment booked successfully! We will contact you soon.');
+                closeModal();
+                loadAppointments();
+                return;
+                
+            } catch (error) {
+                console.error('❌ Appointment booking error:', error);
+                alert('Error booking appointment: ' + error.message);
+            }
+        };
+
+        // Supabase API helper function
+        async function callSupabaseAPI(method, table, data = null) {
+            const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+            
+            const options = {
+                method: method,
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=representation'
+                }
+            };
+            
+            if (data) {
+                options.body = JSON.stringify(data);
+            }
+            
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, options);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`API Error: ${response.status} - ${errorText}`);
+            }
+            
+            return await response.json();
+        }
+
+        // Action functions
+        async function cancelAppointment(id) {
+            if (confirm('Are you sure you want to cancel this appointment?')) {
+                try {
+                    console.log('🔄 Cancelling appointment:', id);
+                    
+                    const userData = JSON.parse(localStorage.getItem('currentUser'));
+                    if (!userData || !userData.id) {
+                        alert('Error: User not logged in. Please refresh and try again.');
+                        return;
+                    }
+                    
+                    const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                    
+                    // Update appointment status in Supabase using direct API
+                    const response = await fetch(`${SUPABASE_URL}/rest/v1/appointments?id=eq.${id}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=representation'
+                        },
+                        body: JSON.stringify({ 
+                            status: 'cancelled',
+                            updated_at: new Date().toISOString()
+                        })
+                    });
+                    
+                    console.log('📡 Cancel response status:', response.status);
+                    
+                    if (response.ok) {
+                        console.log('✅ Appointment cancelled in Supabase');
+                        
+                        // Update local array
+                        const appointment = appointments.find(apt => apt.id === id);
+                        if (appointment) {
+                            appointment.status = 'cancelled';
+                            appointment.updated_at = new Date().toISOString();
+                            console.log('✅ Local appointment updated to cancelled');
+                        }
+                        
+                        // Refresh the current filter to update the display
+                        filterAppointments(currentFilter);
+                        
+                        // Show success message with toast
+                        showToast('Appointment cancelled successfully!', 'success');
+                        
+                        console.log('✅ Appointment cancellation completed');
+                    } else {
+                        const errorText = await response.text();
+                        console.error('❌ Failed to cancel appointment:', response.status, errorText);
+                        alert('Error cancelling appointment. Please try again.');
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Error cancelling appointment:', error);
+                    alert('Error cancelling appointment: ' + (error.message || 'Unknown error'));
+                }
+            }
+        }
+
+        function viewPatientSchedule() {
+            console.log('👁️ View QR Code button clicked');
+            
+            // Get patient's confirmed appointments
+            const confirmedAppointments = appointments.filter(apt => 
+                apt.status === 'confirmed'
+            );
+
+            if (confirmedAppointments.length === 0) {
+                alert('No confirmed appointments found to generate QR code.');
+                return;
+            }
+
+            // Generate QR code for the first confirmed appointment
+            const firstAppointment = confirmedAppointments[0];
+            console.log('📋 Using first confirmed appointment:', firstAppointment);
+            generateAppointmentQR(firstAppointment);
+        }
+
+        function viewAppointment(id) {
+            console.log('👁️ View button clicked for appointment:', id);
+            
+            const appointment = appointments.find(apt => apt.id === id);
+            if (!appointment) {
+                console.error('❌ Appointment not found:', id);
+                alert('Appointment not found');
+                return;
+            }
+
+            console.log('📋 Appointment found:', appointment);
+
+            // Generate QR code for this specific appointment
+            generateAppointmentQR(appointment);
+        }
+
+        // Generate QR code for specific appointment
+        function generateAppointmentQR(appointment) {
+            console.log('🔍 Generating QR code for appointment:', appointment.id);
+            
+            // Create base URL
+            let baseUrl;
+            if (window.location.protocol === 'file:') {
+                baseUrl = 'http://192.168.254.117:8000/appointment-schedule.html';
+            } else {
+                baseUrl = window.location.origin + '/appointment-schedule.html';
+            }
+
+            const qrData = `${baseUrl}?id=${appointment.id}`;
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData)}&ecc=H&margin=15`;
+            
+            console.log('🔗 QR code URL:', qrData);
+            
+            // Show modal with QR code
+            const modal = document.getElementById('patientQRModal');
+            const qrViewContainer = document.getElementById('patientQRCodeView');
+            
+            if (!modal || !qrViewContainer) {
+                alert('Unable to display QR code. Please refresh the page.');
+                return;
+            }
+
+            // Create large QR code image
+            qrViewContainer.innerHTML = `
+                <div style="background: white; padding: 20px; border: 4px solid #28a745; border-radius: 15px; display: inline-block;">
+                    <img src="${qrUrl}" alt="Appointment QR Code" style="width: 300px; height: 300px; border-radius: 10px;">
+                </div>
+            `;
+
+            // Store QR data
+            window.patientQRData = qrData;
+            window.patientQRUrl = qrUrl;
+
+            // Show modal
+            modal.style.display = 'block';
+            
+            console.log('✅ QR code modal opened for appointment:', appointment.id);
+        }
+
+        function closePatientQRModal() {
+            const modal = document.getElementById('patientQRModal');
+            if (modal) {
+                modal.style.display = 'none';
+                console.log('✅ QR code modal closed');
+            }
+        }
+
+        function downloadPatientQR() {
+            if (!window.patientQRData) {
+                alert('No QR code data to download');
+                return;
+            }
+
+            console.log('🔄 Downloading QR code...');
+            
+            const userData = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            const patientName = userData.name || 'Patient';
+            const fileName = `My_Schedule_QR_${patientName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.txt`;
+            
+            const blob = new Blob([window.patientQRData], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            console.log('✅ QR code downloaded');
+        }
+
+        function printPatientQR() {
+            if (!window.patientQRUrl) {
+                alert('No QR code to print');
+                return;
+            }
+
+            console.log('🖨️ Printing QR code...');
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write([
+                '<!DOCTYPE html>',
+                '<html>',
+                '<head>',
+                '<title>My Schedule QR Code</title>',
+                '<style>',
+                'body { margin: 0; padding: 40px; text-align: center; font-family: Arial, sans-serif; }',
+                '.qr-container { display: inline-block; padding: 40px; border: 5px solid #28a745; border-radius: 20px; }',
+                'img { width: 400px; height: 400px; }',
+                'h1 { color: #333; }',
+                'p { color: #666; margin-top: 20px; }',
+                '</style>',
+                '</head>',
+                '<body>',
+                '<h1>My Schedule QR Code</h1>',
+                '<div class="qr-container">',
+                '<img src="' + window.patientQRUrl + '" alt="QR Code">',
+                '</div>',
+                '<p>Scan with your phone to view your appointment schedule</p>',
+                '</body>',
+                '</html>'
+            ].join(''));
+            printWindow.document.close();
+            printWindow.focus();
+            
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
+        }
+
+        // Real-time update functions (for integration with your backend)
+        function updateAppointmentsData() {
+            filterAppointments(currentFilter);
+        }
+
+        function addNewAppointment(appointmentData) {
+            appointments.push(appointmentData);
+            localStorage.setItem('patientAppointments', JSON.stringify(appointments));
+            updateAppointmentsData();
+        }
+
+        // Toast notification system
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            // Add toast styles if not already added
+            if (!document.getElementById('toast-styles')) {
+                const style = document.createElement('style');
+                style.id = 'toast-styles';
+                style.textContent = `
+                    .toast {
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        padding: 15px 20px;
+                        border-radius: 8px;
+                        color: white;
+                        font-weight: bold;
+                        z-index: 10000;
+                        animation: slideIn 0.3s ease-out;
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                        max-width: 400px;
+                    }
+                    .toast-success { background: #4caf50; }
+                    .toast-error { background: #f44336; }
+                    .toast-info { background: #2196f3; }
+                    @keyframes slideIn {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('currentUser');
+                
+                // If in iframe, communicate with parent
+                if (window !== window.top) {
+                    window.parent.postMessage({ action: 'logout' }, '*');
+                } else {
+                    // If standalone, redirect to main page
+                    window.location.href = '../../../index.html';
+                }
+            }
+        }
+
+        // Show mobile menu toggle on small screens
+        function checkScreenSize() {
+            // This function is not needed in standalone mode
+            // The parent dashboard handles mobile menu
+            return;
+        }
+    </script>
+
+    <!-- Patient QR Code Modal -->
+    <div id="patientQRModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-qrcode"></i> My Schedule QR Code</h3>
+                <span class="close-button" onclick="closePatientQRModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="patientQRCodeView"></div>
+                <p><i class="fas fa-mobile-alt"></i> Scan with your phone camera or QR scanner app</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="downloadPatientQR()">
+                    <i class="fas fa-file-excel"></i> Download
+                </button>
+                <button class="btn btn-secondary" onclick="printPatientQR()">
+                    <i class="fas fa-print"></i> Print QR
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            max-width: 500px;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 25px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .close-button {
+            cursor: pointer;
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            transition: opacity 0.3s;
+        }
+        .close-button:hover {
+            opacity: 0.7;
+        }
+        .modal-body {
+            padding: 30px;
+            text-align: center;
+        }
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .modal .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .modal .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .modal .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .modal .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .modal .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+    </style>
+</body>
+</html>

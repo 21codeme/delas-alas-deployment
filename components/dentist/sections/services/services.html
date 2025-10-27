@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Services</title>
+    <link rel="stylesheet" href="services.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="services-content">
+        <div class="services-header">
+            <div class="header-left">
+                <h1>🦷 Services Management</h1>
+                <p>Manage clinic services and pricing</p>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-primary" onclick="addNewService()">
+                    <i class="fas fa-plus"></i> Add Custom Service
+                </button>
+            </div>
+        </div>
+
+        <!-- Services Grid -->
+        <div class="services-grid" id="servicesGrid">
+            <div class="loading">Loading services...</div>
+        </div>
+    </div>
+
+    <!-- Service Modal -->
+    <div id="serviceModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="services.js"></script>
+</body>
+</html>
+

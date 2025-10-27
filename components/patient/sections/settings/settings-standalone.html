@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Delas Alas Dental Clinic</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦷</text></svg>">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../images/tooth.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../images/tooth.png">
+    <link rel="shortcut icon" href="../../../images/tooth.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../images/tooth.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar h2 {
+            color: #ffd700;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+
+        .user-info {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 32px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .user-info h3 {
+            margin-bottom: 5px;
+            font-size: 1.2rem;
+        }
+
+        .user-info p {
+            color: #bdc3c7;
+            font-size: 0.9rem;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 10px;
+        }
+
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .nav-item a:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateX(5px);
+        }
+
+        .nav-item a.active {
+            background: rgba(255,255,255,0.2);
+            border-left: 4px solid #ffd700;
+        }
+
+        .nav-item a i {
+            margin-right: 15px;
+            font-size: 18px;
+            width: 20px;
+        }
+
+        .logout-btn {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            color: #e74c3c;
+            margin-top: 20px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(231, 76, 60, 0.3);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        /* Iframe Mode - Hide sidebar when loaded in iframe */
+        .iframe-mode .sidebar {
+            display: none;
+        }
+
+        .iframe-mode .main-content {
+            margin-left: 0;
+            padding: 0;
+        }
+
+        .iframe-mode .menu-toggle {
+            display: none !important;
+        }
+
+        /* Settings Styles */
+        .settings-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .section-header h2 {
+            color: #2c3e50;
+            margin: 0 0 5px 0;
+            font-size: 1.8rem;
+        }
+
+        .section-header p {
+            color: #666;
+            margin: 0;
+        }
+
+        .settings-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .settings-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .settings-card-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+        }
+
+        .settings-card-header h3 {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .settings-card-body {
+            padding: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #667eea;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .settings-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        /* Profile Picture Upload Styles */
+        .profile-picture-upload {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .current-picture {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid #e0e0e0;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .current-picture img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .picture-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+        }
+
+        .picture-placeholder i {
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+
+        .picture-placeholder span {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .upload-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .upload-hint {
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-1px);
+        }
+
+        .notification-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-info h4 {
+            margin: 0 0 5px 0;
+            color: #2c3e50;
+        }
+
+        .notification-info p {
+            margin: 0;
+            color: #666;
+            font-size: 12px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 15px;
+            }
+
+            .settings-container {
+                grid-template-columns: 1fr;
+            }
+
+            .settings-actions {
+                flex-direction: column;
+            }
+
+            .menu-toggle {
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 1001;
+                background: #2c3e50;
+                color: white;
+                border: none;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                font-size: 20px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <h2>🦷 Delas Alas Dental Clinic</h2>
+            
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h3 id="patientName">John Doe</h3>
+                <p id="patientEmail">john.doe@email.com</p>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a onclick="navigateToSection('dashboard')">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a onclick="navigateToSection('appointments')">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>Appointments</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a onclick="navigateToSection('treatments')">
+                        <i class="fas fa-tooth"></i>
+                        <span>Treatments</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a onclick="navigateToSection('messages')">
+                        <i class="fas fa-comments"></i>
+                        <span>Messages</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="active" onclick="navigateToSection('settings')">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="logout-btn" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="settings-content">
+                <div class="section-header">
+                    <h2>Settings</h2>
+                    <p>Manage your account and preferences</p>
+                </div>
+
+                <div class="settings-container">
+                    <!-- Profile Settings -->
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <h3><i class="fas fa-user"></i> Profile Settings</h3>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="fullName" value="John Doe">
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="email" value="john.doe@email.com">
+                            </div>
+                            <div class="form-group">
+                                <label>Phone Number</label>
+                                <input type="tel" id="phone" value="+63 912 345 6789">
+                            </div>
+                            <div class="form-group">
+                                <label>Date of Birth</label>
+                                <input type="date" id="dob" value="1990-01-01">
+                            </div>
+                            <div class="form-group">
+                                <label>Address</label>
+                                <textarea id="address">123 Main Street, City, Philippines</textarea>
+                            </div>
+                            
+                            <!-- Profile Picture Upload -->
+                            <div class="form-group">
+                                <label>Profile Picture</label>
+                                <div class="profile-picture-upload">
+                                    <div class="current-picture" id="currentPicture">
+                                        <img id="profileImage" src="" alt="Profile Picture" style="display: none;">
+                                        <div class="picture-placeholder" id="picturePlaceholder">
+                                            <i class="fas fa-user"></i>
+                                            <span>No picture uploaded</span>
+                                        </div>
+                                    </div>
+                                    <div class="upload-controls">
+                                        <input type="file" id="profilePictureInput" accept="image/*" style="display: none;" onchange="handleProfilePictureUpload(event)">
+                                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('profilePictureInput').click()">
+                                            <i class="fas fa-upload"></i> Upload Picture
+                                        </button>
+                                        <button type="button" class="btn btn-danger" id="removePictureBtn" onclick="removeProfilePicture()" style="display: none;">
+                                            <i class="fas fa-trash"></i> Remove
+                                        </button>
+                                    </div>
+                                    <small class="upload-hint">Supported formats: JPG, PNG, GIF. Max size: 5MB</small>
+                                </div>
+                            </div>
+                            
+                            <div class="settings-actions">
+                                <button class="btn btn-primary" onclick="updateProfile()">
+                                    <i class="fas fa-save"></i> Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notification Settings -->
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <h3><i class="fas fa-bell"></i> Notification Settings</h3>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="notification-item">
+                                <div class="notification-info">
+                                    <h4>Email Notifications</h4>
+                                    <p>Receive notifications via email</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="notification-item">
+                                <div class="notification-info">
+                                    <h4>SMS Notifications</h4>
+                                    <p>Receive notifications via SMS</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="notification-item">
+                                <div class="notification-info">
+                                    <h4>Appointment Reminders</h4>
+                                    <p>Get reminded about upcoming appointments</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="notification-item">
+                                <div class="notification-info">
+                                    <h4>Treatment Updates</h4>
+                                    <p>Get notified about treatment progress</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Settings -->
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <h3><i class="fas fa-shield-alt"></i> Security Settings</h3>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="form-group">
+                                <label>Current Password</label>
+                                <input type="password" id="currentPassword" placeholder="Enter current password">
+                            </div>
+                            <div class="form-group">
+                                <label>New Password</label>
+                                <input type="password" id="newPassword" placeholder="Enter new password">
+                            </div>
+                            <div class="form-group">
+                                <label>Confirm New Password</label>
+                                <input type="password" id="confirmPassword" placeholder="Confirm new password">
+                            </div>
+                            <div class="settings-actions">
+                                <button class="btn btn-primary" onclick="changePassword()">
+                                    <i class="fas fa-key"></i> Change Password
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Actions -->
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Account Actions</h3>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="form-group">
+                                <p style="color: #666; margin-bottom: 15px;">
+                                    Manage your account data and privacy settings.
+                                </p>
+                            </div>
+                            <div class="settings-actions">
+                                <button class="btn btn-secondary" onclick="exportData()">
+                                    <i class="fas fa-download"></i> Export Data
+                                </button>
+                                <button class="btn btn-danger" onclick="deleteAccount()">
+                                    <i class="fas fa-trash"></i> Delete Account
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Mobile Menu Toggle (visible on mobile only) -->
+        <button class="menu-toggle" onclick="toggleMobileMenu()" style="display: none;">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <script>
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if loaded in iframe
+            if (window !== window.top) {
+                document.body.classList.add('iframe-mode');
+            }
+            loadSettings();
+            loadProfilePicture(); // Load saved profile picture
+        });
+
+        // Toast notification system
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            // Add toast styles if not already added
+            if (!document.getElementById('toast-styles')) {
+                const style = document.createElement('style');
+                style.id = 'toast-styles';
+                style.textContent = `
+                    .toast {
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        padding: 15px 20px;
+                        border-radius: 8px;
+                        color: white;
+                        font-weight: bold;
+                        z-index: 10000;
+                        animation: slideIn 0.3s ease-out;
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                        max-width: 400px;
+                    }
+                    .toast-success { background: #4caf50; }
+                    .toast-error { background: #f44336; }
+                    .toast-info { background: #2196f3; }
+                    @keyframes slideIn {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Load settings data
+        async function loadSettings() {
+            // First, try to load from Supabase (primary storage)
+            try {
+                const userData = localStorage.getItem('currentUser');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    if (user && user.id) {
+                        const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                        
+                        const resp = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}&select=name,email,phone,dob,address`, {
+                            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                        });
+                        
+                        if (resp.ok) {
+                            const data = await resp.json();
+                            if (Array.isArray(data) && data.length > 0) {
+                                const profile = data[0];
+                                
+                                // Populate form fields with data from Supabase
+                                document.getElementById('fullName').value = profile.name || '';
+                                document.getElementById('email').value = profile.email || '';
+                                document.getElementById('phone').value = profile.phone || '';
+                                document.getElementById('dob').value = profile.dob || '';
+                                document.getElementById('address').value = profile.address || '';
+                                
+                                return; // Data loaded from Supabase, skip localStorage
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log('Error loading from Supabase:', error);
+            }
+            
+            // Fallback to localStorage if Supabase doesn't have it
+            try {
+                const storedSettings = localStorage.getItem('patientSettings');
+                if (storedSettings) {
+                    const settings = JSON.parse(storedSettings);
+                    // Apply settings to form fields
+                    Object.keys(settings).forEach(key => {
+                        const element = document.getElementById(key);
+                        if (element) {
+                            element.value = settings[key];
+                        }
+                    });
+                }
+            } catch (error) {
+                console.log('No existing settings found or error loading from storage');
+            }
+        }
+
+        // Navigation function
+        function navigateToSection(section) {
+            // If loaded in iframe, communicate with parent
+            if (window !== window.top) {
+                window.parent.postMessage({ action: 'loadSection', section: section }, '*');
+            } else {
+                // If standalone, navigate directly
+                window.location.href = `../${section}/${section}-standalone.html`;
+            }
+        }
+
+        // Profile Picture Functions
+        function handleProfilePictureUpload(event) {
+            const file = event.target.files[0];
+            
+            if (!file) return;
+            
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please select a valid image file.');
+                return;
+            }
+            
+            // Validate file size (5MB max)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File size must be less than 5MB.');
+                return;
+            }
+            
+            // Compress image to reduce size
+            const image = new Image();
+            image.onload = async function() {
+                // Create canvas to resize image
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Set maximum dimensions (200x200 for profile pictures)
+                const maxWidth = 200;
+                const maxHeight = 200;
+                let width = image.width;
+                let height = image.height;
+                
+                // Calculate new dimensions
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height *= maxWidth / width;
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width *= maxHeight / height;
+                        height = maxHeight;
+                    }
+                }
+                
+                // Set canvas size
+                canvas.width = width;
+                canvas.height = height;
+                
+                // Draw and compress
+                ctx.drawImage(image, 0, 0, width, height);
+                const compressedImage = canvas.toDataURL('image/jpeg', 0.5); // 50% quality for smaller size
+                
+                const profileImage = document.getElementById('profileImage');
+                const picturePlaceholder = document.getElementById('picturePlaceholder');
+                const removeBtn = document.getElementById('removePictureBtn');
+                
+                // Show the uploaded image first
+                profileImage.src = compressedImage;
+                profileImage.style.display = 'block';
+                picturePlaceholder.style.display = 'none';
+                removeBtn.style.display = 'inline-block';
+                
+                // Save to Supabase FIRST (primary storage)
+                try {
+                    const user = JSON.parse(localStorage.getItem('currentUser'));
+                    if (user && user.id) {
+                        const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                        
+                        console.log('💾 Saving compressed profile picture to Supabase...', 'Original:', file.size, 'bytes', 'Compressed:', compressedImage.length, 'bytes');
+                        
+                        const response = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'return=representation'
+                            },
+                            body: JSON.stringify({
+                                profile_picture: compressedImage
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            const savedData = await response.json();
+                            console.log('✅ Profile picture saved to Supabase successfully!');
+                            console.log('📊 Profile picture data length:', savedData[0].profile_picture?.length || 'No data');
+                            
+                            // Show success modal with verification info
+                            setTimeout(() => {
+                                alert(`✅ PROFILE PICTURE SAVED TO SUPABASE!\n\nYou can now:\n1. Logout and login again\n2. Open on different device\n3. Your profile picture will appear!\n\nData length: ${savedData[0].profile_picture?.length || 0} bytes`);
+                            }, 500);
+                        } else {
+                            const errorText = await response.text();
+                            console.error('⚠️ Failed to save profile picture to Supabase:', response.status, errorText);
+                            alert(`❌ Failed to save profile picture to Supabase!\n\nError: ${response.status}\n${errorText}`);
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ Error saving profile picture to Supabase:', error);
+                }
+                
+                // Save to localStorage as backup/fallback
+                localStorage.setItem('patientProfilePicture', compressedImage);
+                
+                // Update sidebar profile picture
+                updateSidebarProfilePicture(compressedImage);
+                
+                console.log('✅ Profile picture uploaded and compressed successfully');
+            };
+            
+            // Load image from file
+            image.src = URL.createObjectURL(file);
+        }
+        
+        async function removeProfilePicture() {
+            if (confirm('Are you sure you want to remove your profile picture?')) {
+                // Remove from Supabase FIRST
+                try {
+                    const user = JSON.parse(localStorage.getItem('currentUser'));
+                    if (user && user.id) {
+                        const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                        
+                        console.log('🗑️ Removing profile picture from Supabase...');
+                        
+                        const response = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                profile_picture: null
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            console.log('✅ Profile picture removed from Supabase');
+                        } else {
+                            const errorText = await response.text();
+                            console.warn('⚠️ Failed to remove profile picture from Supabase:', response.status, errorText);
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ Error removing profile picture from Supabase:', error);
+                }
+                
+                // Remove from localStorage as backup
+                localStorage.removeItem('patientProfilePicture');
+                
+                // Hide the image and show placeholder
+                const profileImage = document.getElementById('profileImage');
+                const picturePlaceholder = document.getElementById('picturePlaceholder');
+                const removeBtn = document.getElementById('removePictureBtn');
+                const fileInput = document.getElementById('profilePictureInput');
+                
+                profileImage.style.display = 'none';
+                profileImage.src = '';
+                picturePlaceholder.style.display = 'flex';
+                removeBtn.style.display = 'none';
+                fileInput.value = '';
+                
+                // Update sidebar to show default avatar
+                updateSidebarProfilePicture(null);
+                
+                console.log('✅ Profile picture removed');
+            }
+        }
+        
+        function updateSidebarProfilePicture(imageData) {
+            // Update the sidebar profile picture in the main dashboard
+            if (window.parent && window.parent !== window) {
+                // If in iframe, communicate with parent
+                window.parent.postMessage({ 
+                    action: 'updateProfilePicture', 
+                    imageData: imageData 
+                }, '*');
+            } else {
+                // If standalone, update directly
+                const sidebarAvatar = document.querySelector('.user-avatar img');
+                if (sidebarAvatar) {
+                    if (imageData) {
+                        sidebarAvatar.src = imageData;
+                        sidebarAvatar.style.display = 'block';
+                    } else {
+                        sidebarAvatar.style.display = 'none';
+                    }
+                }
+            }
+        }
+        
+        function loadProfilePicture() {
+            const savedImage = localStorage.getItem('patientProfilePicture');
+            if (savedImage) {
+                const profileImage = document.getElementById('profileImage');
+                const picturePlaceholder = document.getElementById('picturePlaceholder');
+                const removeBtn = document.getElementById('removePictureBtn');
+                
+                profileImage.src = savedImage;
+                profileImage.style.display = 'block';
+                picturePlaceholder.style.display = 'none';
+                removeBtn.style.display = 'inline-block';
+                
+                // Update sidebar
+                updateSidebarProfilePicture(savedImage);
+            }
+        }
+
+        // Action functions
+        async function updateProfile() {
+            const profileData = {
+                fullName: document.getElementById('fullName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                dob: document.getElementById('dob').value,
+                address: document.getElementById('address').value,
+                profilePicture: localStorage.getItem('patientProfilePicture')
+            };
+            
+            // Save to Supabase FIRST (primary storage)
+            try {
+                const userData = localStorage.getItem('currentUser');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    if (user && user.id) {
+                        const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                        
+                        const response = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'return=representation'
+                            },
+                            body: JSON.stringify({
+                                name: profileData.fullName,
+                                email: profileData.email,
+                                phone: profileData.phone,
+                                dob: profileData.dob,
+                                address: profileData.address
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            showToast('Profile saved to cloud! Changes persist after logout.', 'success');
+                            alert('✅ PROFILE SAVED TO SUPABASE!\n\nYour changes will persist even after logging out.');
+                            
+                            // Notify parent dashboard to update sidebar
+                            if (window.parent && window.parent !== window) {
+                                window.parent.postMessage({ 
+                                    action: 'updateProfile' 
+                                }, '*');
+                            }
+                            
+                            // Update localStorage currentUser with new name and email
+                            const userData = localStorage.getItem('currentUser');
+                            if (userData) {
+                                const user = JSON.parse(userData);
+                                user.name = profileData.fullName;
+                                user.email = profileData.email;
+                                localStorage.setItem('currentUser', JSON.stringify(user));
+                            }
+                        } else {
+                            const errorText = await response.text();
+                            console.error('Failed to save to Supabase:', errorText);
+                            showToast('Warning: Could not save to server. Saved locally only.', 'warning');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error saving to Supabase:', error);
+                showToast('Warning: Could not save to server. Saved locally only.', 'warning');
+            }
+            
+            // Save to localStorage as backup
+            localStorage.setItem('patientSettings', JSON.stringify(profileData));
+            
+            console.log('✅ Profile updated:', profileData);
+        }
+
+        function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                alert('Please fill in all password fields.');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                alert('New passwords do not match.');
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                alert('Password must be at least 8 characters long.');
+                return;
+            }
+            
+            // Here you would typically send to your backend
+            alert('Password changed successfully! (Integrate with your authentication system)');
+            
+            // Clear password fields
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        }
+
+        function exportData() {
+            alert('Export data functionality - integrate with your data export system');
+        }
+
+        function deleteAccount() {
+            if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                if (confirm('This will permanently delete all your data. Are you absolutely sure?')) {
+                    alert('Account deletion functionality - integrate with your account management system');
+                }
+            }
+        }
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('mobile-open');
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                alert('Logout functionality - integrate with your authentication system');
+                // window.location.href = '/login';
+            }
+        }
+
+        // Show mobile menu toggle on small screens
+        function checkScreenSize() {
+            const menuToggle = document.querySelector('.menu-toggle');
+            if (window.innerWidth <= 768) {
+                menuToggle.style.display = 'block';
+            } else {
+                menuToggle.style.display = 'none';
+                document.getElementById('sidebar').classList.remove('mobile-open');
+            }
+        }
+
+        window.addEventListener('resize', checkScreenSize);
+        checkScreenSize();
+    </script>
+</body>
+</html>
+
