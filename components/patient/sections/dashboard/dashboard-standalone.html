@@ -1220,33 +1220,71 @@
                 }
                 
                 const user = JSON.parse(userData);
+                if (!user || !user.id) {
+                    console.log('⚠️ Invalid user data or missing user ID');
+                    loadFromLocalStorage();
+                    return;
+                }
+                
                 console.log('👤 Loading appointments for user:', user.id, user.name);
                 
                 const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
                 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
                 
-                const url = `${SUPABASE_URL}/rest/v1/appointments?patient_id=eq.${user.id}&select=*`;
+                // Encode user ID to handle special characters
+                const encodedUserId = encodeURIComponent(user.id);
+                const url = `${SUPABASE_URL}/rest/v1/appointments?patient_id=eq.${encodedUserId}&select=*`;
                 console.log('🔗 Fetching from URL:', url);
                 
-                // Load patient's own appointments
-                const response = await fetch(url, {
-                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-                });
+                // Load patient's own appointments with timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
                 
-                console.log('📡 Response status:', response.status);
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    appointments = data || [];
-                    console.log('✅ Loaded patient appointments:', appointments.length);
-                    console.log('📅 Appointments data:', appointments);
-                } else {
-                    const errorText = await response.text();
-                    console.warn('❌ Failed to load appointments from Supabase:', response.status, errorText);
-                    loadFromLocalStorage(); // Fallback
+                try {
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: { 
+                            'apikey': SUPABASE_KEY, 
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=representation'
+                        },
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    console.log('📡 Response status:', response.status);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        appointments = data || [];
+                        console.log('✅ Loaded patient appointments:', appointments.length);
+                        console.log('📅 Appointments data:', appointments);
+                    } else {
+                        const errorText = await response.text();
+                        console.warn('❌ Failed to load appointments from Supabase:', response.status, errorText);
+                        loadFromLocalStorage(); // Fallback
+                    }
+                } catch (fetchError) {
+                    clearTimeout(timeoutId);
+                    
+                    if (fetchError.name === 'AbortError') {
+                        console.error('❌ Request timeout - network is slow or unreachable');
+                        loadFromLocalStorage();
+                    } else if (fetchError.message.includes('Failed to fetch')) {
+                        console.error('❌ Network error - check internet connection or CORS settings');
+                        console.error('Error details:', fetchError);
+                        loadFromLocalStorage();
+                    } else {
+                        throw fetchError; // Re-throw other errors
+                    }
                 }
             } catch (error) {
                 console.error('❌ Error loading appointments from Supabase:', error);
+                console.error('Error type:', error.constructor.name);
+                console.error('Error message:', error.message);
+                console.error('Error stack:', error.stack);
                 loadFromLocalStorage(); // Fallback
             }
         }

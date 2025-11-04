@@ -595,6 +595,26 @@
             } else if (event.data && event.data.action === 'updateProfilePicture') {
                 updateSidebarProfilePicture(event.data.imageData);
             } else if (event.data && event.data.action === 'updateProfile') {
+                // Update currentUser with new data
+                if (event.data.name) currentUser.name = event.data.name;
+                if (event.data.email) currentUser.email = event.data.email;
+                if (event.data.phone) currentUser.phone = event.data.phone;
+                
+                // Update localStorage
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                // Update sidebar UI
+                updateUserInfo();
+            } else if (event.data && event.data.action === 'updateProfileName') {
+                // Update sidebar name and email directly
+                if (event.data.name) currentUser.name = event.data.name;
+                if (event.data.email) currentUser.email = event.data.email;
+                
+                // Update localStorage
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                // Update sidebar UI
+                updateUserInfo();
                 // Reload profile data from Supabase
                 loadUserData();
             }

@@ -777,40 +777,71 @@
                 const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
                 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
 
-                // Load appointments
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/appointments?patient_id=eq.${userData.id}&order=appointment_date.desc`, {
-                    headers: {
-                        'apikey': SUPABASE_KEY,
-                        'Authorization': `Bearer ${SUPABASE_KEY}`,
-                        'Content-Type': 'application/json'
+                // Encode user ID to handle special characters
+                const encodedUserId = encodeURIComponent(userData.id);
+                const url = `${SUPABASE_URL}/rest/v1/appointments?patient_id=eq.${encodedUserId}&order=appointment_date.desc`;
+                console.log('🔗 Fetching from URL:', url);
+                
+                // Load appointments with timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+                
+                try {
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=representation'
+                        },
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    console.log('📡 API response status:', response.status);
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('✅ Appointments loaded via direct API:', data.length);
+                        console.log('📋 Sample appointment data:', data[0]);
+                        appointments = data || [];
+                        console.log('📋 Loaded', appointments.length, 'appointments');
+                        
+                        // Load dentist names for each appointment
+                        await loadDentistNames();
+                        
+                        // Filter and display appointments after loading names
+                        filterAppointments(currentFilter);
+                        
+                        // Re-display to show dentist names
+                        displayAppointments(appointments);
+                    } else {
+                        console.error('❌ Failed to load appointments:', response.status);
+                        const errorText = await response.text();
+                        console.error('❌ Error details:', errorText);
+                        showNoAppointments();
                     }
-                });
-
-                console.log('📡 API response status:', response.status);
-
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('✅ Appointments loaded via direct API:', data.length);
-                    console.log('📋 Sample appointment data:', data[0]);
-                    appointments = data || [];
-                    console.log('📋 Loaded', appointments.length, 'appointments');
+                } catch (fetchError) {
+                    clearTimeout(timeoutId);
                     
-                    // Load dentist names for each appointment
-                    await loadDentistNames();
-                    
-                    // Filter and display appointments after loading names
-                    filterAppointments(currentFilter);
-                    
-                    // Re-display to show dentist names
-                    displayAppointments(appointments);
-                } else {
-                    console.error('❌ Failed to load appointments:', response.status);
-                    const errorText = await response.text();
-                    console.error('❌ Error details:', errorText);
-                    showNoAppointments();
+                    if (fetchError.name === 'AbortError') {
+                        console.error('❌ Request timeout - network is slow or unreachable');
+                        showNoAppointments();
+                    } else if (fetchError.message.includes('Failed to fetch')) {
+                        console.error('❌ Network error - check internet connection or CORS settings');
+                        console.error('Error details:', fetchError);
+                        showNoAppointments();
+                    } else {
+                        throw fetchError; // Re-throw other errors
+                    }
                 }
             } catch (error) {
                 console.error('❌ Error loading appointments:', error);
+                console.error('Error type:', error.constructor.name);
+                console.error('Error message:', error.message);
+                console.error('Error stack:', error.stack);
                 showNoAppointments();
             }
         }
