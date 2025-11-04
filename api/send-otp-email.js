@@ -2,6 +2,7 @@
 // This uses Node.js, so Nodemailer works perfectly!
 
 const nodemailer = require('nodemailer');
+const { createClient } = require('@supabase/supabase-js');
 
 module.exports = async (req, res) => {
   // Handle CORS
@@ -18,14 +19,54 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { email, otp, name } = req.body;
+    const { email, name } = req.body;
 
-    if (!email || !otp) {
+    if (!email) {
       return res.status(400).json({ 
         success: false,
-        error: 'Email and OTP are required' 
+        error: 'Email is required' 
       });
     }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // OTP expires in 10 minutes
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+    // Initialize Supabase client
+    const supabaseUrl = process.env.SUPABASE_URL || 'https://xlubjwiumytdkxrzojdg.supabase.co';
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
+    
+    if (!supabaseKey) {
+      return res.status(500).json({
+        success: false,
+        error: 'Supabase credentials not configured'
+      });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Store OTP in Supabase
+    const { error: dbError } = await supabase
+      .from('otps')
+      .insert([{
+        email: email,
+        otp: otp,
+        expires_at: expiresAt,
+        verified: false
+      }]);
+
+    if (dbError) {
+      console.error('❌ Error storing OTP in Supabase:', dbError);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to store OTP',
+        details: dbError.message
+      });
+    }
+
+    console.log('✅ OTP stored in Supabase for:', email);
 
     // Get Gmail credentials from environment variables
     const GMAIL_USER = process.env.GMAIL_USER || '';

@@ -1844,45 +1844,38 @@
                 
                 console.log('✅ Current password verified');
                 
-                // Step 2: Send password reset email (same as registration confirmation)
-                showNotification('Sending confirmation email...', 'info');
+                // Step 2: Send OTP via email
+                showNotification('Sending OTP to your email...', 'info');
                 
-                // Store new password temporarily (will be used after email confirmation)
+                // Store new password temporarily (will be used after OTP verification)
                 localStorage.setItem('pendingPasswordChange', JSON.stringify({
                     newPassword: newPassword,
                     email: user.email,
                     timestamp: Date.now()
                 }));
                 
-                // Send password reset email via Supabase (same as registration)
-                const resetResponse = await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
+                // Send OTP via Vercel API
+                const otpResponse = await fetch('/api/send-otp-email', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'apikey': SUPABASE_KEY,
-                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         email: user.email,
-                        redirect_to: window.location.origin + '/password-reset.html'
+                        name: user.name || user.email
                     })
                 });
                 
-                if (resetResponse.ok || resetResponse.status === 429) {
-                    // 429 means rate limit, but email was still sent
-                    showNotification('✅ Confirmation email sent! Please check your email and click the link to complete the password change.', 'success');
+                const otpData = await otpResponse.json();
+                
+                if (otpData.success) {
+                    showNotification('✅ OTP sent successfully! Please check your email and enter the OTP code.', 'success');
                     
-                    // Show info modal
-                    showPasswordChangeEmailSentModal(user.email);
-                    
-                    // Clear password fields
-                    document.getElementById('currentPassword').value = '';
-                    document.getElementById('newPassword').value = '';
-                    document.getElementById('confirmPassword').value = '';
+                    // Redirect to password reset OTP page
+                    window.location.href = 'password-reset-otp.html';
                 } else {
-                    const errorData = await resetResponse.json().catch(() => ({}));
-                    console.error('Error sending password reset email:', errorData);
-                    showNotification('Failed to send confirmation email. Please try again.', 'error');
+                    console.error('Error sending OTP:', otpData);
+                    showNotification(otpData.error || 'Failed to send OTP. Please try again.', 'error');
                 }
                 
             } catch (error) {
