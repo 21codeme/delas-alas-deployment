@@ -41,12 +41,34 @@ class LocalSupabaseAuth {
             const data = await response.json();
             
             if (!response.ok) {
-                return { data: null, error: { message: data.msg || 'Signup failed' } };
+                console.error('Signup error response:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    data: data
+                });
+                
+                // Extract error message from various possible formats
+                let errorMessage = data.msg || data.message || data.error_description || 'Signup failed';
+                
+                // If it's a 500 error, provide more context
+                if (response.status === 500) {
+                    errorMessage = 'Server error during registration. The database trigger may have failed. Please check your database configuration or contact support.';
+                }
+                
+                return { 
+                    data: null, 
+                    error: { 
+                        message: errorMessage,
+                        status: response.status,
+                        originalError: data
+                    } 
+                };
             }
             
             return { data, error: null };
         } catch (error) {
-            return { data: null, error: { message: error.message } };
+            console.error('Signup fetch error:', error);
+            return { data: null, error: { message: error.message || 'Network error during signup' } };
         }
     }
     

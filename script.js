@@ -51,6 +51,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Initialize application
 function initializeApp() {
+    // Check for email confirmation redirect (access_token in URL hash)
+    handleEmailConfirmation();
+    
     // Check if user is logged in
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
@@ -413,12 +416,24 @@ function validateEmail(event) {
 }
 
 function validatePhone(event) {
-    const phone = event.target.value;
-    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+    const phone = event.target.value.trim();
     
-    if (phone && !phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''))) {
-        showFieldError(event.target, 'Please enter a valid phone number');
-        return false;
+    // Remove spaces, dashes, and parentheses for validation
+    const phoneDigits = phone.replace(/[\s\-\(\)]/g, '');
+    
+    // Allow phone numbers starting with 0 (common in Philippines) or + for international
+    // Must have at least 10 digits and can have up to 15 digits
+    if (phone && phoneDigits.length > 0) {
+        // Allow: +63..., 09123456789, 0912345678, etc.
+        const phoneRegex = /^[\+]?[0-9][\d]{9,14}$/;
+        
+        if (!phoneRegex.test(phoneDigits)) {
+            showFieldError(event.target, 'Please enter a valid phone number (at least 10 digits)');
+            return false;
+        } else {
+            clearFieldError(event.target);
+            return true;
+        }
     } else {
         clearFieldError(event.target);
         return true;
@@ -635,16 +650,31 @@ async function handleRegister(event) {
     }
     lastRegistrationAttempt = now;
     
-    const name = document.getElementById('regName').value;
-    const email = document.getElementById('regEmail').value;
-    const phone = document.getElementById('regPhone').value;
+    const name = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const phone = document.getElementById('regPhone').value.trim();
     const password = document.getElementById('regPassword').value;
     const confirmPassword = document.getElementById('regConfirmPassword').value;
     const userType = document.getElementById('regRole').value;
     
     // Validate form
-    if (!name || !email || !phone || !password || !confirmPassword) {
-        showToast('Please fill in all fields', 'error');
+    if (!name || !email || !phone || !password || !confirmPassword || !userType) {
+        showToast('Please fill in all fields including account type', 'error');
+        return;
+    }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showToast('Please enter a valid email address', 'error');
+        return;
+    }
+    
+    // Validate phone format (allow starting with 0 for Philippine numbers)
+    const phoneDigits = phone.replace(/[\s\-\(\)]/g, '');
+    const phoneRegex = /^[\+]?[0-9][\d]{9,14}$/;
+    if (!phoneRegex.test(phoneDigits) || phoneDigits.length < 10) {
+        showToast('Please enter a valid phone number (at least 10 digits)', 'error');
         return;
     }
     
@@ -655,6 +685,12 @@ async function handleRegister(event) {
     
     if (password.length < 6) {
         showToast('Password must be at least 6 characters', 'error');
+        return;
+    }
+    
+    // Validate role selection
+    if (userType !== 'patient' && userType !== 'dentist') {
+        showToast('Please select a valid account type', 'error');
         return;
     }
     
@@ -675,9 +711,17 @@ async function handleRegister(event) {
         
         while (retryCount < maxRetries) {
             try {
+                // Include user metadata in signup so the database trigger has the data it needs
                 const result = await supabase.auth.signUp({
                     email,
-                    password
+                    password,
+                    options: {
+                        data: {
+                            name: name,
+                            phone: phone,
+                            user_type: userType
+                        }
+                    }
                 });
                 authData = result.data;
                 authError = result.error;
@@ -697,19 +741,30 @@ async function handleRegister(event) {
         }
         
         if (authError) {
-            if (authError.message.includes('429') || authError.message.includes('Too Many Requests')) {
-                showToast('Too many registration attempts. Please wait a few minutes and try again.', 'error');
-                // Reset the cooldown timer to prevent immediate retry
-                lastRegistrationAttempt = Date.now() + 60000; // Add 1 minute
-            } else if (authError.message.includes('already registered') || authError.message.includes('User already registered')) {
-                showToast('This email is already registered. Please try logging in instead.', 'error');
-            } else if (authError.message.includes('Invalid email')) {
-                showToast('Please enter a valid email address.', 'error');
-            } else if (authError.message.includes('Password should be at least')) {
-                showToast('Password must be at least 6 characters long.', 'error');
-            } else {
-                showToast('Registration failed: ' + authError.message, 'error');
+            console.error('Registration error details:', authError);
+            let errorMessage = 'Registration failed';
+            
+            if (authError.message) {
+                if (authError.message.includes('429') || authError.message.includes('Too Many Requests')) {
+                    errorMessage = 'Too many registration attempts. Please wait a few minutes and try again.';
+                    // Reset the cooldown timer to prevent immediate retry
+                    lastRegistrationAttempt = Date.now() + 60000; // Add 1 minute
+                } else if (authError.message.includes('already registered') || authError.message.includes('User already registered') || authError.message.includes('already exists')) {
+                    errorMessage = 'This email is already registered. Please try logging in instead.';
+                } else if (authError.message.includes('Invalid email')) {
+                    errorMessage = 'Please enter a valid email address.';
+                } else if (authError.message.includes('Password should be at least')) {
+                    errorMessage = 'Password must be at least 6 characters long.';
+                } else if (authError.message.includes('500') || authError.message.includes('Internal Server Error')) {
+                    errorMessage = 'Server error during registration. This might be due to database configuration. Please contact support or try again later.';
+                } else {
+                    errorMessage = 'Registration failed: ' + authError.message;
+                }
+            } else if (authError.msg) {
+                errorMessage = 'Registration failed: ' + authError.msg;
             }
+            
+            showToast(errorMessage, 'error');
             return;
         }
         
@@ -813,9 +868,9 @@ async function handleRegister(event) {
 async function handleAppointment(event) {
     event.preventDefault();
     
-    const name = document.getElementById('aptName').value;
-    const email = document.getElementById('aptEmail').value;
-    const phone = document.getElementById('aptPhone').value;
+    const name = document.getElementById('aptName').value.trim();
+    const email = document.getElementById('aptEmail').value.trim();
+    const phone = document.getElementById('aptPhone').value.trim();
     const service = document.getElementById('aptService').value;
     const date = document.getElementById('aptDate').value;
     const message = document.getElementById('aptMessage').value;
@@ -823,6 +878,21 @@ async function handleAppointment(event) {
     // Validate form
     if (!name || !email || !phone || !service || !date) {
         showToast('Please fill in all required fields', 'error');
+        return;
+    }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showToast('Please enter a valid email address', 'error');
+        return;
+    }
+    
+    // Validate phone format (allow starting with 0 for Philippine numbers)
+    const phoneDigits = phone.replace(/[\s\-\(\)]/g, '');
+    const phoneRegex = /^[\+]?[0-9][\d]{9,14}$/;
+    if (!phoneRegex.test(phoneDigits) || phoneDigits.length < 10) {
+        showToast('Please enter a valid phone number (at least 10 digits)', 'error');
         return;
     }
     
@@ -1031,6 +1101,80 @@ async function resendVerificationEmail() {
     } catch (error) {
         console.error('Resend email error:', error);
         showToast('Failed to resend email. Please try again.', 'error');
+    }
+}
+
+// Handle email confirmation from URL hash (when user clicks email confirmation link)
+async function handleEmailConfirmation() {
+    try {
+        // Check if there's an access_token in the URL hash
+        const hash = window.location.hash;
+        if (!hash || !hash.includes('access_token')) {
+            return; // No email confirmation token, continue normally
+        }
+        
+        console.log('📧 Email confirmation detected in URL hash');
+        
+        // Extract access_token from hash
+        const hashParams = new URLSearchParams(hash.substring(1)); // Remove # from hash
+        const accessToken = hashParams.get('access_token');
+        const type = hashParams.get('type');
+        
+        if (!accessToken) {
+            console.log('⚠️ No access_token found in hash');
+            return;
+        }
+        
+        // If this is an email confirmation
+        if (type === 'signup' || hash.includes('type=signup')) {
+            console.log('✅ Processing email confirmation...');
+            
+            // Store the token temporarily
+            localStorage.setItem('email_confirmation_token', accessToken);
+            
+            // Try to set the session with the token
+            try {
+                // Use Supabase to exchange the token for a session
+                // Note: This requires the Supabase client to be initialized
+                if (supabase && supabase.auth) {
+                    // The token will be automatically processed by Supabase
+                    // We just need to verify the email was confirmed
+                    const { data: { user }, error } = await supabase.auth.getUser();
+                    
+                    if (user && user.email_confirmed_at) {
+                        showToast('✅ Email verified successfully! You can now login.', 'success');
+                        // Clear the hash from URL
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        // Show login modal
+                        setTimeout(() => {
+                            showLoginModal();
+                        }, 1500);
+                    } else {
+                        showToast('Email verification in progress. Please try logging in.', 'info');
+                        // Clear the hash from URL
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    }
+                } else {
+                    showToast('Email confirmation link detected. Please refresh the page and try logging in.', 'info');
+                    // Clear the hash from URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            } catch (error) {
+                console.error('Error processing email confirmation:', error);
+                showToast('Email confirmation processed. Please try logging in.', 'info');
+                // Clear the hash from URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        } else {
+            // Other types of tokens (password reset, etc.)
+            console.log('📧 Other token type detected:', type);
+            // Clear the hash from URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    } catch (error) {
+        console.error('Error handling email confirmation:', error);
+        // Clear the hash from URL even on error
+        window.history.replaceState({}, document.title, window.location.pathname);
     }
 }
 

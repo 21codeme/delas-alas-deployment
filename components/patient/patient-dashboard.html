@@ -493,21 +493,36 @@
                         
                         if (resp.ok) {
                             const data = await resp.json();
-                            if (Array.isArray(data) && data.length > 0 && data[0].profile_picture) {
+                            // Only show profile picture if it exists in Supabase and is not null/empty
+                            if (Array.isArray(data) && data.length > 0 && data[0].profile_picture && data[0].profile_picture.trim() !== '') {
                                 updateSidebarProfilePicture(data[0].profile_picture);
+                                // Sync to localStorage
+                                localStorage.setItem('patientProfilePicture', data[0].profile_picture);
+                                return;
+                            } else {
+                                // No profile picture in Supabase, clear localStorage and show default icon
+                                localStorage.removeItem('patientProfilePicture');
+                                updateSidebarProfilePicture(null);
                                 return;
                             }
                         }
                     }
                 }
             } catch (error) {
-                // Error loading from Supabase
+                // Error loading from Supabase, show default icon
+                console.error('Error loading profile picture from Supabase:', error);
             }
             
-            // Fallback to localStorage if Supabase doesn't have it
+            // If Supabase doesn't have it, check localStorage
+            // But only use localStorage if it matches the current user
             const savedImage = localStorage.getItem('patientProfilePicture');
-            if (savedImage) {
+            if (savedImage && savedImage.trim() !== '') {
+                // Verify this is still valid by checking Supabase
+                // For now, show it but it will be overridden by Supabase check
                 updateSidebarProfilePicture(savedImage);
+            } else {
+                // No profile picture, show default icon
+                updateSidebarProfilePicture(null);
             }
         }
 
