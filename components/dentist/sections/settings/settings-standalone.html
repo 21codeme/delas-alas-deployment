@@ -10,6 +10,8 @@
     <link rel="shortcut icon" href="../../../images/tooth.png">
     <link rel="apple-touch-icon" sizes="180x180" href="../../../images/tooth.png">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- EmailJS for sending OTP emails -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -1660,31 +1662,52 @@
                     expiresAt: Date.now() + 10 * 60 * 1000 // 10 minutes
                 }));
                 
-                // Send OTP via email using Supabase
+                // Send OTP via email using EmailJS
                 try {
-                    // Use Supabase password reset email as a workaround
-                    // In production, you should use a proper email service or Supabase Edge Function
-                    const resetResponse = await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'apikey': SUPABASE_KEY,
-                            'Authorization': `Bearer ${SUPABASE_KEY}`
-                        },
-                        body: JSON.stringify({
-                            email: user.email,
-                            redirect_to: window.location.origin + '/password-reset-confirmation'
-                        })
-                    });
-                    
-                    // Note: The OTP should be sent via a proper email service
-                    // For now, we'll use Supabase's password reset as a notification
-                    // In production, integrate with EmailJS, SendGrid, or Supabase Edge Functions
-                    
-                    console.log('📧 Email notification sent (using password reset flow)');
+                    // Initialize EmailJS (if not already initialized)
+                    if (typeof emailjs !== 'undefined') {
+                        // EmailJS configuration
+                        // Replace these with your actual EmailJS credentials
+                        const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID'; // Get from EmailJS dashboard
+                        const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID'; // Get from EmailJS dashboard
+                        const EMAILJS_PUBLIC_KEY = 'YOUR_PUBLIC_KEY'; // Get from EmailJS dashboard
+                        
+                        // Initialize EmailJS
+                        emailjs.init(EMAILJS_PUBLIC_KEY);
+                        
+                        // Send OTP email
+                        const emailParams = {
+                            to_email: user.email,
+                            to_name: user.name || 'User',
+                            otp_code: otp.toString(),
+                            subject: 'Password Change Confirmation Code',
+                            message: `Your password change confirmation code is: ${otp}. This code will expire in 10 minutes.`
+                        };
+                        
+                        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, emailParams);
+                        console.log('📧 OTP email sent via EmailJS');
+                        showNotification('Confirmation code sent to your email!', 'success');
+                    } else {
+                        // Fallback: Use Supabase password reset as notification
+                        console.warn('⚠️ EmailJS not loaded, using fallback notification');
+                        const resetResponse = await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`
+                            },
+                            body: JSON.stringify({
+                                email: user.email,
+                                redirect_to: window.location.origin + '/password-reset-confirmation'
+                            })
+                        });
+                        showNotification('Email notification sent! Please check your email for the OTP code.', 'info');
+                    }
                 } catch (emailError) {
-                    console.warn('⚠️ Could not send email notification:', emailError);
-                    // Continue anyway - OTP is stored and can be verified
+                    console.error('❌ Error sending OTP email:', emailError);
+                    // Still show modal - OTP is stored and can be verified manually
+                    showNotification('Warning: Could not send email automatically. Please contact support.', 'warning');
                 }
                 
                 // Show OTP modal for user to enter code
@@ -1851,26 +1874,44 @@
                     expiresAt: Date.now() + 5 * 60 * 1000
                 }));
                 
-                // Send new OTP via email
+                // Send new OTP via email using EmailJS
                 try {
-                    const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
-                    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
-                    
-                    // Use Supabase password reset email as a workaround
-                    const resetResponse = await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'apikey': SUPABASE_KEY,
-                            'Authorization': `Bearer ${SUPABASE_KEY}`
-                        },
-                        body: JSON.stringify({
-                            email: stored.email,
-                            redirect_to: window.location.origin + '/password-reset-confirmation'
-                        })
-                    });
-                    
-                    console.log('📧 New OTP email notification sent');
+                    if (typeof emailjs !== 'undefined') {
+                        const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID';
+                        const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
+                        const EMAILJS_PUBLIC_KEY = 'YOUR_PUBLIC_KEY';
+                        
+                        emailjs.init(EMAILJS_PUBLIC_KEY);
+                        
+                        const emailParams = {
+                            to_email: stored.email,
+                            to_name: 'User',
+                            otp_code: newOtp.toString(),
+                            subject: 'Password Change Confirmation Code',
+                            message: `Your new password change confirmation code is: ${newOtp}. This code will expire in 10 minutes.`
+                        };
+                        
+                        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, emailParams);
+                        console.log('📧 New OTP email sent via EmailJS');
+                    } else {
+                        // Fallback
+                        const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                        
+                        const resetResponse = await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`
+                            },
+                            body: JSON.stringify({
+                                email: stored.email,
+                                redirect_to: window.location.origin + '/password-reset-confirmation'
+                            })
+                        });
+                        console.log('📧 New OTP email notification sent (fallback)');
+                    }
                 } catch (emailError) {
                     console.warn('⚠️ Could not resend email notification:', emailError);
                 }
