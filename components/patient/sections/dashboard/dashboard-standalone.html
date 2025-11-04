@@ -81,6 +81,17 @@
         .user-info p {
             color: #bdc3c7;
             font-size: 0.9rem;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding: 0 5px;
+        }
+        
+        .user-info {
+            overflow: hidden;
         }
 
         .nav-menu {
@@ -1133,7 +1144,12 @@
                 const emailElement = document.getElementById('patientEmail');
                 
                 if (nameElement) nameElement.textContent = currentUser.name || 'Patient';
-                if (emailElement) emailElement.textContent = currentUser.email || 'patient@email.com';
+                if (emailElement) {
+                    const email = currentUser.email || 'patient@email.com';
+                    emailElement.textContent = email;
+                    // Add title attribute to show full email on hover
+                    emailElement.setAttribute('title', email);
+                }
             }
         }
 
