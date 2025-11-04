@@ -51,6 +51,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Initialize application
 function initializeApp() {
+    // Check for password reset redirect FIRST (before anything else)
+    const hash = window.location.hash;
+    const currentPath = window.location.pathname;
+    const currentFile = currentPath.split('/').pop() || 'index.html';
+    
+    // Immediate redirect for password reset errors or recovery tokens
+    if (hash && (hash.includes('error=') || hash.includes('error_code=') || hash.includes('type=recovery') || (hash.includes('access_token') && hash.includes('recovery')))) {
+        if (currentFile !== 'password-reset.html') {
+            console.log('🔐 Redirecting to password-reset.html immediately');
+            window.location.replace('password-reset.html' + hash);
+            return; // Exit early to prevent other code from running
+        }
+    }
+    
     // Check for email confirmation redirect (access_token in URL hash)
     handleEmailConfirmation();
     
@@ -1107,8 +1121,31 @@ async function resendVerificationEmail() {
 // Handle email confirmation from URL hash (when user clicks email confirmation link)
 async function handleEmailConfirmation() {
     try {
-        // Check if there's an access_token in the URL hash
         const hash = window.location.hash;
+        const currentPath = window.location.pathname;
+        const currentFile = currentPath.split('/').pop() || 'index.html';
+        
+        // Check for password reset errors first - redirect immediately if not already on password-reset.html
+        if (hash && (hash.includes('error=') || hash.includes('error_code='))) {
+            if (currentFile !== 'password-reset.html') {
+                console.log('🔐 Password reset error detected, redirecting to password-reset.html');
+                // Use relative path for better compatibility
+                window.location.replace('password-reset.html' + hash);
+                return;
+            }
+        }
+        
+        // Check for password reset token (recovery type) - redirect immediately if not already on password-reset.html
+        if (hash && (hash.includes('type=recovery') || (hash.includes('access_token') && hash.includes('recovery')))) {
+            if (currentFile !== 'password-reset.html') {
+                console.log('🔐 Password reset token detected, redirecting to password-reset.html');
+                // Use relative path for better compatibility
+                window.location.replace('password-reset.html' + hash);
+                return;
+            }
+        }
+        
+        // Check if there's an access_token in the URL hash
         if (!hash || !hash.includes('access_token')) {
             return; // No email confirmation token, continue normally
         }
@@ -1122,6 +1159,14 @@ async function handleEmailConfirmation() {
         
         if (!accessToken) {
             console.log('⚠️ No access_token found in hash');
+            return;
+        }
+        
+        // If this is a password recovery/reset token
+        if (type === 'recovery' || hash.includes('type=recovery')) {
+            console.log('🔐 Password reset token detected, redirecting to password-reset.html');
+            // Redirect to password reset page with the token
+            window.location.href = 'password-reset.html' + hash;
             return;
         }
         
@@ -1166,7 +1211,7 @@ async function handleEmailConfirmation() {
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         } else {
-            // Other types of tokens (password reset, etc.)
+            // Other types of tokens - redirect to password reset if it's a recovery token
             console.log('📧 Other token type detected:', type);
             // Clear the hash from URL
             window.history.replaceState({}, document.title, window.location.pathname);

@@ -10,8 +10,6 @@
     <link rel="shortcut icon" href="../../../images/tooth.png">
     <link rel="apple-touch-icon" sizes="180x180" href="../../../images/tooth.png">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- EmailJS for sending OTP emails -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -252,6 +250,63 @@
         .form-group textarea {
             resize: vertical;
             min-height: 100px;
+        }
+
+        /* Password Input Container */
+        .password-input-container {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .password-input-container input {
+            width: 100%;
+            padding-right: 45px;
+            box-sizing: border-box;
+        }
+
+        .password-toggle-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: #555;
+            cursor: pointer;
+            padding: 0;
+            font-size: 18px;
+            z-index: 1000;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+            line-height: 1;
+        }
+
+        .password-toggle-btn:hover {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .password-toggle-btn:active {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .password-toggle-btn:focus {
+            outline: none;
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .password-toggle-btn i {
+            display: block;
+            line-height: 1;
+            font-size: 18px;
         }
 
         .btn {
@@ -755,15 +810,30 @@
                         <div class="settings-card-body">
                             <div class="form-group">
                                 <label>Current Password</label>
-                                <input type="password" id="currentPassword" placeholder="Enter current password">
+                                <div class="password-input-container">
+                                    <input type="password" id="currentPassword" placeholder="Enter current password">
+                                    <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('currentPassword')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label>New Password</label>
-                                <input type="password" id="newPassword" placeholder="Enter new password">
+                                <div class="password-input-container">
+                                    <input type="password" id="newPassword" placeholder="Enter new password">
+                                    <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('newPassword')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label>Confirm New Password</label>
-                                <input type="password" id="confirmPassword" placeholder="Confirm new password">
+                                <div class="password-input-container">
+                                    <input type="password" id="confirmPassword" placeholder="Confirm new password">
+                                    <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('confirmPassword')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="settings-actions">
                                 <button class="btn btn-primary" onclick="changePassword()">
@@ -867,10 +937,10 @@
             console.log('🔍 Loading settings...');
             
             // First, load from currentUser in localStorage (fast, always available)
-            const userData = localStorage.getItem('currentUser');
+                const userData = localStorage.getItem('currentUser');
             let currentUser = null;
             
-            if (userData) {
+                if (userData) {
                 try {
                     currentUser = JSON.parse(userData);
                     console.log('✅ Loaded currentUser from localStorage:', currentUser);
@@ -920,9 +990,9 @@
             // Then, try to load additional data from Supabase (dob, address)
             // Also, if currentUser is missing or incomplete, try to load from Supabase
             try {
-                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
-                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
-                
+                        const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                        
                 // Get user ID from currentUser or try to get from auth session
                 let userId = currentUser?.id;
                 
@@ -944,15 +1014,15 @@
                     
                     // First, try to load basic user data (name, email, phone) - these always exist
                     let resp = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${userId}&select=name,email,phone`, {
-                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-                    });
-                    
-                    if (resp.ok) {
-                        const data = await resp.json();
+                            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                        });
+                        
+                        if (resp.ok) {
+                            const data = await resp.json();
                         console.log('📦 Supabase response (basic):', data);
                         
-                        if (Array.isArray(data) && data.length > 0) {
-                            const profile = data[0];
+                            if (Array.isArray(data) && data.length > 0) {
+                                const profile = data[0];
                             console.log('✅ Profile loaded from Supabase:', profile);
                             
                             // Update all fields from Supabase (this is the source of truth)
@@ -1477,73 +1547,46 @@
                 
                 console.log('✅ Current password verified');
                 
-                // Step 2: Send OTP to email for confirmation
-                showToast('Sending confirmation code to your email...', 'info');
+                // Step 2: Send password reset email (same as registration confirmation)
+                showToast('Sending confirmation email...', 'info');
                 
-                // Generate OTP (6-digit random number)
-                const otp = Math.floor(100000 + Math.random() * 900000);
-                // OTP is sent via email - do not log in production
-                
-                // Store OTP temporarily in localStorage with expiry (10 minutes)
-                localStorage.setItem('passwordChangeOTP', JSON.stringify({
-                    otp: otp.toString(),
+                // Store new password temporarily (will be used after email confirmation)
+                localStorage.setItem('pendingPasswordChange', JSON.stringify({
                     newPassword: newPassword,
                     email: user.email,
-                    userId: user.id,
-                    expiresAt: Date.now() + 10 * 60 * 1000 // 10 minutes
+                    timestamp: Date.now()
                 }));
                 
-                // Send OTP via email using EmailJS
-                try {
-                    // Initialize EmailJS (if not already initialized)
-                    if (typeof emailjs !== 'undefined') {
-                        // EmailJS configuration
-                        // Replace these with your actual EmailJS credentials
-                        const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID'; // Get from EmailJS dashboard
-                        const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID'; // Get from EmailJS dashboard
-                        const EMAILJS_PUBLIC_KEY = 'YOUR_PUBLIC_KEY'; // Get from EmailJS dashboard
-                        
-                        // Initialize EmailJS
-                        emailjs.init(EMAILJS_PUBLIC_KEY);
-                        
-                        // Send OTP email
-                        const emailParams = {
-                            to_email: user.email,
-                            to_name: user.name || 'User',
-                            otp_code: otp.toString(),
-                            subject: 'Password Change Confirmation Code',
-                            message: `Your password change confirmation code is: ${otp}. This code will expire in 10 minutes.`
-                        };
-                        
-                        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, emailParams);
-                        console.log('📧 OTP email sent via EmailJS');
-                        showToast('Confirmation code sent to your email!', 'success');
-                    } else {
-                        // Fallback: Use Supabase password reset as notification
-                        console.warn('⚠️ EmailJS not loaded, using fallback notification');
-                        const resetResponse = await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'apikey': SUPABASE_KEY,
-                                'Authorization': `Bearer ${SUPABASE_KEY}`
-                            },
-                            body: JSON.stringify({
-                                email: user.email,
-                                redirect_to: window.location.origin + '/password-reset-confirmation'
-                            })
-                        });
-                        showToast('Email notification sent! Please check your email for the OTP code.', 'info');
-                    }
-                } catch (emailError) {
-                    console.error('❌ Error sending OTP email:', emailError);
-                    // Still show modal - OTP is stored and can be verified manually
-                    showToast('Warning: Could not send email automatically. Please contact support or check console for OTP.', 'warning');
-                }
+                // Send password reset email via Supabase (same as registration)
+                const resetResponse = await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    },
+                    body: JSON.stringify({
+                        email: user.email,
+                        redirect_to: window.location.origin + '/password-reset.html'
+                    })
+                });
                 
-                // Show OTP modal for confirmation
-                // OTP is sent via email - user will receive it in their inbox
-                showOTPConfirmationModal(user.email);
+                if (resetResponse.ok || resetResponse.status === 429) {
+                    // 429 means rate limit, but email was still sent
+                    showToast('✅ Confirmation email sent! Please check your email and click the link to complete the password change.', 'success');
+                    
+                    // Show info modal
+                    showPasswordChangeEmailSentModal(user.email);
+                    
+                    // Clear password fields
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                } else {
+                    const errorData = await resetResponse.json().catch(() => ({}));
+                    console.error('Error sending password reset email:', errorData);
+                    showToast('Failed to send confirmation email. Please try again.', 'error');
+                }
                 
             } catch (error) {
                 console.error('❌ Error initiating password change:', error);
@@ -1551,7 +1594,59 @@
             }
         }
         
-        // Show OTP confirmation modal
+        // Show password change email sent modal
+        function showPasswordChangeEmailSentModal(email) {
+            const modalHTML = `
+                <div id="passwordChangeModal" class="modal" style="display: block;">
+                    <div class="modal-content" style="max-width: 500px;">
+                        <div class="modal-header">
+                            <h3><i class="fas fa-envelope"></i> Check Your Email</h3>
+                            <span class="close" onclick="closePasswordChangeModal()">&times;</span>
+                        </div>
+                        <div class="modal-body">
+                            <div style="text-align: center; margin-bottom: 20px;">
+                                <i class="fas fa-envelope-circle-check" style="font-size: 64px; color: #667eea; margin-bottom: 20px;"></i>
+                            </div>
+                            <p style="margin-bottom: 15px; font-size: 1.1rem; text-align: center;">
+                                We've sent a confirmation email to:
+                            </p>
+                            <p style="font-weight: bold; color: #667eea; margin-bottom: 20px; text-align: center; font-size: 1.05rem;">
+                                ${email}
+                            </p>
+                            <p style="font-size: 0.95rem; color: #666; margin-bottom: 20px; line-height: 1.6;">
+                                Please click the link in the email to confirm your password change. The link will expire in 1 hour.
+                            </p>
+                            <div style="background: #f0f7ff; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                                <p style="font-size: 0.85rem; color: #666; margin: 0;">
+                                    <i class="fas fa-info-circle"></i> <strong>Important:</strong> If you don't see the email, please check your spam folder.
+                                </p>
+                            </div>
+                            <button class="btn btn-primary" onclick="closePasswordChangeModal()" style="width: 100%;">
+                                <i class="fas fa-check"></i> Got it!
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if any
+            const existingModal = document.getElementById('passwordChangeModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+        
+        function closePasswordChangeModal() {
+            const modal = document.getElementById('passwordChangeModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+        
+        // OLD OTP MODAL (DEPRECATED - keeping for reference)
         function showOTPConfirmationModal(email) {
             // Create modal HTML
             const modalHTML = `
@@ -1637,46 +1732,55 @@
                 stored.expiresAt = Date.now() + 10 * 60 * 1000;
                 localStorage.setItem('passwordChangeOTP', JSON.stringify(stored));
                 
-                // Send new OTP via email using EmailJS
+                // Store new OTP in Supabase database
                 try {
-                    if (typeof emailjs !== 'undefined') {
-                        const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID';
-                        const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
-                        const EMAILJS_PUBLIC_KEY = 'YOUR_PUBLIC_KEY';
-                        
-                        emailjs.init(EMAILJS_PUBLIC_KEY);
-                        
-                        const emailParams = {
-                            to_email: stored.email,
-                            to_name: 'User',
-                            otp_code: newOtp.toString(),
-                            subject: 'Password Change Confirmation Code',
-                            message: `Your new password change confirmation code is: ${newOtp}. This code will expire in 10 minutes.`
-                        };
-                        
-                        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, emailParams);
-                        console.log('📧 New OTP email sent via EmailJS');
+                    const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                    
+                    // Store new OTP in database
+                    const storeOTPResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/store_otp_code`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`
+                        },
+                        body: JSON.stringify({
+                            user_email: stored.email,
+                            code: newOtp.toString(),
+                            expiry_minutes: 10
+                        })
+                    });
+                    
+                    if (storeOTPResponse.ok) {
+                        console.log('✅ New OTP stored in Supabase');
+                    }
+                    
+                    // Send new OTP via Vercel API (using Nodemailer with Gmail SMTP)
+                    const API_URL = window.location.origin.includes('vercel.app') 
+                        ? window.location.origin 
+                        : 'http://localhost:3000';
+                    
+                    const apiResponse = await fetch(`${API_URL}/api/send-otp-email`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            email: stored.email,
+                            otp: newOtp.toString(),
+                            name: 'User'
+                        })
+                    });
+                    
+                    if (apiResponse.ok) {
+                        console.log('📧 New OTP email sent via Gmail SMTP');
                     } else {
-                        // Fallback
-                        const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
-                        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
-                        
-                        const resetResponse = await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'apikey': SUPABASE_KEY,
-                                'Authorization': `Bearer ${SUPABASE_KEY}`
-                            },
-                            body: JSON.stringify({
-                                email: stored.email,
-                                redirect_to: window.location.origin + '/password-reset-confirmation'
-                            })
-                        });
-                        console.log('📧 New OTP email notification sent (fallback)');
+                        console.log('📧 New OTP Code (for testing - check console):', newOtp);
                     }
                 } catch (emailError) {
                     console.warn('⚠️ Could not resend email notification:', emailError);
+                    console.log('📧 New OTP Code (for testing - check console):', newOtp);
                 }
                 
                 showToast('New OTP sent to your email!', 'success');
@@ -1795,11 +1899,11 @@
                     
                     // Close modal
                     closeOTPModal();
-                    
-                    // Clear password fields
-                    document.getElementById('currentPassword').value = '';
-                    document.getElementById('newPassword').value = '';
-                    document.getElementById('confirmPassword').value = '';
+            
+            // Clear password fields
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
                     
                     showToast('✅ Password changed successfully!', 'success');
                     
@@ -2086,6 +2190,28 @@
             }
             
             console.log('✅ Notification listeners setup complete');
+        }
+
+        // Password Toggle Function
+        function togglePasswordVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            
+            const button = input.parentNode.querySelector('.password-toggle-btn');
+            if (!button) return;
+            
+            const icon = button.querySelector('i');
+            if (!icon) return;
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
         }
 
         // Save notification settings to localStorage and Supabase

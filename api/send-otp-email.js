@@ -1,0 +1,99 @@
+// Vercel Serverless Function to send OTP email using Nodemailer
+// This uses Node.js, so Nodemailer works perfectly!
+
+const nodemailer = require('nodemailer');
+
+module.exports = async (req, res) => {
+  // Handle CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { email, otp, name } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Email and OTP are required' 
+      });
+    }
+
+    // Get Gmail credentials from environment variables
+    const GMAIL_USER = process.env.GMAIL_USER || '';
+    const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD || '';
+
+    if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
+      console.error('Gmail credentials not configured');
+      return res.status(500).json({ 
+        success: false,
+        error: 'Email service not configured. Please set GMAIL_USER and GMAIL_APP_PASSWORD environment variables.',
+        message: 'OTP stored in database but email not sent. Check console for OTP code.'
+      });
+    }
+
+    // Create transporter using Gmail SMTP
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: GMAIL_USER,
+        pass: GMAIL_APP_PASSWORD
+      }
+    });
+
+    // Email content
+    const mailOptions = {
+      from: `"Delas Alas Dental Clinic" <${GMAIL_USER}>`,
+      to: email,
+      subject: 'Password Change Confirmation Code',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">🦷 Delas Alas Dental Clinic</h1>
+          </div>
+          <div style="background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 10px 10px;">
+            <h2 style="color: #667eea; margin-top: 0;">Password Change Confirmation</h2>
+            <p style="color: #333; font-size: 16px;">Hello ${name || 'User'},</p>
+            <p style="color: #333; font-size: 16px;">You have requested to change your password. Please use the following confirmation code:</p>
+            <div style="background: #f0f0f0; padding: 30px; border-radius: 8px; text-align: center; margin: 30px 0;">
+              <h1 style="color: #667eea; font-size: 48px; margin: 0; font-family: monospace; letter-spacing: 5px;">${otp}</h1>
+            </div>
+            <p style="color: #666; font-size: 14px; margin-top: 20px;">This code will expire in <strong>10 minutes</strong>.</p>
+            <p style="color: #666; font-size: 14px;">If you did not request this password change, please ignore this email.</p>
+            <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+            <p style="color: #999; font-size: 12px; text-align: center; margin: 0;">Thank you,<br>Delas Alas Dental Clinic</p>
+          </div>
+        </div>
+      `
+    };
+
+    // Send email
+    const info = await transporter.sendMail(mailOptions);
+    
+    console.log('✅ OTP email sent successfully:', info.messageId);
+
+    return res.status(200).json({ 
+      success: true, 
+      message: 'OTP email sent successfully',
+      messageId: info.messageId
+    });
+
+  } catch (error) {
+    console.error('❌ Error sending OTP email:', error);
+    
+    return res.status(500).json({ 
+      success: false,
+      error: error.message || 'Failed to send email',
+      message: 'OTP stored in database but email not sent. Check console for OTP code.'
+    });
+  }
+};
+
