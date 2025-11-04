@@ -1855,7 +1855,11 @@
                 }));
                 
                 // Send OTP via Vercel API
-                const otpResponse = await fetch('/api/send-otp-email', {
+                const apiUrl = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+                    ? 'http://localhost:3000/api/send-otp-email'  // For local testing
+                    : window.location.origin + '/api/send-otp-email';  // For production
+                
+                const otpResponse = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
