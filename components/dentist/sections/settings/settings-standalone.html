@@ -1889,7 +1889,15 @@
                     const passwordResetUrl = window.location.protocol === 'file:' || !window.location.origin
                         ? 'https://delas-alas-deployment.vercel.app/password-reset-otp.html'
                         : window.location.origin + '/password-reset-otp.html';
-                    window.location.replace(passwordResetUrl);
+                    
+                    // If loaded in iframe, replace parent window; otherwise replace current window
+                    if (window !== window.top) {
+                        // Loaded in iframe - replace parent window (dashboard)
+                        window.top.location.replace(passwordResetUrl);
+                    } else {
+                        // Standalone - replace current window
+                        window.location.replace(passwordResetUrl);
+                    }
                 } else {
                     console.error('❌ Error sending OTP:', otpData);
                     console.error('❌ Error details:', otpData.details);
