@@ -1855,9 +1855,18 @@
                 }));
                 
                 // Send OTP via Vercel API
-                const apiUrl = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
-                    ? 'http://localhost:3000/api/send-otp-email'  // For local testing
-                    : window.location.origin + '/api/send-otp-email';  // For production
+                // Handle file:// protocol (local file opening) and different environments
+                let apiUrl;
+                if (window.location.protocol === 'file:' || !window.location.origin) {
+                    // Local file opening - use Vercel URL or localhost
+                    apiUrl = 'https://delas-alas-deployment.vercel.app/api/send-otp-email';
+                } else if (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')) {
+                    // Local development server
+                    apiUrl = 'http://localhost:3000/api/send-otp-email';
+                } else {
+                    // Production (Vercel)
+                    apiUrl = window.location.origin + '/api/send-otp-email';
+                }
                 
                 const otpResponse = await fetch(apiUrl, {
                     method: 'POST',
@@ -1875,11 +1884,27 @@
                 if (otpData.success) {
                     showNotification('✅ OTP sent successfully! Please check your email and enter the OTP code.', 'success');
                     
-                    // Redirect to password reset OTP page
-                    window.location.href = 'password-reset-otp.html';
+                    // Redirect to password reset OTP page (use root-relative path)
+                    const passwordResetUrl = window.location.protocol === 'file:' || !window.location.origin
+                        ? 'https://delas-alas-deployment.vercel.app/password-reset-otp.html'
+                        : window.location.origin + '/password-reset-otp.html';
+                    window.location.href = passwordResetUrl;
                 } else {
-                    console.error('Error sending OTP:', otpData);
-                    showNotification(otpData.error || 'Failed to send OTP. Please try again.', 'error');
+                    console.error('❌ Error sending OTP:', otpData);
+                    console.error('❌ Error details:', otpData.details);
+                    
+                    let errorMessage = otpData.error || 'Failed to send OTP. Please try again.';
+                    
+                    // Add helpful error messages
+                    if (otpData.error && otpData.error.includes('Supabase credentials')) {
+                        errorMessage = '⚠️ Supabase credentials not configured. Please set SUPABASE_SERVICE_ROLE_KEY in Vercel environment variables.';
+                    } else if (otpData.error && otpData.error.includes('Email service')) {
+                        errorMessage = '⚠️ Email service not configured. Please set GMAIL_USER and GMAIL_APP_PASSWORD in Vercel environment variables.';
+                    } else if (otpData.error && otpData.error.includes('Failed to store OTP')) {
+                        errorMessage = '⚠️ OTP table not found. Please run CREATE_OTP_TABLE.sql in Supabase SQL Editor.';
+                    }
+                    
+                    showNotification(errorMessage, 'error');
                 }
                 
             } catch (error) {

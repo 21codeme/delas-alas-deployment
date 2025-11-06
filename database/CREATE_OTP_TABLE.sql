@@ -17,6 +17,11 @@ CREATE INDEX IF NOT EXISTS idx_otps_expires_at ON otps(expires_at);
 -- Enable RLS (Row Level Security)
 ALTER TABLE otps ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist (to avoid errors)
+DROP POLICY IF EXISTS "Allow anonymous to insert OTPs" ON otps;
+DROP POLICY IF EXISTS "Allow anonymous to select OTPs" ON otps;
+DROP POLICY IF EXISTS "Allow anonymous to update OTPs" ON otps;
+
 -- Allow anonymous users to insert OTPs (for password reset)
 CREATE POLICY "Allow anonymous to insert OTPs" ON otps
   FOR INSERT
@@ -35,6 +40,9 @@ CREATE POLICY "Allow anonymous to update OTPs" ON otps
 -- Grant permissions
 GRANT INSERT, SELECT, UPDATE ON TABLE otps TO anon;
 GRANT INSERT, SELECT, UPDATE ON TABLE otps TO authenticated;
+
+-- Drop existing function if it exists
+DROP FUNCTION IF EXISTS cleanup_expired_otps();
 
 -- Function to clean up expired OTPs (optional - can be called periodically)
 CREATE OR REPLACE FUNCTION cleanup_expired_otps()

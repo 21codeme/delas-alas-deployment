@@ -78,3 +78,5 @@ SELECT COUNT(*) as total_patients FROM users WHERE user_type = 'patient';
 
 
 
+
+

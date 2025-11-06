@@ -129,11 +129,14 @@ module.exports = async (req, res) => {
 
   } catch (error) {
     console.error('❌ Error sending OTP email:', error);
+    console.error('❌ Error stack:', error.stack);
+    console.error('❌ Error details:', JSON.stringify(error, null, 2));
     
     return res.status(500).json({ 
       success: false,
       error: error.message || 'Failed to send email',
-      message: 'OTP stored in database but email not sent. Check console for OTP code.'
+      details: error.stack || 'Unknown error',
+      message: 'Please check Vercel logs for more details. Make sure the otps table exists and environment variables are set.'
     });
   }
 };
