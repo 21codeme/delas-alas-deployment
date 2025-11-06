@@ -1885,10 +1885,11 @@
                     showNotification('✅ OTP sent successfully! Please check your email and enter the OTP code.', 'success');
                     
                     // Redirect to password reset OTP page (use root-relative path)
+                    // Use replace() to completely replace the dashboard page (no sidebar)
                     const passwordResetUrl = window.location.protocol === 'file:' || !window.location.origin
                         ? 'https://delas-alas-deployment.vercel.app/password-reset-otp.html'
                         : window.location.origin + '/password-reset-otp.html';
-                    window.location.href = passwordResetUrl;
+                    window.location.replace(passwordResetUrl);
                 } else {
                     console.error('❌ Error sending OTP:', otpData);
                     console.error('❌ Error details:', otpData.details);
