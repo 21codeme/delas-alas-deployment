@@ -2281,33 +2281,53 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                                 ? 'http://localhost:3000' 
                                 : window.location.origin);
                         
+                        const emailData = {
+                            email: appointment.email,
+                            patientName: appointment.patientName,
+                            serviceType: appointment.service,
+                            appointmentDate: appointment.date,
+                            appointmentTime: appointment.time,
+                            dentistName: dentistName,
+                            notes: appointment.notes
+                        };
+                        
+                        console.log('📧 Sending confirmation email to:', appointment.email);
+                        console.log('📧 Email data:', emailData);
+                        console.log('📧 API URL:', `${apiBaseUrl}/api/send-appointment-email`);
+                        
                         const emailResponse = await fetch(`${apiBaseUrl}/api/send-appointment-email`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify({
-                                email: appointment.email,
-                                patientName: appointment.patientName,
-                                serviceType: appointment.service,
-                                appointmentDate: appointment.date,
-                                appointmentTime: appointment.time,
-                                dentistName: dentistName,
-                                notes: appointment.notes
-                            })
+                            body: JSON.stringify(emailData)
                         });
                         
+                        const responseText = await emailResponse.text();
+                        let responseData;
+                        try {
+                            responseData = JSON.parse(responseText);
+                        } catch (e) {
+                            responseData = { message: responseText };
+                        }
+                        
                         if (emailResponse.ok) {
-                            console.log('✅ Confirmation email sent to patient:', appointment.email);
+                            console.log('✅ Confirmation email sent successfully to patient:', appointment.email);
+                            console.log('✅ Email response:', responseData);
                         } else {
-                            console.warn('⚠️ Failed to send confirmation email:', await emailResponse.text());
+                            console.error('❌ Failed to send confirmation email. Status:', emailResponse.status);
+                            console.error('❌ Error response:', responseData);
+                            alert(`Warning: Appointment confirmed but email could not be sent. Error: ${responseData.error || responseData.message || 'Unknown error'}`);
                         }
                     } catch (emailError) {
                         console.error('❌ Error sending confirmation email:', emailError);
+                        console.error('❌ Error details:', emailError.message, emailError.stack);
+                        alert(`Warning: Appointment confirmed but email could not be sent. Please check console for details.`);
                         // Continue even if email fails - appointment is still confirmed
                     }
                 } else {
                     console.warn('⚠️ Patient email not available, skipping email notification');
+                    console.warn('⚠️ Appointment email value:', appointment.email);
                 }
                 
                 // Refresh display
