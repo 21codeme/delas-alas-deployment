@@ -1308,8 +1308,19 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                     console.log('✅ Appointments loaded from Supabase:', appointments.length);
                     // Debug: Log first appointment's created_at to verify timezone
                     if (appointments.length > 0) {
-                        console.log('📅 Sample booking time (UTC):', appointments[0].createdAt);
-                        console.log('📅 Sample booking time (Local):', new Date(appointments[0].createdAt).toLocaleString());
+                        const sampleApt = appointments[0];
+                        const sampleDate = new Date(sampleApt.createdAt);
+                        console.log('📅 Sample booking time debug:', {
+                            original: sampleApt.createdAt,
+                            type: typeof sampleApt.createdAt,
+                            utc: sampleDate.toISOString(),
+                            local: sampleDate.toLocaleString(),
+                            localTime: sampleDate.toLocaleTimeString(),
+                            hours: sampleDate.getHours(),
+                            minutes: sampleDate.getMinutes(),
+                            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                            offset: sampleDate.getTimezoneOffset()
+                        });
                     }
                 } else {
                     console.log('ℹ️ No appointments found in database');
@@ -1437,25 +1448,41 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 let bookingDate = 'N/A';
                 let bookingTime = 'N/A';
                 if (appointment.createdAt) {
-                    // Parse the UTC timestamp and convert to local time
-                    const bookingDateTime = new Date(appointment.createdAt);
+                    // Parse the timestamp - Supabase stores created_at in UTC
+                    // new Date() automatically converts UTC to local timezone
+                    let bookingDateTime;
                     
-                    // Ensure we're using local timezone
-                    // Get local date components
-                    const year = bookingDateTime.getFullYear();
-                    const month = String(bookingDateTime.getMonth() + 1).padStart(2, '0');
-                    const day = String(bookingDateTime.getDate()).padStart(2, '0');
+                    // Handle different timestamp formats from Supabase
+                    if (typeof appointment.createdAt === 'string') {
+                        // If it's a string, parse it directly
+                        bookingDateTime = new Date(appointment.createdAt);
+                    } else {
+                        // If it's already a Date object or timestamp
+                        bookingDateTime = new Date(appointment.createdAt);
+                    }
                     
-                    // Format date as MM/DD/YYYY
-                    bookingDate = `${month}/${day}/${year}`;
-                    
-                    // Format time in 12-hour format with AM/PM
-                    let hours = bookingDateTime.getHours();
-                    const minutes = String(bookingDateTime.getMinutes()).padStart(2, '0');
-                    const ampm = hours >= 12 ? 'PM' : 'AM';
-                    hours = hours % 12;
-                    hours = hours ? hours : 12; // the hour '0' should be '12'
-                    bookingTime = `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+                    // Verify the date is valid
+                    if (isNaN(bookingDateTime.getTime())) {
+                        console.error('Invalid date:', appointment.createdAt);
+                        bookingDate = 'Invalid Date';
+                        bookingTime = 'Invalid Time';
+                    } else {
+                        // Get local timezone date components (already converted from UTC)
+                        const year = bookingDateTime.getFullYear();
+                        const month = String(bookingDateTime.getMonth() + 1).padStart(2, '0');
+                        const day = String(bookingDateTime.getDate()).padStart(2, '0');
+                        
+                        // Format date as MM/DD/YYYY
+                        bookingDate = `${month}/${day}/${year}`;
+                        
+                        // Get local timezone hours and minutes (already converted from UTC)
+                        let hours = bookingDateTime.getHours(); // This is already in local time
+                        const minutes = String(bookingDateTime.getMinutes()).padStart(2, '0');
+                        const ampm = hours >= 12 ? 'PM' : 'AM';
+                        hours = hours % 12;
+                        hours = hours ? hours : 12; // the hour '0' should be '12'
+                        bookingTime = `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+                    }
                 }
                 
                 return `
