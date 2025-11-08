@@ -2260,6 +2260,22 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 // Update in database
                 await updateAppointmentInDatabase(appointment);
                 
+                // Reload appointment from database to get latest data
+                try {
+                    const updatedAppointment = await callSupabaseAPI('GET', `appointments?id=eq.${appointment.id}`);
+                    if (updatedAppointment && updatedAppointment.length > 0) {
+                        // Update appointment object with latest data
+                        appointment.email = updatedAppointment[0].patient_email || appointment.email;
+                        appointment.patientName = updatedAppointment[0].patient_name || appointment.patientName;
+                        appointment.date = updatedAppointment[0].appointment_date || appointment.date;
+                        appointment.time = updatedAppointment[0].appointment_time || appointment.time;
+                        appointment.service = updatedAppointment[0].service_type || appointment.service;
+                        appointment.notes = updatedAppointment[0].notes || appointment.notes;
+                    }
+                } catch (e) {
+                    console.warn('⚠️ Could not reload appointment from database:', e);
+                }
+                
                 // Get dentist name
                 let dentistName = '';
                 try {
@@ -2271,8 +2287,19 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                     console.error('Error getting dentist name:', e);
                 }
                 
+                // Debug: Log appointment data before sending email
+                console.log('📋 Appointment data before email:', {
+                    id: appointment.id,
+                    email: appointment.email,
+                    patientName: appointment.patientName,
+                    date: appointment.date,
+                    time: appointment.time,
+                    service: appointment.service
+                });
+                
                 // Send confirmation email to patient
-                if (appointment.email && appointment.email !== 'No email provided') {
+                if (appointment.email && appointment.email !== 'No email provided' && appointment.email.trim() !== '') {
+                    console.log('✅ Email check passed, proceeding to send email...');
                     try {
                         // Determine API base URL (for Vercel deployment)
                         const apiBaseUrl = window.location.origin.includes('vercel.app') 
