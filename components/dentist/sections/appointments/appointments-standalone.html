@@ -14,17 +14,17 @@
     <script>
         // Excel-based QR Code Generation (matching template format)
         function generateExcelQRCode(appointment) {
-            // Create web URL for QR code (NEW APPROACH) - Direct to schedule section
+            // Create web URL for QR code (NEW APPROACH)
             let baseUrl;
             if (window.location.protocol === 'file:') {
                 // For local development, use your actual local IP address
-                baseUrl = 'http://192.168.254.117:8000/components/dentist/dentist-dashboard.html';
+                baseUrl = 'http://192.168.254.117:8000/appointment-schedule.html';
             } else {
                 // For online deployment, use current domain
-                baseUrl = window.location.origin + '/components/dentist/dentist-dashboard.html';
+                baseUrl = window.location.origin + '/appointment-schedule.html';
             }
             
-            const qrData = `${baseUrl}?section=schedule&appointment_id=${appointment.id}`;
+            const qrData = `${baseUrl}?id=${appointment.id}`;
             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData)}&ecc=H&margin=15`;
             
             // Create patient data for display
@@ -53,21 +53,21 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
         
         // Generate QR code using web URL (NEW APPROACH)
         function generateOnlineQRCode(appointment) {
-            // Create a web URL that will redirect directly to dentist dashboard schedule section
+            // Create a web URL that will display the appointment schedule
             // This URL will be accessible when the QR code is scanned
             
             // Check if running locally or on web server
             let baseUrl;
             if (window.location.protocol === 'file:') {
                 // For local development, use your actual local IP address
-                baseUrl = 'http://192.168.254.117:8000/components/dentist/dentist-dashboard.html';
+                baseUrl = 'http://192.168.254.117:8000/appointment-schedule.html';
             } else {
                 // For online deployment, use current domain
-                baseUrl = window.location.origin + '/components/dentist/dentist-dashboard.html';
+                baseUrl = window.location.origin + '/appointment-schedule.html';
             }
             
-            // Direct redirect to schedule section with appointment ID
-            const qrData = `${baseUrl}?section=schedule&appointment_id=${appointment.id}`;
+            // Add protocol prefix to ensure QR scanners recognize it as a URL
+            const qrData = `${baseUrl}?id=${appointment.id}`;
             
             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData)}&ecc=M&margin=10`;
             
@@ -2334,7 +2334,7 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                         alert('Appointment updated and confirmed successfully! Note: Patient email not available, so no email notification was sent.');
                     }
                 } else {
-                    alert('Appointment updated successfully!');
+                alert('Appointment updated successfully!');
                 }
             }
         }
