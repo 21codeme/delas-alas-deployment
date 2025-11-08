@@ -1285,8 +1285,8 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             appointments = [];
 
             try {
-                // Load appointments using direct API call
-                const data = await callSupabaseAPI('GET', 'appointments?order=appointment_date.desc');
+                // Load appointments using direct API call - order by booking date/time (created_at) descending (latest first)
+                const data = await callSupabaseAPI('GET', 'appointments?order=created_at.desc');
 
                 if (data && data.length > 0) {
                     // Convert Supabase data to the format expected by the UI
@@ -1398,6 +1398,13 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 return matchesStatus && matchesDate && matchesSearch;
             });
 
+            // Sort by booking date/time (created_at) descending - latest booking first
+            filteredAppointments.sort((a, b) => {
+                const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+                const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+                return dateB - dateA; // Descending order (newest first)
+            });
+
             displayAppointments();
         }
 
@@ -1420,12 +1427,26 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 return;
             }
 
-            tbody.innerHTML = filteredAppointments.map(appointment => `
+            tbody.innerHTML = filteredAppointments.map(appointment => {
+                // Format booking date and time (when appointment was created/booked)
+                let bookingDate = 'N/A';
+                let bookingTime = 'N/A';
+                if (appointment.createdAt) {
+                    const bookingDateTime = new Date(appointment.createdAt);
+                    bookingDate = bookingDateTime.toLocaleDateString();
+                    bookingTime = bookingDateTime.toLocaleTimeString('en-US', { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: true 
+                    });
+                }
+                
+                return `
                 <tr>
                     <td>
                         <div>
-                            <strong>${new Date(appointment.date).toLocaleDateString()}</strong><br>
-                            <small>${formatAppointmentTime(appointment.time)}</small>
+                            <strong>${bookingDate}</strong><br>
+                            <small>${bookingTime}</small>
                         </div>
                     </td>
                     <td>
@@ -1480,7 +1501,8 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                         </div>
                     </td>
                 </tr>
-            `).join('');
+                `;
+            }).join('');
         }
 
         // Navigation function
@@ -2149,7 +2171,7 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             }
         }
 
-        function confirmAppointment() {
+        async function confirmAppointment() {
             if (!currentAppointmentId) return;
             
             const selectedTimeSlot = document.querySelector('.time-slot.selected');
@@ -2166,7 +2188,57 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 appointment.notes = document.getElementById('confirmNotes').value || appointment.notes;
                 
                 // Update in database
-                updateAppointmentInDatabase(appointment);
+                await updateAppointmentInDatabase(appointment);
+                
+                // Get dentist name
+                let dentistName = '';
+                try {
+                    const currentUserData = JSON.parse(localStorage.getItem('currentUser'));
+                    if (currentUserData && currentUserData.name) {
+                        dentistName = currentUserData.name;
+                    }
+                } catch (e) {
+                    console.error('Error getting dentist name:', e);
+                }
+                
+                // Send confirmation email to patient
+                if (appointment.email && appointment.email !== 'No email provided') {
+                    try {
+                        // Determine API base URL (for Vercel deployment)
+                        const apiBaseUrl = window.location.origin.includes('vercel.app') 
+                            ? window.location.origin 
+                            : (window.location.origin.includes('localhost') 
+                                ? 'http://localhost:3000' 
+                                : window.location.origin);
+                        
+                        const emailResponse = await fetch(`${apiBaseUrl}/api/send-appointment-email`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                email: appointment.email,
+                                patientName: appointment.patientName,
+                                serviceType: appointment.service,
+                                appointmentDate: appointment.date,
+                                appointmentTime: appointment.time,
+                                dentistName: dentistName,
+                                notes: appointment.notes
+                            })
+                        });
+                        
+                        if (emailResponse.ok) {
+                            console.log('✅ Confirmation email sent to patient:', appointment.email);
+                        } else {
+                            console.warn('⚠️ Failed to send confirmation email:', await emailResponse.text());
+                        }
+                    } catch (emailError) {
+                        console.error('❌ Error sending confirmation email:', emailError);
+                        // Continue even if email fails - appointment is still confirmed
+                    }
+                } else {
+                    console.warn('⚠️ Patient email not available, skipping email notification');
+                }
                 
                 // Refresh display
                 filterAppointments();
@@ -2175,7 +2247,12 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 // Create notification for confirmed appointment
                 createConfirmedAppointmentNotification(appointment);
                 
-                alert('Appointment confirmed successfully!');
+                // Show success message
+                if (appointment.email && appointment.email !== 'No email provided') {
+                    alert('Appointment confirmed successfully! A confirmation email has been sent to the patient.');
+                } else {
+                    alert('Appointment confirmed successfully! Note: Patient email not available, so no email notification was sent.');
+                }
             }
         }
 

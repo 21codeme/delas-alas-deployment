@@ -346,15 +346,33 @@ function togglePasswordVisibility(inputId) {
 document.getElementById('dentistForm').onsubmit = async function(e) {
     e.preventDefault();
     
-    const name = document.getElementById('dentistName').value.trim();
-    const email = document.getElementById('dentistEmail').value.trim();
-    const phone = document.getElementById('dentistPhone').value.trim();
-    const password = document.getElementById('dentistPassword').value;
-    const confirmPassword = document.getElementById('dentistConfirmPassword').value;
-    const specialization = document.getElementById('dentistSpecialization').value;
-    const license = document.getElementById('dentistLicense').value.trim();
-    const experience = parseInt(document.getElementById('dentistExperience').value) || 0;
-    const bio = document.getElementById('dentistBio').value.trim();
+    // Get form elements with safety checks
+    const nameEl = document.getElementById('dentistName');
+    const emailEl = document.getElementById('dentistEmail');
+    const phoneEl = document.getElementById('dentistPhone');
+    const passwordEl = document.getElementById('dentistPassword');
+    const confirmPasswordEl = document.getElementById('dentistConfirmPassword');
+    const specializationEl = document.getElementById('dentistSpecialization');
+    const licenseEl = document.getElementById('dentistLicense');
+    const experienceEl = document.getElementById('dentistExperience');
+    const bioEl = document.getElementById('dentistBio');
+    
+    // Check if all required elements exist
+    if (!nameEl || !emailEl || !phoneEl || !passwordEl || !confirmPasswordEl || !specializationEl || !licenseEl || !experienceEl) {
+        alert('Error: Form fields not found. Please refresh the page and try again.');
+        console.error('Missing form elements:', { nameEl, emailEl, phoneEl, passwordEl, confirmPasswordEl, specializationEl, licenseEl, experienceEl });
+        return;
+    }
+    
+    const name = (nameEl.value || '').trim();
+    const email = (emailEl.value || '').trim();
+    const phone = (phoneEl.value || '').trim();
+    const password = passwordEl.value || '';
+    const confirmPassword = confirmPasswordEl.value || '';
+    const specialization = specializationEl.value || '';
+    const license = (licenseEl.value || '').trim();
+    const experience = parseInt(experienceEl.value) || 0;
+    const bio = (bioEl ? (bioEl.value || '').trim() : '');
     
     // Validate form
     if (!name || !email || !phone || !password || !confirmPassword || !specialization || !license) {
@@ -406,7 +424,8 @@ document.getElementById('dentistForm').onsubmit = async function(e) {
                         name: name,
                         phone: phone,
                         user_type: 'dentist'
-                    }
+                    },
+                    emailRedirectTo: window.location.origin + '/index.html'
                 }
             });
             authData = result.data;
@@ -427,7 +446,8 @@ document.getElementById('dentistForm').onsubmit = async function(e) {
                         name: name,
                         phone: phone,
                         user_type: 'dentist'
-                    }
+                    },
+                    email_redirect_to: window.location.origin + '/index.html'
                 })
             });
             
@@ -504,11 +524,14 @@ document.getElementById('dentistForm').onsubmit = async function(e) {
         if (authData && authData.user) {
             if (!authData.user.email_confirmed_at) {
                 // Email confirmation is required
-                successMessage = `Dentist registered successfully!\n\nA confirmation email has been sent to:\n${email}\n\nPlease ask the dentist to check their email and click the verification link to activate their account.`;
+                console.log('📧 Email confirmation required. Confirmation email should be sent to:', email);
+                successMessage = `Dentist registered successfully!\n\nA confirmation email has been sent to:\n${email}\n\nPlease ask the dentist to check their email (including spam folder) and click the verification link to activate their account.\n\nNote: If email confirmation is disabled in Supabase settings, the account will be active immediately.`;
             } else {
                 // Email already confirmed (shouldn't happen on new signup, but just in case)
                 successMessage = `Dentist registered successfully!\n\nEmail: ${email}\n\nThe dentist can now login with their credentials.`;
             }
+        } else {
+            console.warn('⚠️ No user data returned from signup. Email confirmation status unknown.');
         }
         
         alert(successMessage);

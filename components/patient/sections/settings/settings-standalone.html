@@ -2014,9 +2014,9 @@
                     console.error('⚠️ Error deleting appointments:', error);
                 }
                 
-                // Delete messages (if messages table exists)
+                // Delete messages (delete as sender)
                 try {
-                    const deleteMessagesResponse = await fetch(`${SUPABASE_URL}/rest/v1/messages?patient_id=eq.${user.id}`, {
+                    await fetch(`${SUPABASE_URL}/rest/v1/messages?sender_id=eq.${user.id}`, {
                         method: 'DELETE',
                         headers: {
                             'apikey': SUPABASE_KEY,
@@ -2024,9 +2024,24 @@
                             'Content-Type': 'application/json'
                         }
                     });
-                    console.log('✅ Deleted messages:', deleteMessagesResponse.status);
+                    console.log('✅ Deleted messages (as sender)');
                 } catch (error) {
-                    console.error('⚠️ Error deleting messages:', error);
+                    console.error('⚠️ Error deleting messages (as sender):', error);
+                }
+                
+                // Delete messages (delete as receiver)
+                try {
+                    await fetch(`${SUPABASE_URL}/rest/v1/messages?receiver_id=eq.${user.id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    console.log('✅ Deleted messages (as receiver)');
+                } catch (error) {
+                    console.error('⚠️ Error deleting messages (as receiver):', error);
                 }
                 
                 // Delete treatments (if treatments table exists)
@@ -2082,11 +2097,50 @@
                 const signInData = await signInResponse.json();
                 const accessToken = signInData.access_token;
                 
-                // Step 3: Delete user from auth.users (requires admin access or service role key)
-                // Note: Regular users cannot delete themselves from auth.users
-                // This would typically require a server-side function or admin access
-                // For now, we'll delete the user data from public tables
-                console.log('✅ User data deleted from public tables');
+                // Step 3: Delete user from auth.users using Admin API
+                // Note: This requires service_role key, but we'll try with user's access token first
+                // If it fails, we'll need to use a database function or Edge Function
+                try {
+                    const deleteAuthResponse = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${user.id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (deleteAuthResponse.ok) {
+                        console.log('✅ Deleted user from auth.users');
+                    } else {
+                        // Try using RPC function to delete from auth.users
+                        try {
+                            const rpcResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/delete_user_account`, {
+                                method: 'POST',
+                                headers: {
+                                    'apikey': SUPABASE_KEY,
+                                    'Authorization': `Bearer ${accessToken}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ user_id: user.id })
+                            });
+                            
+                            if (rpcResponse.ok) {
+                                console.log('✅ Deleted user from auth.users via RPC function');
+                            } else {
+                                console.warn('⚠️ Could not delete from auth.users (requires admin access). User data deleted from public tables.');
+                                // User data is deleted from public tables, but auth user remains
+                                // This is acceptable - the user won't be able to access their data
+                            }
+                        } catch (rpcError) {
+                            console.warn('⚠️ RPC function not available. User data deleted from public tables.');
+                            // Continue - user data is already deleted from public tables
+                        }
+                    }
+                } catch (authError) {
+                    console.warn('⚠️ Could not delete from auth.users:', authError);
+                    // Continue - user data is already deleted from public tables
+                }
                 
                 // Step 4: Clear all localStorage data
                 localStorage.clear();
