@@ -1704,24 +1704,48 @@
                 const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
                 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
                 
-                console.log('🔄 Attempting to update existing clinic settings...');
-                // First, try to update existing clinic settings
-                const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/clinic_settings?id=eq.clinic`, {
-                    method: 'PATCH',
+                // First, check if record exists
+                const checkResponse = await fetch(`${SUPABASE_URL}/rest/v1/clinic_settings?id=eq.clinic&select=id`, {
                     headers: {
                         'apikey': SUPABASE_KEY,
                         'Authorization': `Bearer ${SUPABASE_KEY}`,
-                        'Content-Type': 'application/json',
-                        'Prefer': 'return=representation'
-                    },
-                    body: JSON.stringify(clinicData)
+                        'Content-Type': 'application/json'
+                    }
                 });
                 
-                console.log('📡 Update response status:', updateResponse.status);
+                let recordExists = false;
+                if (checkResponse.ok) {
+                    const checkData = await checkResponse.json();
+                    recordExists = Array.isArray(checkData) && checkData.length > 0;
+                    console.log('📋 Record exists:', recordExists);
+                }
                 
-                if (!updateResponse.ok) {
-                    console.log('⚠️ Update failed, attempting to insert new record...');
-                    // If update fails, try to insert new record
+                if (recordExists) {
+                    // Update existing record
+                    console.log('🔄 Updating existing clinic settings...');
+                    const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/clinic_settings?id=eq.clinic`, {
+                        method: 'PATCH',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=representation'
+                        },
+                        body: JSON.stringify(clinicData)
+                    });
+                    
+                    console.log('📡 Update response status:', updateResponse.status);
+                    
+                    if (!updateResponse.ok) {
+                        const errorText = await updateResponse.text();
+                        console.error('❌ Update failed:', errorText);
+                        throw new Error('Failed to update clinic settings: ' + errorText);
+                    }
+                    
+                    console.log('✅ Clinic settings updated successfully');
+                } else {
+                    // Insert new record
+                    console.log('🔄 Inserting new clinic settings record...');
                     const insertResponse = await fetch(`${SUPABASE_URL}/rest/v1/clinic_settings`, {
                         method: 'POST',
                         headers: {
@@ -1741,12 +1765,13 @@
                     if (!insertResponse.ok) {
                         const errorText = await insertResponse.text();
                         console.error('❌ Insert failed:', errorText);
+                        console.error('❌ Insert URL:', `${SUPABASE_URL}/rest/v1/clinic_settings`);
+                        console.error('❌ Insert data:', JSON.stringify({ id: 'clinic', ...clinicData }, null, 2));
                         throw new Error('Failed to save clinic settings: ' + errorText);
                     }
                     
-                    console.log('✅ Clinic settings inserted successfully');
-                } else {
-                    console.log('✅ Clinic settings updated successfully');
+                    const insertData = await insertResponse.json();
+                    console.log('✅ Clinic settings inserted successfully:', insertData);
                 }
                 
                 // Also save to localStorage as backup
