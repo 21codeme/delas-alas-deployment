@@ -1306,6 +1306,11 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                         createdAt: apt.created_at
                     }));
                     console.log('✅ Appointments loaded from Supabase:', appointments.length);
+                    // Debug: Log first appointment's created_at to verify timezone
+                    if (appointments.length > 0) {
+                        console.log('📅 Sample booking time (UTC):', appointments[0].createdAt);
+                        console.log('📅 Sample booking time (Local):', new Date(appointments[0].createdAt).toLocaleString());
+                    }
                 } else {
                     console.log('ℹ️ No appointments found in database');
                     appointments = [];
@@ -1432,13 +1437,25 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 let bookingDate = 'N/A';
                 let bookingTime = 'N/A';
                 if (appointment.createdAt) {
+                    // Parse the UTC timestamp and convert to local time
                     const bookingDateTime = new Date(appointment.createdAt);
-                    bookingDate = bookingDateTime.toLocaleDateString();
-                    bookingTime = bookingDateTime.toLocaleTimeString('en-US', { 
-                        hour: '2-digit', 
-                        minute: '2-digit',
-                        hour12: true 
-                    });
+                    
+                    // Ensure we're using local timezone
+                    // Get local date components
+                    const year = bookingDateTime.getFullYear();
+                    const month = String(bookingDateTime.getMonth() + 1).padStart(2, '0');
+                    const day = String(bookingDateTime.getDate()).padStart(2, '0');
+                    
+                    // Format date as MM/DD/YYYY
+                    bookingDate = `${month}/${day}/${year}`;
+                    
+                    // Format time in 12-hour format with AM/PM
+                    let hours = bookingDateTime.getHours();
+                    const minutes = String(bookingDateTime.getMinutes()).padStart(2, '0');
+                    const ampm = hours >= 12 ? 'PM' : 'AM';
+                    hours = hours % 12;
+                    hours = hours ? hours : 12; // the hour '0' should be '12'
+                    bookingTime = `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
                 }
                 
                 return `
