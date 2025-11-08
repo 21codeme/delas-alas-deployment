@@ -1,6 +1,11 @@
 // Global variables
 let dentists = [];
 let filteredDentists = [];
+let supabase = null;
+
+// Initialize Supabase
+const supabaseUrl = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
@@ -8,6 +13,20 @@ document.addEventListener('DOMContentLoaded', function() {
     if (window !== window.top) {
         document.body.classList.add('iframe-mode');
     }
+    
+    // Initialize Supabase
+    try {
+        if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+            supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        } else if (typeof window.createClient !== 'undefined') {
+            supabase = window.createClient(supabaseUrl, supabaseKey);
+        } else if (typeof LocalSupabaseClient !== 'undefined') {
+            supabase = new LocalSupabaseClient(supabaseUrl, supabaseKey);
+        }
+    } catch (error) {
+        console.error('Error initializing Supabase:', error);
+    }
+    
     loadDentists();
 });
 
@@ -43,8 +62,10 @@ async function loadDentistsFromDatabase() {
         console.log('📊 Raw presence:', presence);
         
         if (users && users.length > 0) {
+            // Filter out any null or undefined users first
+            const validUsers = users.filter(user => user != null && user !== undefined && user.id);
             // Convert Supabase data to the format expected by the UI
-            dentists = users.map(user => ({
+            dentists = validUsers.map(user => ({
                 id: user.id,
                 name: user.name || 'Unknown Dentist',
                 email: user.email || 'No email',
@@ -53,7 +74,7 @@ async function loadDentistsFromDatabase() {
                 license: 'DMD-001', // Default license
                 experience: 5, // Default experience
                 bio: 'Experienced dental professional',
-                status: (presence || []).some(p => p.user_id === user.id && p.status === 'online') ? 'online' : 'offline',
+                status: (presence || []).some(p => p && p.user_id === user.id && p.status === 'online') ? 'online' : 'offline',
                 rating: 4.5, // Default rating
                 patientsCount: 0, // This would need to be calculated from appointments
                 appointmentsToday: 0 // This would need to be calculated from appointments
@@ -158,11 +179,13 @@ function setupRealtimeListeners() {
 
 // Update statistics
 function updateStats() {
+    // Filter out any undefined or null dentists
+    const validDentists = dentists.filter(d => d != null && d !== undefined);
     const onlineId = localStorage.getItem('onlineDentistId');
-    const totalDentists = dentists.length;
-    const onlineDentists = dentists.filter(d => (d.id === onlineId || d.email === onlineId)).length;
-    const averageRating = dentists.length > 0 ? 
-        (dentists.reduce((sum, d) => sum + d.rating, 0) / dentists.length).toFixed(1) : 0;
+    const totalDentists = validDentists.length;
+    const onlineDentists = validDentists.filter(d => d && (d.id === onlineId || d.email === onlineId)).length;
+    const averageRating = validDentists.length > 0 ? 
+        (validDentists.reduce((sum, d) => sum + (d.rating || 0), 0) / validDentists.length).toFixed(1) : 0;
 
     document.getElementById('totalDentists').textContent = totalDentists;
     document.getElementById('onlineDentists').textContent = onlineDentists;
@@ -176,15 +199,18 @@ function filterDentists() {
     const searchInput = document.getElementById('searchInput').value.toLowerCase();
 
     const onlineIdForStatus = localStorage.getItem('onlineDentistId');
-    filteredDentists = dentists.map(d => ({
+    // Filter out any undefined or null dentists first
+    const validDentists = dentists.filter(d => d != null && d !== undefined);
+    filteredDentists = validDentists.map(d => ({
         ...d,
-        status: (d.id === onlineIdForStatus || d.email === onlineIdForStatus) ? 'online' : 'offline'
+        status: (d && (d.id === onlineIdForStatus || d.email === onlineIdForStatus)) ? 'online' : 'offline'
     })).filter(dentist => {
-        const matchesSpecialization = !specializationFilter || dentist.specialization === specializationFilter;
-        const matchesStatus = !statusFilter || dentist.status === statusFilter;
+        if (!dentist) return false;
+        const matchesSpecialization = !specializationFilter || (dentist.specialization || '') === specializationFilter;
+        const matchesStatus = !statusFilter || (dentist.status || 'offline') === statusFilter;
         const matchesSearch = !searchInput || 
-            dentist.name.toLowerCase().includes(searchInput) ||
-            dentist.specialization.toLowerCase().includes(searchInput);
+            (dentist.name || '').toLowerCase().includes(searchInput) ||
+            (dentist.specialization || '').toLowerCase().includes(searchInput);
         
         return matchesSpecialization && matchesStatus && matchesSearch;
     });
@@ -299,30 +325,203 @@ function closeModal() {
     document.getElementById('dentistForm').reset();
 }
 
-// Form submission
-document.getElementById('dentistForm').onsubmit = function(e) {
+// Password toggle function
+function togglePasswordVisibility(inputId) {
+    const input = document.getElementById(inputId);
+    const button = input.nextElementSibling;
+    const icon = button.querySelector('i');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+// Form submission - Register new dentist
+document.getElementById('dentistForm').onsubmit = async function(e) {
     e.preventDefault();
     
-    const dentistData = {
-        name: document.getElementById('dentistName').value,
-        email: document.getElementById('dentistEmail').value,
-        phone: document.getElementById('dentistPhone').value,
-        specialization: document.getElementById('dentistSpecialization').value,
-        license: document.getElementById('dentistLicense').value,
-        experience: parseInt(document.getElementById('dentistExperience').value),
-        bio: document.getElementById('dentistBio').value,
-        status: 'offline',
-        rating: 0,
-        patientsCount: 0,
-        appointmentsToday: 0
-    };
+    const name = document.getElementById('dentistName').value.trim();
+    const email = document.getElementById('dentistEmail').value.trim();
+    const phone = document.getElementById('dentistPhone').value.trim();
+    const password = document.getElementById('dentistPassword').value;
+    const confirmPassword = document.getElementById('dentistConfirmPassword').value;
+    const specialization = document.getElementById('dentistSpecialization').value;
+    const license = document.getElementById('dentistLicense').value.trim();
+    const experience = parseInt(document.getElementById('dentistExperience').value) || 0;
+    const bio = document.getElementById('dentistBio').value.trim();
     
-    if (dentistData.name && dentistData.email && dentistData.phone && dentistData.specialization) {
-        addDentist(dentistData);
-        alert('Dentist added successfully!');
-        closeModal();
-    } else {
+    // Validate form
+    if (!name || !email || !phone || !password || !confirmPassword || !specialization || !license) {
         alert('Please fill in all required fields.');
+        return;
+    }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        alert('Please enter a valid email address.');
+        return;
+    }
+    
+    // Validate phone format
+    const phoneDigits = phone.replace(/[\s\-\(\)]/g, '');
+    const phoneRegex = /^[\+]?[0-9][\d]{9,14}$/;
+    if (!phoneRegex.test(phoneDigits) || phoneDigits.length < 10) {
+        alert('Please enter a valid phone number (at least 10 digits).');
+        return;
+    }
+    
+    if (password !== confirmPassword) {
+        alert('Passwords do not match.');
+        return;
+    }
+    
+    if (password.length < 6) {
+        alert('Password must be at least 6 characters.');
+        return;
+    }
+    
+    // Show loading state
+    const submitButton = document.querySelector('#dentistForm button[type="submit"]');
+    const originalText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.textContent = 'Registering...';
+    
+    try {
+        // Create auth user with Supabase
+        let authData, authError;
+        
+        if (supabase && supabase.auth && supabase.auth.signUp) {
+            const result = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        name: name,
+                        phone: phone,
+                        user_type: 'dentist'
+                    }
+                }
+            });
+            authData = result.data;
+            authError = result.error;
+        } else {
+            // Fallback: Use direct API call
+            const response = await fetch(`${supabaseUrl}/auth/v1/signup`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': supabaseKey,
+                    'Authorization': `Bearer ${supabaseKey}`
+                },
+                body: JSON.stringify({
+                    email,
+                    password,
+                    data: {
+                        name: name,
+                        phone: phone,
+                        user_type: 'dentist'
+                    }
+                })
+            });
+            
+            const data = await response.json();
+            if (!response.ok) {
+                authError = data;
+            } else {
+                authData = data;
+            }
+        }
+        
+        if (authError) {
+            let errorMessage = 'Registration failed.';
+            if (authError.message) {
+                if (authError.message.includes('already registered') || authError.message.includes('already exists')) {
+                    errorMessage = 'This email is already registered.';
+                } else if (authError.message.includes('Invalid email')) {
+                    errorMessage = 'Please enter a valid email address.';
+                } else if (authError.message.includes('Password should be at least')) {
+                    errorMessage = 'Password must be at least 6 characters long.';
+                } else {
+                    errorMessage = 'Registration failed: ' + authError.message;
+                }
+            }
+            alert(errorMessage);
+            submitButton.disabled = false;
+            submitButton.textContent = originalText;
+            return;
+        }
+        
+        // Create user profile in database
+        if (authData && authData.user) {
+            // Try to create profile using RPC or direct insert
+            try {
+                // Try RPC function first
+                if (supabase && supabase.rpc) {
+                    const { error: rpcError } = await supabase.rpc('create_user_profile', {
+                        user_id: authData.user.id,
+                        user_name: name,
+                        user_email: email,
+                        user_phone: phone,
+                        user_type: 'dentist'
+                    });
+                    
+                    if (rpcError) {
+                        console.log('RPC function error:', rpcError);
+                        // Fallback to direct insert
+                        await callSupabaseAPI('POST', 'users', {
+                            id: authData.user.id,
+                            name: name,
+                            email: email,
+                            phone: phone,
+                            user_type: 'dentist'
+                        });
+                    }
+                } else {
+                    // Direct insert
+                    await callSupabaseAPI('POST', 'users', {
+                        id: authData.user.id,
+                        name: name,
+                        email: email,
+                        phone: phone,
+                        user_type: 'dentist'
+                    });
+                }
+            } catch (profileError) {
+                console.error('Error creating user profile:', profileError);
+                // Continue even if profile creation fails - the trigger might handle it
+            }
+        }
+        
+        // Check if email confirmation is required
+        let successMessage = 'Dentist registered successfully!';
+        if (authData && authData.user) {
+            if (!authData.user.email_confirmed_at) {
+                // Email confirmation is required
+                successMessage = `Dentist registered successfully!\n\nA confirmation email has been sent to:\n${email}\n\nPlease ask the dentist to check their email and click the verification link to activate their account.`;
+            } else {
+                // Email already confirmed (shouldn't happen on new signup, but just in case)
+                successMessage = `Dentist registered successfully!\n\nEmail: ${email}\n\nThe dentist can now login with their credentials.`;
+            }
+        }
+        
+        alert(successMessage);
+        closeModal();
+        
+        // Reload dentists list
+        loadDentists();
+        
+    } catch (error) {
+        console.error('Registration error:', error);
+        alert('Registration failed: ' + (error.message || 'Unknown error'));
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
     }
 };
 
@@ -402,185 +601,6 @@ function messageDentist(id) {
 function updateDentistsData() {
     updateStats();
     filterDentists();
-}
-
-function addNewDentist(dentistData) {
-    dentists.push(dentistData);
-    localStorage.setItem('clinicDentists', JSON.stringify(dentists));
-    updateDentistsData();
-}
-
-// Save edit
-function saveDentistEdit(id) {
-    const idx = dentists.findIndex(d => d.id == id);
-    if (idx === -1) return;
-    const updated = {
-        ...dentists[idx],
-        name: document.getElementById('eName').value,
-        email: document.getElementById('eEmail').value,
-        phone: document.getElementById('ePhone').value,
-        specialization: document.getElementById('eSpec').value,
-        experience: parseInt(document.getElementById('eExp').value) || 0,
-        bio: document.getElementById('eBio').value
-    };
-    dentists[idx] = updated;
-    updateDentistsData();
-    closeVem();
-}
-
-// Send message (placeholder)
-function sendMessageToDentist(id) {
-    const dentist = dentists.find(d => d.id == id);
-    const subject = document.getElementById('mSubject').value.trim();
-    const body = document.getElementById('mBody').value.trim();
-    if (!subject || !body) { alert('Please fill subject and message.'); return; }
-    alert(`Message sent to ${dentist?.email || id}!\n\nSubject: ${subject}`);
-    closeVem();
-}
-
-// Close shared modal
-function closeVem() {
-    const modal = document.getElementById('viewEditMessageModal');
-    if (modal) modal.style.display = 'none';
-}
-
-// Mobile menu toggle
-function toggleMobileMenu() {
-    const sidebar = document.getElementById('sidebar');
-    sidebar.classList.toggle('mobile-open');
-}
-
-// Logout function
-function logout() {
-    if (confirm('Are you sure you want to logout?')) {
-        alert('Logout functionality - integrate with your authentication system');
-        // window.location.href = '/login';
-    }
-}
-
-// Show mobile menu toggle on small screens
-function checkScreenSize() {
-    const menuToggle = document.querySelector('.menu-toggle');
-    if (window.innerWidth <= 768) {
-        menuToggle.style.display = 'block';
-    } else {
-        menuToggle.style.display = 'none';
-        document.getElementById('sidebar').classList.remove('mobile-open');
-    }
-}
-
-window.addEventListener('resize', checkScreenSize);
-checkScreenSize();
-
-// Form submission
-document.getElementById('dentistForm').onsubmit = function(e) {
-    e.preventDefault();
-    
-    const dentistData = {
-        name: document.getElementById('dentistName').value,
-        email: document.getElementById('dentistEmail').value,
-        phone: document.getElementById('dentistPhone').value,
-        specialization: document.getElementById('dentistSpecialization').value,
-        license: document.getElementById('dentistLicense').value,
-        experience: parseInt(document.getElementById('dentistExperience').value),
-        bio: document.getElementById('dentistBio').value,
-        status: 'offline',
-        rating: 0,
-        patientsCount: 0,
-        appointmentsToday: 0
-    };
-    
-    if (dentistData.name && dentistData.email && dentistData.phone && dentistData.specialization) {
-        addDentist(dentistData);
-        alert('Dentist added successfully!');
-        closeModal();
-    } else {
-        alert('Please fill in all required fields.');
-    }
-};
-
-function addDentist(dentistData) {
-    const newDentist = {
-        id: Date.now(),
-        ...dentistData
-    };
-    
-    dentists.push(newDentist);
-    localStorage.setItem('clinicDentists', JSON.stringify(dentists));
-    updateStats();
-    filterDentists();
-}
-
-function exportDentists() {
-    alert('Export dentists functionality - integrate with your export system');
-}
-
-function viewDentist(id) {
-    const dentist = dentists.find(d => d.id == id);
-    const modal = document.getElementById('viewEditMessageModal');
-    if (!dentist || !modal) return;
-    document.getElementById('vemTitle').textContent = 'View Dentist';
-    document.getElementById('vemBody').innerHTML = `
-        <div class="form-group"><label>Name</label><input type="text" value="${dentist.name}" disabled></div>
-        <div class="form-group"><label>Email</label><input type="text" value="${dentist.email}" disabled></div>
-        <div class="form-group"><label>Phone</label><input type="text" value="${dentist.phone}" disabled></div>
-        <div class="form-group"><label>Specialization</label><input type="text" value="${dentist.specialization}" disabled></div>
-        <div class="form-group"><label>Experience</label><input type="text" value="${dentist.experience} years" disabled></div>
-        <div class="form-group"><label>Bio</label><textarea disabled>${dentist.bio}</textarea></div>
-    `;
-    document.getElementById('vemActions').innerHTML = `<button class="btn btn-secondary" onclick="closeVem()">Close</button>`;
-    modal.style.display = 'block';
-}
-
-function editDentist(id) {
-    const dentist = dentists.find(d => d.id == id);
-    const modal = document.getElementById('viewEditMessageModal');
-    if (!dentist || !modal) return;
-    document.getElementById('vemTitle').textContent = 'Edit Dentist';
-    document.getElementById('vemBody').innerHTML = `
-        <form id="editDentistForm">
-            <div class="form-group"><label>Name</label><input type="text" id="eName" value="${dentist.name}" required></div>
-            <div class="form-group"><label>Email</label><input type="email" id="eEmail" value="${dentist.email}" required></div>
-            <div class="form-group"><label>Phone</label><input type="tel" id="ePhone" value="${dentist.phone}" required></div>
-            <div class="form-group"><label>Specialization</label><input type="text" id="eSpec" value="${dentist.specialization}" required></div>
-            <div class="form-group"><label>Experience (years)</label><input type="number" id="eExp" value="${dentist.experience}" min="0" required></div>
-            <div class="form-group"><label>Bio</label><textarea id="eBio">${dentist.bio}</textarea></div>
-        </form>
-    `;
-    document.getElementById('vemActions').innerHTML = `
-        <button class="btn btn-secondary" onclick="closeVem()">Cancel</button>
-        <button class="btn btn-primary" onclick="saveDentistEdit('${id}')">Save</button>
-    `;
-    modal.style.display = 'block';
-}
-
-function messageDentist(id) {
-    const dentist = dentists.find(d => d.id == id);
-    const modal = document.getElementById('viewEditMessageModal');
-    if (!dentist || !modal) return;
-    document.getElementById('vemTitle').textContent = 'Message Dentist';
-    document.getElementById('vemBody').innerHTML = `
-        <div class="form-group"><label>To</label><input type="text" value="${dentist.email}" disabled></div>
-        <div class="form-group"><label>Subject</label><input type="text" id="mSubject" placeholder="Subject"></div>
-        <div class="form-group"><label>Message</label><textarea id="mBody" rows="5" placeholder="Your message..."></textarea></div>
-    `;
-    document.getElementById('vemActions').innerHTML = `
-        <button class="btn btn-secondary" onclick="closeVem()">Cancel</button>
-        <button class="btn btn-primary" onclick="sendMessageToDentist('${id}')">Send</button>
-    `;
-    modal.style.display = 'block';
-}
-
-// Real-time update functions (for integration with your backend)
-function updateDentistsData() {
-    updateStats();
-    filterDentists();
-}
-
-function addNewDentist(dentistData) {
-    dentists.push(dentistData);
-    localStorage.setItem('clinicDentists', JSON.stringify(dentists));
-    updateDentistsData();
 }
 
 // Save edit

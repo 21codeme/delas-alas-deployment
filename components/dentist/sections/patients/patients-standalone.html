@@ -944,10 +944,72 @@
         </div>
     </div>
 
+    <!-- Add Patient Modal -->
+    <div id="addPatientModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 15px 15px 0 0; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0;">Register New Patient</h3>
+                <span class="close" onclick="closeAddPatientModal()" style="color: white;">&times;</span>
+            </div>
+            <div class="modal-body" style="padding: 25px;">
+                <form id="patientForm">
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Full Name</label>
+                        <input type="text" id="patientName" autocomplete="name" required style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Email</label>
+                        <input type="email" id="patientEmail" autocomplete="email" required style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Phone Number</label>
+                        <input type="tel" id="patientPhone" autocomplete="tel" required style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Password</label>
+                        <div class="password-input-container" style="position: relative; display: inline-block; width: 100%;">
+                            <input type="password" id="patientPassword" autocomplete="new-password" required style="width: 100%; padding: 12px 40px 12px 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px;">
+                            <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('patientPassword')" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #999; cursor: pointer; padding: 6px; font-size: 16px; z-index: 10;">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Confirm Password</label>
+                        <div class="password-input-container" style="position: relative; display: inline-block; width: 100%;">
+                            <input type="password" id="patientConfirmPassword" autocomplete="new-password" required style="width: 100%; padding: 12px 40px 12px 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px;">
+                            <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('patientConfirmPassword')" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #999; cursor: pointer; padding: 6px; font-size: 16px; z-index: 10;">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Date of Birth</label>
+                        <input type="date" id="patientDOB" required style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Address</label>
+                        <textarea id="patientAddress" rows="3" required style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px; resize: vertical;"></textarea>
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeAddPatientModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Register Patient</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../../../local-supabase.js"></script>
     <script>
         // Global variables
         let patients = [];
         let filteredPatients = [];
+        let supabase = null;
+
+        // Initialize Supabase
+        const supabaseUrl = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
 
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
@@ -955,6 +1017,20 @@
             if (window !== window.top) {
                 document.body.classList.add('iframe-mode');
             }
+            
+            // Initialize Supabase
+            try {
+                if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+                    supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+                } else if (typeof window.createClient !== 'undefined') {
+                    supabase = window.createClient(supabaseUrl, supabaseKey);
+                } else if (typeof LocalSupabaseClient !== 'undefined') {
+                    supabase = new LocalSupabaseClient(supabaseUrl, supabaseKey);
+                }
+            } catch (error) {
+                console.error('Error initializing Supabase:', error);
+            }
+            
             loadPatients();
         });
 
@@ -986,8 +1062,10 @@
                 console.log('📊 Raw data from API:', data);
                 
                 if (data && data.length > 0) {
+                    // Filter out any null or undefined users first
+                    const validUsers = data.filter(user => user != null && user !== undefined && user.id);
                     // Convert Supabase data to the format expected by the UI
-                    patients = data.map(user => ({
+                    patients = validUsers.map(user => ({
                         id: user.id,
                         name: user.name || 'Unknown Patient',
                         email: user.email || 'No email',
@@ -1088,9 +1166,12 @@
 
         // Update statistics
         function updateStats() {
-            const totalPatients = patients.length;
-            const activePatients = patients.filter(p => (p.status || 'active') === 'active').length;
-            const newThisWeek = patients.filter(p => {
+            // Filter out any undefined or null patients
+            const validPatients = patients.filter(p => p != null && p !== undefined);
+            const totalPatients = validPatients.length;
+            const activePatients = validPatients.filter(p => p && (p.status || 'active') === 'active').length;
+            const newThisWeek = validPatients.filter(p => {
+                if (!p) return false;
                 const weekAgo = new Date();
                 weekAgo.setDate(weekAgo.getDate() - 7);
                 return new Date(p.registeredDate || p.createdAt || new Date()) > weekAgo;
@@ -1106,11 +1187,14 @@
             const searchTerm = document.getElementById('patientSearch').value.toLowerCase();
             const statusFilter = document.getElementById('statusFilter').value;
 
-            filteredPatients = patients.filter(patient => {
+            // Filter out any undefined or null patients first
+            const validPatients = patients.filter(p => p != null && p !== undefined);
+            filteredPatients = validPatients.filter(patient => {
+                if (!patient) return false;
                 const matchesSearch = !searchTerm || 
-                    patient.name.toLowerCase().includes(searchTerm) ||
-                    patient.email.toLowerCase().includes(searchTerm);
-                const matchesStatus = !statusFilter || patient.status === statusFilter;
+                    (patient.name || '').toLowerCase().includes(searchTerm) ||
+                    (patient.email || '').toLowerCase().includes(searchTerm);
+                const matchesStatus = !statusFilter || (patient.status || 'active') === statusFilter;
                 
                 return matchesSearch && matchesStatus;
             });
@@ -1122,14 +1206,20 @@
         function sortPatients() {
             const sortBy = document.getElementById('sortBy').value;
             
+            // Filter out any undefined or null patients before sorting
+            filteredPatients = filteredPatients.filter(p => p != null && p !== undefined);
+            
             filteredPatients.sort((a, b) => {
+                if (!a || !b) return 0;
                 switch(sortBy) {
                     case 'name':
-                        return a.name.localeCompare(b.name);
+                        return (a.name || '').localeCompare(b.name || '');
                     case 'lastVisit':
-                        return new Date(b.lastVisit) - new Date(a.lastVisit);
+                        const aDate = a.lastVisit ? new Date(a.lastVisit) : new Date(0);
+                        const bDate = b.lastVisit ? new Date(b.lastVisit) : new Date(0);
+                        return bDate - aDate;
                     case 'totalVisits':
-                        return b.totalVisits - a.totalVisits;
+                        return (b.totalVisits || 0) - (a.totalVisits || 0);
                     default:
                         return 0;
                 }
@@ -1207,78 +1297,224 @@
             }
         }
 
-        // Action functions
-        function addNewPatient() {
-            const modalBody = document.getElementById('modalBody');
-            modalBody.innerHTML = `
-                <h2>Add New Patient</h2>
-                <form id="patientForm" style="padding: 20px 0;">
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Full Name:</label>
-                        <input type="text" id="patientName" required style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px;">
-                    </div>
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Email:</label>
-                        <input type="email" id="patientEmail" required style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px;">
-                    </div>
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Phone:</label>
-                        <input type="tel" id="patientPhone" required style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px;">
-                    </div>
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Date of Birth:</label>
-                        <input type="date" id="patientDOB" required style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px;">
-                    </div>
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Address:</label>
-                        <textarea id="patientAddress" rows="3" required style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 8px;"></textarea>
-                    </div>
-                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Add Patient</button>
-                    </div>
-                </form>
-            `;
+        // Password toggle function
+        function togglePasswordVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            const button = input.nextElementSibling;
+            const icon = button.querySelector('i');
             
-            document.getElementById('patientForm').onsubmit = function(e) {
-                e.preventDefault();
-                
-                const patientData = {
-                    name: document.getElementById('patientName').value,
-                    email: document.getElementById('patientEmail').value,
-                    phone: document.getElementById('patientPhone').value,
-                    dob: document.getElementById('patientDOB').value,
-                    address: document.getElementById('patientAddress').value,
-                    status: 'active',
-                    registeredDate: new Date().toISOString(),
-                    totalVisits: 0
-                };
-                
-                if (patientData.name && patientData.email && patientData.phone) {
-                    addPatient(patientData);
-                    alert('Patient added successfully!');
-                    closeModal();
-                } else {
-                    alert('Please fill in all required fields.');
-                }
-            };
-            
-            document.getElementById('patientModal').style.display = 'block';
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
         }
 
-        function addPatient(patientData) {
-            const newPatient = {
-                id: Date.now().toString(),
-                ...patientData
-            };
-            
-            patients.push(newPatient);
-            localStorage.setItem('dentalPatients', JSON.stringify(patients));
-            updateStats();
-            filterPatients();
-            
-            return newPatient;
+        // Action functions
+        function addNewPatient() {
+            document.getElementById('addPatientModal').style.display = 'block';
         }
+
+        function closeAddPatientModal() {
+            document.getElementById('addPatientModal').style.display = 'none';
+            document.getElementById('patientForm').reset();
+        }
+
+        // Form submission - Register new patient
+        document.getElementById('patientForm').onsubmit = async function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('patientName').value.trim();
+            const email = document.getElementById('patientEmail').value.trim();
+            const phone = document.getElementById('patientPhone').value.trim();
+            const password = document.getElementById('patientPassword').value;
+            const confirmPassword = document.getElementById('patientConfirmPassword').value;
+            const dob = document.getElementById('patientDOB').value;
+            const address = document.getElementById('patientAddress').value.trim();
+            
+            // Validate form
+            if (!name || !email || !phone || !password || !confirmPassword || !dob || !address) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+            
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                alert('Please enter a valid email address.');
+                return;
+            }
+            
+            // Validate phone format
+            const phoneDigits = phone.replace(/[\s\-\(\)]/g, '');
+            const phoneRegex = /^[\+]?[0-9][\d]{9,14}$/;
+            if (!phoneRegex.test(phoneDigits) || phoneDigits.length < 10) {
+                alert('Please enter a valid phone number (at least 10 digits).');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                alert('Passwords do not match.');
+                return;
+            }
+            
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters.');
+                return;
+            }
+            
+            // Show loading state
+            const submitButton = document.querySelector('#patientForm button[type="submit"]');
+            const originalText = submitButton.textContent;
+            submitButton.disabled = true;
+            submitButton.textContent = 'Registering...';
+            
+            try {
+                // Create auth user with Supabase
+                let authData, authError;
+                
+                if (supabase && supabase.auth && supabase.auth.signUp) {
+                    const result = await supabase.auth.signUp({
+                        email,
+                        password,
+                        options: {
+                            data: {
+                                name: name,
+                                phone: phone,
+                                user_type: 'patient'
+                            }
+                        }
+                    });
+                    authData = result.data;
+                    authError = result.error;
+                } else {
+                    // Fallback: Use direct API call
+                    const response = await fetch(`${supabaseUrl}/auth/v1/signup`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'apikey': supabaseKey,
+                            'Authorization': `Bearer ${supabaseKey}`
+                        },
+                        body: JSON.stringify({
+                            email,
+                            password,
+                            data: {
+                                name: name,
+                                phone: phone,
+                                user_type: 'patient'
+                            }
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (!response.ok) {
+                        authError = data;
+                    } else {
+                        authData = data;
+                    }
+                }
+                
+                if (authError) {
+                    let errorMessage = 'Registration failed.';
+                    if (authError.message) {
+                        if (authError.message.includes('already registered') || authError.message.includes('already exists')) {
+                            errorMessage = 'This email is already registered.';
+                        } else if (authError.message.includes('Invalid email')) {
+                            errorMessage = 'Please enter a valid email address.';
+                        } else if (authError.message.includes('Password should be at least')) {
+                            errorMessage = 'Password must be at least 6 characters long.';
+                        } else {
+                            errorMessage = 'Registration failed: ' + authError.message;
+                        }
+                    }
+                    alert(errorMessage);
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalText;
+                    return;
+                }
+                
+                // Create user profile in database
+                if (authData && authData.user) {
+                    // Try to create profile using RPC or direct insert
+                    try {
+                        // Try RPC function first
+                        if (supabase && supabase.rpc) {
+                            const { error: rpcError } = await supabase.rpc('create_user_profile', {
+                                user_id: authData.user.id,
+                                user_name: name,
+                                user_email: email,
+                                user_phone: phone,
+                                user_type: 'patient'
+                            });
+                            
+                            if (rpcError) {
+                                console.log('RPC function error:', rpcError);
+                                // Fallback to direct insert
+                                await callSupabaseAPI('POST', 'users', {
+                                    id: authData.user.id,
+                                    name: name,
+                                    email: email,
+                                    phone: phone,
+                                    user_type: 'patient',
+                                    date_of_birth: dob,
+                                    address: address
+                                });
+                            } else {
+                                // Update with additional fields
+                                await callSupabaseAPI('PATCH', `users?id=eq.${authData.user.id}`, {
+                                    date_of_birth: dob,
+                                    address: address
+                                });
+                            }
+                        } else {
+                            // Direct insert
+                            await callSupabaseAPI('POST', 'users', {
+                                id: authData.user.id,
+                                name: name,
+                                email: email,
+                                phone: phone,
+                                user_type: 'patient',
+                                date_of_birth: dob,
+                                address: address
+                            });
+                        }
+                    } catch (profileError) {
+                        console.error('Error creating user profile:', profileError);
+                        // Continue even if profile creation fails - the trigger might handle it
+                    }
+                }
+                
+                // Check if email confirmation is required
+                let successMessage = 'Patient registered successfully!';
+                if (authData && authData.user) {
+                    if (!authData.user.email_confirmed_at) {
+                        // Email confirmation is required
+                        successMessage = `Patient registered successfully!\n\nA confirmation email has been sent to:\n${email}\n\nPlease ask the patient to check their email and click the verification link to activate their account.`;
+                    } else {
+                        // Email already confirmed (shouldn't happen on new signup, but just in case)
+                        successMessage = `Patient registered successfully!\n\nEmail: ${email}\n\nThe patient can now login with their credentials.`;
+                    }
+                }
+                
+                alert(successMessage);
+                closeAddPatientModal();
+                
+                // Reload patients list
+                loadPatients();
+                
+            } catch (error) {
+                console.error('Registration error:', error);
+                alert('Registration failed: ' + (error.message || 'Unknown error'));
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
+            }
+        }
+
 
         function exportPatients() {
             alert('Export patients functionality - integrate with your export system');
@@ -1716,12 +1952,6 @@
         function updatePatientsData() {
             updateStats();
             filterPatients();
-        }
-
-        function addNewPatient(patientData) {
-            patients.push(patientData);
-            localStorage.setItem('dentalPatients', JSON.stringify(patients));
-            updatePatientsData();
         }
 
         // Mobile menu toggle

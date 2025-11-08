@@ -1495,8 +1495,294 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
         }
 
         // Action functions
-        function newAppointment() {
-            alert('New appointment functionality - integrate with your booking system');
+        async function newAppointment() {
+            // Show patient list modal first
+            await showPatientListModal();
+        }
+        
+        // Show patient list modal
+        async function showPatientListModal() {
+            try {
+                // Load patients from database
+                const patients = await callSupabaseAPI('GET', 'users?user_type=eq.patient');
+                
+                if (!patients || patients.length === 0) {
+                    alert('No patients found. Please register patients first.');
+                    return;
+                }
+                
+                // Create patient list modal
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.id = 'patientListModal';
+                modal.style.display = 'block';
+                modal.innerHTML = `
+                    <div class="modal-content" style="max-width: 600px;">
+                        <div class="modal-header">
+                            <h3><i class="fas fa-users"></i> Select Patient</h3>
+                            <span class="close" onclick="closePatientListModal()">&times;</span>
+                        </div>
+                        <div class="modal-body">
+                            <div style="margin-bottom: 15px;">
+                                <input type="text" id="patientSearchInput" placeholder="Search patients..." 
+                                       style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px;"
+                                       oninput="filterPatientList()">
+                            </div>
+                            <div id="patientList" style="max-height: 400px; overflow-y: auto;">
+                                ${patients.map(patient => {
+                                    const safeId = patient.id || '';
+                                    const safeName = (patient.name || '').replace(/'/g, "\\'");
+                                    const safeEmail = (patient.email || '').replace(/'/g, "\\'");
+                                    const safePhone = (patient.phone || '').replace(/'/g, "\\'");
+                                    const displayName = patient.name || 'Unknown Patient';
+                                    const displayEmail = patient.email || 'No email';
+                                    const displayPhone = patient.phone || '';
+                                    const initial = (patient.name || 'P').charAt(0).toUpperCase();
+                                    const searchName = (patient.name || '').toLowerCase();
+                                    const searchEmail = (patient.email || '').toLowerCase();
+                                    
+                                    return `
+                                    <div class="patient-item" onclick="selectPatient('${safeId}', '${safeName}', '${safeEmail}', '${safePhone}')" 
+                                         style="padding: 15px; border: 2px solid #e9ecef; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: all 0.3s ease;"
+                                         data-name="${searchName}"
+                                         data-email="${searchEmail}">
+                                        <div style="display: flex; align-items: center; gap: 15px;">
+                                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: bold;">
+                                                ${initial}
+                                            </div>
+                                            <div style="flex: 1;">
+                                                <div style="font-weight: 600; color: #2c3e50; font-size: 16px; margin-bottom: 5px;">
+                                                    ${displayName}
+                                                </div>
+                                                <div style="color: #666; font-size: 14px;">
+                                                    <i class="fas fa-envelope" style="margin-right: 5px;"></i>${displayEmail}
+                                                </div>
+                                                ${displayPhone ? `
+                                                    <div style="color: #666; font-size: 14px;">
+                                                        <i class="fas fa-phone" style="margin-right: 5px;"></i>${displayPhone}
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+                                            <div style="color: #667eea; font-size: 24px;">
+                                                <i class="fas fa-chevron-right"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                
+                // Add hover effect
+                setTimeout(() => {
+                    const patientItems = document.querySelectorAll('.patient-item');
+                    patientItems.forEach(item => {
+                        item.addEventListener('mouseenter', function() {
+                            this.style.borderColor = '#667eea';
+                            this.style.background = 'rgba(102, 126, 234, 0.05)';
+                            this.style.transform = 'translateX(5px)';
+                        });
+                        item.addEventListener('mouseleave', function() {
+                            this.style.borderColor = '#e9ecef';
+                            this.style.background = 'white';
+                            this.style.transform = 'translateX(0)';
+                        });
+                    });
+                }, 100);
+                
+            } catch (error) {
+                console.error('Error loading patients:', error);
+                alert('Error loading patients. Please try again.');
+            }
+        }
+        
+        // Filter patient list
+        function filterPatientList() {
+            const searchInput = document.getElementById('patientSearchInput');
+            const searchTerm = searchInput.value.toLowerCase();
+            const patientItems = document.querySelectorAll('.patient-item');
+            
+            patientItems.forEach(item => {
+                const name = item.getAttribute('data-name') || '';
+                const email = item.getAttribute('data-email') || '';
+                
+                if (name.includes(searchTerm) || email.includes(searchTerm)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+        
+        // Close patient list modal
+        function closePatientListModal() {
+            const modal = document.getElementById('patientListModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+        
+        // Select patient and show booking form
+        function selectPatient(patientId, patientName, patientEmail, patientPhone) {
+            // Close patient list modal
+            closePatientListModal();
+            
+            // Show booking form modal
+            showBookingFormModal(patientId, patientName, patientEmail, patientPhone);
+        }
+        
+        // Show booking form modal
+        function showBookingFormModal(patientId, patientName, patientEmail, patientPhone) {
+            // Escape HTML and quotes for safe insertion
+            const safeName = (patientName || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            const safeEmail = (patientEmail || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            const safePhone = (patientPhone || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            const safeId = (patientId || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            
+            // Create booking form modal
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.id = 'bookingFormModal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-calendar-plus"></i> Book New Appointment</h3>
+                        <span class="close" onclick="closeBookingFormModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <form id="newAppointmentForm">
+                            <div class="form-group">
+                                <label>Patient Name *</label>
+                                <input type="text" id="newAptName" value="${safeName}" required readonly style="background: #f8f9fa;">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Email Address *</label>
+                                <input type="email" id="newAptEmail" value="${safeEmail}" required readonly style="background: #f8f9fa;">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Phone Number *</label>
+                                <input type="tel" id="newAptPhone" value="${safePhone}" required readonly style="background: #f8f9fa;">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Service Needed *</label>
+                                <select id="newAptService" required>
+                                    <option value="">Select Service</option>
+                                    <option value="general">General Checkup</option>
+                                    <option value="cleaning">Teeth Cleaning</option>
+                                    <option value="filling">Dental Filling</option>
+                                    <option value="extraction">Tooth Extraction</option>
+                                    <option value="root-canal">Root Canal</option>
+                                    <option value="crown">Dental Crown</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Appointment Date *</label>
+                                <input type="date" id="newAptDate" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Additional Notes</label>
+                                <textarea id="newAptMessage" placeholder="Any specific concerns or requests..."></textarea>
+                            </div>
+                            
+                            <input type="hidden" id="newAptPatientId" value="${safeId}">
+                            
+                            <div class="modal-actions">
+                                <button type="button" class="btn btn-secondary" onclick="closeBookingFormModal()">Cancel</button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-calendar-plus"></i> Book Appointment
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Set minimum date to today (allow booking on exact date)
+            const dateInput = document.getElementById('newAptDate');
+            if (dateInput) {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                dateInput.min = `${year}-${month}-${day}`;
+            }
+            
+            // Handle form submission
+            document.getElementById('newAppointmentForm').onsubmit = async function(e) {
+                e.preventDefault();
+                
+                const patientId = document.getElementById('newAptPatientId').value;
+                const name = document.getElementById('newAptName').value;
+                const email = document.getElementById('newAptEmail').value;
+                const phone = document.getElementById('newAptPhone').value;
+                const service = document.getElementById('newAptService').value;
+                const date = document.getElementById('newAptDate').value;
+                const message = document.getElementById('newAptMessage').value;
+                
+                // Validate form
+                if (!name || !email || !phone || !service || !date) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+                
+                // Set default time to 10:00 AM if not specified
+                const time = '10:00';
+                
+                // Get current logged-in dentist ID
+                const currentUserData = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                const currentDentistId = currentUserData?.id || null;
+                
+                try {
+                    const appointmentData = {
+                        patient_id: patientId || null,
+                        dentist_id: currentDentistId,
+                        service_type: service,
+                        appointment_date: date,
+                        appointment_time: time + ':00',
+                        duration: 60,
+                        notes: message,
+                        patient_name: name,
+                        patient_email: email,
+                        patient_phone: phone,
+                        status: 'pending'
+                    };
+                    
+                    console.log('📝 Creating appointment:', appointmentData);
+                    
+                    // Create appointment using direct API
+                    const data = await callSupabaseAPI('POST', 'appointments', appointmentData);
+                    
+                    console.log('✅ Appointment created:', data);
+                    alert('Appointment booked successfully!');
+                    closeBookingFormModal();
+                    loadAppointments();
+                    
+                } catch (error) {
+                    console.error('❌ Error creating appointment:', error);
+                    alert('Error booking appointment: ' + error.message);
+                }
+            };
+        }
+        
+        // Close booking form modal
+        function closeBookingFormModal() {
+            const modal = document.getElementById('bookingFormModal');
+            if (modal) {
+                modal.remove();
+            }
         }
 
         function exportAppointments() {

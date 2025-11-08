@@ -403,6 +403,45 @@
     min-height: 80px;
 }
 
+.password-input-container {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.password-input-container input {
+    width: 100%;
+    padding-right: 40px;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    padding: 6px;
+    font-size: 16px;
+    z-index: 10;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.password-toggle-btn:hover {
+    color: #666;
+}
+
+.password-toggle-btn:focus {
+    outline: none;
+    color: #666;
+}
+
 .modal-actions {
     display: flex;
     gap: 10px;

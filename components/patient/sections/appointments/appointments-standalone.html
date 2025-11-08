@@ -705,11 +705,6 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="aptTime">Preferred Time *</label>
-                    <input type="time" id="aptTime" required min="08:00" max="18:00" step="3600">
-                </div>
-                
-                <div class="form-group">
                     <label for="aptMessage">Additional Notes</label>
                     <textarea id="aptMessage" placeholder="Any specific concerns or requests..."></textarea>
                 </div>
@@ -1057,17 +1052,14 @@
             document.getElementById('appointmentForm').reset();
         }
 
-        // Set minimum date for appointment booking
+        // Set minimum date for appointment booking (allow booking on exact date - today)
         function setMinDate() {
             const dateInput = document.getElementById('aptDate');
             if (dateInput) {
                 const today = new Date();
-                const tomorrow = new Date(today);
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                
-                const year = tomorrow.getFullYear();
-                const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
-                const day = String(tomorrow.getDate()).padStart(2, '0');
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
                 
                 dateInput.min = `${year}-${month}-${day}`;
             }
@@ -1082,14 +1074,16 @@
             const phone = document.getElementById('aptPhone').value;
             const service = document.getElementById('aptService').value;
             const date = document.getElementById('aptDate').value;
-            const time = document.getElementById('aptTime').value;
             const message = document.getElementById('aptMessage').value;
             
             // Validate form
-            if (!name || !email || !phone || !service || !date || !time) {
+            if (!name || !email || !phone || !service || !date) {
                 alert('Please fill in all required fields');
                 return;
             }
+            
+            // Set default time to 10:00 AM if not specified
+            const time = '10:00';
             
             // Get current user if logged in
             let currentUserData = null;
