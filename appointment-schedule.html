@@ -326,15 +326,6 @@
                     throw new Error('Invalid appointment ID format');
                 }
 
-                // Check if user is logged in as dentist (has currentUser in localStorage)
-                const currentUser = localStorage.getItem('currentUser');
-                if (currentUser) {
-                    console.log('🔍 Dentist detected - redirecting to dashboard schedule');
-                    // Redirect to dentist dashboard schedule section
-                    window.location.href = `components/dentist/dentist-dashboard.html?section=schedule&appointment_id=${appointmentId}`;
-                    return;
-                }
-
                 // Load appointment from database
                 console.log('🔍 Fetching appointment from Supabase...');
                 const appointments = await callSupabaseAPI('GET', `appointments?id=eq.${appointmentId}&select=*`);
