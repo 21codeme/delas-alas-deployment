@@ -1448,40 +1448,66 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 let bookingDate = 'N/A';
                 let bookingTime = 'N/A';
                 if (appointment.createdAt) {
-                    // Parse the timestamp - Supabase stores created_at in UTC
-                    // new Date() automatically converts UTC to local timezone
-                    let bookingDateTime;
-                    
-                    // Handle different timestamp formats from Supabase
-                    if (typeof appointment.createdAt === 'string') {
-                        // If it's a string, parse it directly
-                        bookingDateTime = new Date(appointment.createdAt);
-                    } else {
-                        // If it's already a Date object or timestamp
-                        bookingDateTime = new Date(appointment.createdAt);
-                    }
-                    
-                    // Verify the date is valid
-                    if (isNaN(bookingDateTime.getTime())) {
-                        console.error('Invalid date:', appointment.createdAt);
-                        bookingDate = 'Invalid Date';
-                        bookingTime = 'Invalid Time';
-                    } else {
-                        // Get local timezone date components (already converted from UTC)
-                        const year = bookingDateTime.getFullYear();
-                        const month = String(bookingDateTime.getMonth() + 1).padStart(2, '0');
-                        const day = String(bookingDateTime.getDate()).padStart(2, '0');
+                    try {
+                        // Parse the timestamp - Supabase stores created_at in UTC
+                        // Ensure we're parsing it correctly as UTC and converting to local time
+                        let bookingDateTime;
                         
-                        // Format date as MM/DD/YYYY
-                        bookingDate = `${month}/${day}/${year}`;
+                        // Handle timestamp string from Supabase (usually ISO 8601 format)
+                        if (typeof appointment.createdAt === 'string') {
+                            // If the string doesn't end with 'Z', add it to indicate UTC
+                            const timestampStr = appointment.createdAt.endsWith('Z') 
+                                ? appointment.createdAt 
+                                : appointment.createdAt + 'Z';
+                            bookingDateTime = new Date(timestampStr);
+                        } else {
+                            bookingDateTime = new Date(appointment.createdAt);
+                        }
                         
-                        // Get local timezone hours and minutes (already converted from UTC)
-                        let hours = bookingDateTime.getHours(); // This is already in local time
-                        const minutes = String(bookingDateTime.getMinutes()).padStart(2, '0');
-                        const ampm = hours >= 12 ? 'PM' : 'AM';
-                        hours = hours % 12;
-                        hours = hours ? hours : 12; // the hour '0' should be '12'
-                        bookingTime = `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+                        // Verify the date is valid
+                        if (isNaN(bookingDateTime.getTime())) {
+                            console.error('Invalid date:', appointment.createdAt);
+                            bookingDate = 'Invalid Date';
+                            bookingTime = 'Invalid Time';
+                        } else {
+                            // Get local timezone date components (already converted from UTC by new Date())
+                            const year = bookingDateTime.getFullYear();
+                            const month = String(bookingDateTime.getMonth() + 1).padStart(2, '0');
+                            const day = String(bookingDateTime.getDate()).padStart(2, '0');
+                            
+                            // Format date as MM/DD/YYYY
+                            bookingDate = `${month}/${day}/${year}`;
+                            
+                            // Get local timezone hours and minutes (already converted from UTC)
+                            // getHours() and getMinutes() return local time values
+                            let hours = bookingDateTime.getHours();
+                            const minutes = String(bookingDateTime.getMinutes()).padStart(2, '0');
+                            
+                            // Determine AM/PM
+                            const ampm = hours >= 12 ? 'PM' : 'AM';
+                            
+                            // Convert to 12-hour format
+                            hours = hours % 12;
+                            hours = hours ? hours : 12; // the hour '0' should be '12'
+                            
+                            // Format time as HH:MM AM/PM
+                            bookingTime = `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+                            
+                            // Debug log to verify conversion
+                            console.log('📅 Time conversion:', {
+                                original: appointment.createdAt,
+                                utc: bookingDateTime.toISOString(),
+                                local: bookingDateTime.toLocaleString(),
+                                hours: bookingDateTime.getHours(),
+                                minutes: bookingDateTime.getMinutes(),
+                                display: bookingTime,
+                                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error formatting booking time:', error, appointment.createdAt);
+                        bookingDate = 'Error';
+                        bookingTime = 'Error';
                     }
                 }
                 
