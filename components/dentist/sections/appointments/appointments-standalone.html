@@ -51,20 +51,70 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             return true;
         }
         
-        // Generate QR code using web URL (NEW APPROACH)
-        function generateOnlineQRCode(appointment) {
-            // Create a web URL that will display the appointment schedule
-            // This URL will be accessible when the QR code is scanned
-            
-            // Check if running locally or on web server
-            let baseUrl;
-            if (window.location.protocol === 'file:') {
-                // For local development, use your actual local IP address
-                baseUrl = 'http://192.168.254.117:8000/appointment-schedule.html';
-            } else {
-                // For online deployment, use current domain
-                baseUrl = window.location.origin + '/appointment-schedule.html';
+        // Cache for deployment URL to avoid repeated API calls
+        let cachedDeploymentUrl = null;
+        let deploymentUrlPromise = null;
+
+        // Fetch deployment URL from Supabase (cached)
+        async function getDeploymentUrl() {
+            // Return cached URL if available
+            if (cachedDeploymentUrl) {
+                return cachedDeploymentUrl;
             }
+
+            // Return existing promise if already fetching
+            if (deploymentUrlPromise) {
+                return deploymentUrlPromise;
+            }
+
+            // Create new promise to fetch deployment URL
+            deploymentUrlPromise = (async () => {
+                try {
+                    // Default fallback URL
+                    let baseUrl = window.location.origin + '/appointment-schedule.html';
+                    
+                    // If running locally, try to get deployment URL from Supabase
+                    if (window.location.protocol !== 'file:') {
+                        console.log('🔍 Fetching deployment URL from Supabase...');
+                        const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                        
+                        const settingsResponse = await fetch(`${SUPABASE_URL}/rest/v1/clinic_settings?id=eq.clinic&select=deployment_url`, {
+                            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                        });
+                        
+                        if (settingsResponse.ok) {
+                            const settingsData = await settingsResponse.json();
+                            if (Array.isArray(settingsData) && settingsData.length > 0 && settingsData[0].deployment_url) {
+                                baseUrl = settingsData[0].deployment_url;
+                                console.log('✅ Using deployment URL from Supabase:', baseUrl);
+                            } else {
+                                console.log('⚠️ No deployment URL found in Supabase, using current origin');
+                            }
+                        } else {
+                            console.log('⚠️ Failed to fetch from Supabase, using current origin');
+                        }
+                    }
+                    
+                    // Cache the URL
+                    cachedDeploymentUrl = baseUrl;
+                    return baseUrl;
+                } catch (error) {
+                    console.warn('⚠️ Could not fetch deployment URL from Supabase:', error);
+                    // Fallback to current origin
+                    const fallbackUrl = window.location.origin + '/appointment-schedule.html';
+                    cachedDeploymentUrl = fallbackUrl;
+                    return fallbackUrl;
+                }
+            })();
+
+            return deploymentUrlPromise;
+        }
+
+        // Generate QR code using web URL (NEW APPROACH)
+        async function generateOnlineQRCode(appointment) {
+            // Get deployment URL (will use cache if already fetched)
+            const baseUrl = await getDeploymentUrl();
             
             // Add protocol prefix to ensure QR scanners recognize it as a URL
             const qrData = `${baseUrl}?id=${appointment.id}`;
@@ -1425,7 +1475,7 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
         }
 
         // Display appointments
-        function displayAppointments() {
+        async function displayAppointments() {
             const tbody = document.getElementById('appointmentsTableBody');
             
             if (filteredAppointments.length === 0) {
@@ -1442,6 +1492,22 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 `;
                 return;
             }
+
+            // Pre-generate QR codes for confirmed appointments
+            const qrCodePromises = filteredAppointments
+                .filter(apt => apt.status === 'confirmed')
+                .map(async (appointment) => {
+                    try {
+                        const qrUrl = await generateOnlineQRCode(appointment);
+                        appointment._qrCodeUrl = qrUrl; // Cache the QR URL
+                    } catch (error) {
+                        console.warn('Failed to generate QR code for appointment:', appointment.id, error);
+                        appointment._qrCodeUrl = null;
+                    }
+                });
+            
+            // Wait for all QR codes to be generated
+            await Promise.all(qrCodePromises);
 
             tbody.innerHTML = filteredAppointments.map(appointment => {
                 // Format booking date and time (when appointment was created/booked)
@@ -1535,9 +1601,9 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                     <td><span class="status-badge status-${appointment.status}">${appointment.status}</span></td>
                     <td>
                         <div class="qr-code-cell">
-                            ${appointment.status === 'confirmed' ? 
+                            ${appointment.status === 'confirmed' && appointment._qrCodeUrl ? 
                                 `<div class="qr-code-mini" id="qr-mini-${appointment.id}">
-                                    <img src="${generateOnlineQRCode(appointment)}" width="60" height="60" alt="QR Code" style="border-radius: 4px;">
+                                    <img src="${appointment._qrCodeUrl}" width="60" height="60" alt="QR Code" style="border-radius: 4px;">
                                 </div>` : 
                                 `<div class="qr-code-icon">
                             <i class="fas fa-qrcode"></i>
@@ -2076,7 +2142,7 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                     } catch (e) {}
                 }
                 // Generate QR code URL
-                const qrUrl = generateOnlineQRCode(appointment);
+                const qrUrl = await generateOnlineQRCode(appointment);
                 
                 // Create modal for QR code display
                 const modal = document.createElement('div');
@@ -2564,10 +2630,10 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             }
         }
 
-        function generateQRCodeForAppointment(appointment) {
+        async function generateQRCodeForAppointment(appointment) {
             try {
                 // Use online QR generator instead of QRCode library
-                const qrUrl = generateOnlineQRCode(appointment);
+                const qrUrl = await generateOnlineQRCode(appointment);
                 
                 // Find the QR code wrapper
                 const qrWrapper = document.getElementById('qrCodeWrapper');
@@ -2592,13 +2658,13 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             }
         }
 
-        function downloadQRCode(appointmentId) {
+        async function downloadQRCode(appointmentId) {
             try {
                 const appointment = appointments.find(apt => apt.id === appointmentId);
                 if (!appointment) return;
 
                 // Generate QR code URL using online generator
-                const qrUrl = generateOnlineQRCode(appointment);
+                const qrUrl = await generateOnlineQRCode(appointment);
                 
                 // Create a temporary link to download the QR code image
                 const link = document.createElement('a');
@@ -2615,13 +2681,13 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             }
         }
 
-        function printQRCode(appointmentId) {
+        async function printQRCode(appointmentId) {
             try {
                 const appointment = appointments.find(apt => apt.id === appointmentId);
                 if (!appointment) return;
 
                 // Generate QR code URL
-                const qrUrl = generateOnlineQRCode(appointment);
+                const qrUrl = await generateOnlineQRCode(appointment);
                 
                 const printWindow = window.open('', '_blank');
                 printWindow.document.write(`

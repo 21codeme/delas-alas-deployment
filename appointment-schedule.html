@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Appointment Schedule - Delas Alas Dental Clinic</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦷</text></svg>">
+    <!-- Preconnect to external resources for faster loading -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://xlubjwiumytdkxrzojdg.supabase.co">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://xlubjwiumytdkxrzojdg.supabase.co">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
@@ -299,9 +304,6 @@
         async function loadAppointmentData() {
             try {
                 // Get appointment ID from URL parameters
-                console.log('📄 Current URL:', window.location.href);
-                console.log('🔍 Search string:', window.location.search);
-                
                 const urlParams = new URLSearchParams(window.location.search);
                 let appointmentId = urlParams.get('id');
                 
@@ -314,8 +316,6 @@
                     }
                 }
                 
-                console.log('🆔 Extracted appointment ID:', appointmentId);
-                
                 if (!appointmentId) {
                     throw new Error('No appointment ID provided');
                 }
@@ -326,22 +326,27 @@
                     throw new Error('Invalid appointment ID format');
                 }
 
-                // Load appointment from database
-                console.log('🔍 Fetching appointment from Supabase...');
-                const appointments = await callSupabaseAPI('GET', `appointments?id=eq.${appointmentId}&select=*`);
-                console.log('📦 Supabase response:', appointments);
-                console.log('📦 Is array?', Array.isArray(appointments));
-                console.log('📦 Length:', appointments?.length);
+                // Load appointment and dentist info in parallel for faster loading
+                const [appointmentsResponse, dentistResponse] = await Promise.allSettled([
+                    callSupabaseAPI('GET', `appointments?id=eq.${appointmentId}&select=*`),
+                    // Pre-fetch dentist info (will be used if appointment has dentist_id)
+                    Promise.resolve(null) // Placeholder, will fetch dentist if needed
+                ]);
+
+                // Check appointment response
+                if (appointmentsResponse.status === 'rejected') {
+                    throw new Error('Failed to load appointment data');
+                }
+
+                const appointments = appointmentsResponse.value;
                 
                 if (!Array.isArray(appointments) || appointments.length === 0) {
-                    console.error('❌ Appointment not found or invalid response');
                     throw new Error('Appointment not found');
                 }
 
                 const appointment = appointments[0];
-                console.log('✅ Found appointment:', appointment);
 
-                // Load dentist information if available
+                // Load dentist information if available (non-blocking)
                 let dentistName = 'Dr. Delas Alas';
                 if (appointment.dentist_id) {
                     try {
@@ -350,11 +355,12 @@
                             dentistName = dentists[0].name || dentistName;
                         }
                     } catch (e) {
+                        // Use default name if dentist info fails to load
                         console.warn('Could not load dentist info:', e);
                     }
                 }
 
-                // Display appointment information
+                // Display appointment information immediately
                 displayAppointment(appointment, dentistName);
 
             } catch (error) {
@@ -432,32 +438,25 @@
             }
         }
 
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ Appointment schedule page loaded');
-            console.log('🌐 Full URL:', window.location.href);
-            console.log('📋 Pathname:', window.location.pathname);
-            console.log('🔍 Search:', window.location.search);
-            console.log('🔢 Hash:', window.location.hash);
-            
-            // Show loading state
+        // Initialize when page loads - start loading immediately for faster response
+        (function() {
+            // Show loading state immediately
             const loading = document.getElementById('loading');
             const errorMessage = document.getElementById('errorMessage');
             const appointmentContent = document.getElementById('appointmentContent');
             
-            if (loading) {
-                loading.style.display = 'block';
-                console.log('📦 Loading element found');
-            }
-            if (errorMessage) {
-                errorMessage.style.display = 'none';
-            }
-            if (appointmentContent) {
-                appointmentContent.style.display = 'none';
-            }
+            if (loading) loading.style.display = 'block';
+            if (errorMessage) errorMessage.style.display = 'none';
+            if (appointmentContent) appointmentContent.style.display = 'none';
             
-            loadAppointmentData();
-        });
+            // Start loading data as soon as DOM is ready or immediately if already ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', loadAppointmentData);
+            } else {
+                // DOM is already ready, load immediately
+                loadAppointmentData();
+            }
+        })();
     </script>
 </body>
 </html>
