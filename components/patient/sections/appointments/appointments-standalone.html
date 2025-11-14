@@ -1414,10 +1414,18 @@
                 return;
             }
             
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData)}&ecc=H&margin=15`;
+            // Double encode the URL to ensure it works with QR code scanners
+            // Some QR scanners have issues with special characters
+            const encodedQRData = encodeURIComponent(qrData);
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodedQRData}&ecc=H&margin=15`;
             
             console.log('🔗 QR code data (what will be scanned):', qrData);
+            console.log('🔗 Encoded QR data:', encodedQRData);
             console.log('🖼️ QR code image URL:', qrUrl);
+            
+            // Log for debugging
+            console.log('📋 Appointment ID:', appointment.id);
+            console.log('🌐 Base URL:', baseUrl);
             
             // Show modal with QR code
             const modal = document.getElementById('patientQRModal');
@@ -1428,20 +1436,59 @@
                 return;
             }
 
+            // Test if URL is accessible (for debugging)
+            const debugInfo = [];
+            debugInfo.push(`Base URL: ${baseUrl}`);
+            debugInfo.push(`Full URL: ${qrData}`);
+            debugInfo.push(`Appointment ID: ${appointment.id}`);
+            
+            // Try to verify URL accessibility
+            let urlTestResult = 'Not tested';
+            try {
+                // Use a simple fetch to check if URL is reachable
+                const testResponse = await fetch(qrData.split('?')[0], { method: 'HEAD', mode: 'no-cors' });
+                urlTestResult = 'URL appears accessible';
+                debugInfo.push(`URL Test: ${urlTestResult}`);
+            } catch (e) {
+                urlTestResult = `Warning: ${e.message}`;
+                debugInfo.push(`URL Test: ${urlTestResult}`);
+                console.warn('⚠️ Could not verify URL accessibility:', e);
+            }
+
             // Create large QR code image with URL display
             qrViewContainer.innerHTML = `
                 <div style="text-align: center;">
                     <div style="background: white; padding: 20px; border: 4px solid #28a745; border-radius: 15px; display: inline-block; margin-bottom: 15px;">
                         <img src="${qrUrl}" alt="Appointment QR Code" style="width: 300px; height: 300px; border-radius: 10px; display: block;">
                     </div>
-                    <div style="background: #f8f9fa; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 12px; color: #666; word-break: break-all;">
-                        <strong>URL:</strong> <span id="patientQRUrlDisplay">${qrData}</span>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 10px; font-size: 12px; color: #666;">
+                        <div style="margin-bottom: 10px;">
+                            <strong>URL:</strong> 
+                            <a href="${qrData}" target="_blank" rel="noopener noreferrer" 
+                               style="color: #667eea; text-decoration: underline; word-break: break-all; display: inline-block; max-width: 100%;">
+                                ${qrData}
+                            </a>
+                        </div>
+                        <div style="background: #fff3cd; padding: 8px; border-radius: 5px; margin-top: 8px; font-size: 11px; color: #856404;">
+                            <i class="fas fa-lightbulb"></i> <strong>Tip:</strong> Click the URL above to test if it opens correctly, or scan the QR code with your phone camera
+                        </div>
                     </div>
-                    <p style="margin-top: 10px; font-size: 13px; color: #28a745;">
-                        <i class="fas fa-info-circle"></i> Scan this QR code with your phone camera
+                    <p style="margin-top: 15px; font-size: 13px; color: #28a745;">
+                        <i class="fas fa-mobile-alt"></i> Scan this QR code with your phone camera or Google Lens
                     </p>
+                    <button onclick="document.getElementById('patientQRDebugInfo').style.display = document.getElementById('patientQRDebugInfo').style.display === 'none' ? 'block' : 'none';" 
+                            style="margin-top: 10px; padding: 5px 10px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 11px;">
+                        <i class="fas fa-bug"></i> Show Debug Info
+                    </button>
                 </div>
             `;
+            
+            // Set debug info
+            const debugInfoDiv = document.getElementById('patientQRDebugInfo');
+            const debugContentDiv = document.getElementById('patientQRDebugContent');
+            if (debugInfoDiv && debugContentDiv) {
+                debugContentDiv.innerHTML = debugInfo.map(info => `<div>${info}</div>`).join('');
+            }
 
             // Store QR data
             window.patientQRData = qrData;
@@ -1614,7 +1661,10 @@
             </div>
             <div class="modal-body">
                 <div id="patientQRCodeView"></div>
-                <p><i class="fas fa-mobile-alt"></i> Scan with your phone camera or QR scanner app</p>
+                <div id="patientQRDebugInfo" style="display: none; margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 8px; font-size: 11px; color: #666; text-align: left;">
+                    <strong>Debug Info:</strong>
+                    <div id="patientQRDebugContent" style="margin-top: 5px;"></div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-primary" onclick="downloadPatientQR()">
