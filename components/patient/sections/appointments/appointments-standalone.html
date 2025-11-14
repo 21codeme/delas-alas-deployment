@@ -1401,31 +1401,40 @@
                 baseUrl = window.location.origin + '/appointment-schedule.html';
             }
             
-            // Build the full QR code data URL
+            // Build the full QR code data URL - ensure it's a clean URL
+            // Remove any trailing slashes from baseUrl before adding query params
+            baseUrl = baseUrl.replace(/\/$/, '');
             const qrData = `${baseUrl}?id=${appointment.id}`;
             
             // Validate the URL format
+            let validatedUrl;
             try {
-                new URL(qrData); // This will throw if URL is invalid
+                validatedUrl = new URL(qrData); // This will throw if URL is invalid
                 console.log('✅ Valid QR code URL:', qrData);
+                // Use the validated URL's href to ensure proper formatting
+                const finalUrl = validatedUrl.href;
+                console.log('✅ Final formatted URL:', finalUrl);
             } catch (e) {
                 console.error('❌ Invalid QR code URL format:', qrData, e);
                 alert('Error: Invalid URL format. Please check deployment URL settings.');
                 return;
             }
             
-            // Double encode the URL to ensure it works with QR code scanners
-            // Some QR scanners have issues with special characters
-            const encodedQRData = encodeURIComponent(qrData);
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodedQRData}&ecc=H&margin=15`;
+            // Use the validated URL for QR code generation
+            // QR scanners recognize URLs that start with http:// or https://
+            // Use the same format and ECC level as dentist for consistency
+            const finalQRData = validatedUrl.href;
+            const encodedQRData = encodeURIComponent(finalQRData);
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodedQRData}&ecc=M&margin=10`;
             
-            console.log('🔗 QR code data (what will be scanned):', qrData);
+            console.log('🔗 QR code data (what will be scanned):', finalQRData);
             console.log('🔗 Encoded QR data:', encodedQRData);
             console.log('🖼️ QR code image URL:', qrUrl);
             
             // Log for debugging
             console.log('📋 Appointment ID:', appointment.id);
             console.log('🌐 Base URL:', baseUrl);
+            console.log('✅ URL will be recognized as link by QR scanners:', finalQRData.startsWith('http'));
             
             // Show modal with QR code
             const modal = document.getElementById('patientQRModal');
@@ -1439,14 +1448,15 @@
             // Test if URL is accessible (for debugging)
             const debugInfo = [];
             debugInfo.push(`Base URL: ${baseUrl}`);
-            debugInfo.push(`Full URL: ${qrData}`);
+            debugInfo.push(`Full URL: ${finalQRData}`);
             debugInfo.push(`Appointment ID: ${appointment.id}`);
+            debugInfo.push(`URL starts with http: ${finalQRData.startsWith('http')}`);
             
             // Try to verify URL accessibility
             let urlTestResult = 'Not tested';
             try {
                 // Use a simple fetch to check if URL is reachable
-                const testResponse = await fetch(qrData.split('?')[0], { method: 'HEAD', mode: 'no-cors' });
+                const testResponse = await fetch(finalQRData.split('?')[0], { method: 'HEAD', mode: 'no-cors' });
                 urlTestResult = 'URL appears accessible';
                 debugInfo.push(`URL Test: ${urlTestResult}`);
             } catch (e) {
@@ -1464,9 +1474,9 @@
                     <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 10px; font-size: 12px; color: #666;">
                         <div style="margin-bottom: 10px;">
                             <strong>URL:</strong> 
-                            <a href="${qrData}" target="_blank" rel="noopener noreferrer" 
+                            <a href="${finalQRData}" target="_blank" rel="noopener noreferrer" 
                                style="color: #667eea; text-decoration: underline; word-break: break-all; display: inline-block; max-width: 100%;">
-                                ${qrData}
+                                ${finalQRData}
                             </a>
                         </div>
                         <div style="background: #fff3cd; padding: 8px; border-radius: 5px; margin-top: 8px; font-size: 11px; color: #856404;">
@@ -1490,8 +1500,8 @@
                 debugContentDiv.innerHTML = debugInfo.map(info => `<div>${info}</div>`).join('');
             }
 
-            // Store QR data
-            window.patientQRData = qrData;
+            // Store QR data (use final validated URL)
+            window.patientQRData = finalQRData;
             window.patientQRUrl = qrUrl;
 
             // Show modal
