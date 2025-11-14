@@ -1752,7 +1752,8 @@
             }
 
             // Create base URL - fetch from Supabase clinic_settings
-            let baseUrl = '/appointment-schedule.html';
+            // Default to current origin + path (absolute URL, not relative)
+            let baseUrl = window.location.origin + '/appointment-schedule.html';
             
             try {
                 console.log('🔍 Fetching deployment URL from Supabase...');
@@ -1768,17 +1769,37 @@
                     const settingsData = await settingsResponse.json();
                     console.log('📊 Settings data from Supabase:', settingsData);
                     if (Array.isArray(settingsData) && settingsData.length > 0 && settingsData[0].deployment_url) {
-                        baseUrl = settingsData[0].deployment_url;
+                        baseUrl = settingsData[0].deployment_url.trim();
+                        console.log('✅ Raw deployment URL from Supabase:', baseUrl);
+                        
+                        // Ensure URL has protocol
+                        if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+                            baseUrl = 'https://' + baseUrl;
+                            console.log('⚠️ Added https:// protocol:', baseUrl);
+                        }
+                        
+                        // Ensure URL ends with appointment-schedule.html if it doesn't already
+                        if (!baseUrl.includes('appointment-schedule.html')) {
+                            // Remove trailing slash if present
+                            baseUrl = baseUrl.replace(/\/$/, '');
+                            // Add appointment-schedule.html
+                            baseUrl = baseUrl + '/appointment-schedule.html';
+                            console.log('⚠️ Added appointment-schedule.html path:', baseUrl);
+                        }
+                        
                         console.log('✅ Using deployment URL from Supabase:', baseUrl);
                     } else {
-                        console.log('⚠️ No deployment URL found in Supabase, using default');
+                        console.log('⚠️ No deployment URL found in Supabase, using current origin');
                     }
                 } else {
-                    console.log('⚠️ Failed to fetch from Supabase, using default');
+                    console.log('⚠️ Failed to fetch from Supabase, using current origin');
                 }
             } catch (error) {
                 console.warn('⚠️ Could not fetch deployment URL from Supabase:', error);
             }
+            
+            // Clean up baseUrl - remove trailing slash if present
+            baseUrl = baseUrl.replace(/\/$/, '');
             
             console.log('📍 Final base URL for QR code:', baseUrl);
 
@@ -1786,9 +1807,22 @@
             const firstAppointmentId = confirmedAppointments[0].id;
             console.log('🆔 First appointment ID:', firstAppointmentId);
             
-            // Generate QR code URL matching dentist format: appointment-schedule.html?id={id}
-            const qrData = `${baseUrl}?id=${firstAppointmentId}`;
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData)}&ecc=H&margin=15`;
+            // Generate QR code URL matching dentist format - ensure it's a valid absolute URL
+            let qrData = `${baseUrl}?id=${firstAppointmentId}`;
+            
+            // Validate URL format
+            try {
+                new URL(qrData); // This will throw if URL is invalid
+                console.log('✅ Valid QR code URL:', qrData);
+            } catch (e) {
+                console.error('❌ Invalid QR code URL format:', qrData, e);
+                // Fallback to current origin
+                qrData = window.location.origin + `/appointment-schedule.html?id=${firstAppointmentId}`;
+                console.log('⚠️ Using fallback URL:', qrData);
+            }
+            
+            // Use same ECC level as dentist for consistency
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData)}&ecc=M&margin=10`;
             
             console.log('🔗 QR code URL:', qrData);
             console.log('🖼️ QR code image URL:', qrUrl);
