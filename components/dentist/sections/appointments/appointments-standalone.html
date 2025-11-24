@@ -1088,7 +1088,8 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                     </div>
                     <div class="filter-group">
                         <label>Date:</label>
-                        <input type="date" id="dateFilter" onchange="filterAppointments()">
+                        <input type="date" id="dateFilter" onchange="filterAppointments()" placeholder="Filter by date (optional)">
+                        <button type="button" onclick="clearDateFilter()" style="margin-left: 5px; padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 12px;">Clear</button>
                     </div>
                     <div class="filter-group">
                         <label>Search:</label>
@@ -1358,16 +1359,26 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             // QR code functionality uses online generator (no library needed)
             console.log('✅ QR Code functionality initialized (using online generator)');
             
-                loadAppointments();
+            // Ensure date filter is empty by default to show ALL appointments (including past months)
+            const dateFilter = document.getElementById('dateFilter');
+            if (dateFilter) {
+                dateFilter.value = '';
+                console.log('✅ Date filter cleared - all appointments (including past months) will be shown');
+            }
+            
+            loadAppointments();
         });
 
         // Load appointments data
+        // NOTE: This loads ALL appointments (past, present, future) - no date filtering
+        // Historical data from past months (like October) must be preserved and accessible
         async function loadAppointments() {
             console.log('🔄 Loading appointments using direct API...');
             appointments = [];
 
             try {
-                // Load appointments using direct API call - order by booking date/time (created_at) descending (latest first)
+                // Load ALL appointments - no date filtering to preserve historical data
+                // Order by booking date/time (created_at) descending (latest first)
                 const data = await callSupabaseAPI('GET', 'appointments?order=created_at.desc');
 
                 if (data && data.length > 0) {
@@ -1483,6 +1494,8 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
         }
 
         // Filter appointments
+        // NOTE: Date filter is OPTIONAL - if no date is selected, ALL appointments (including past months) are shown
+        // This ensures historical data from past months (like October) remains accessible
         function filterAppointments() {
             const statusFilter = document.getElementById('statusFilter').value;
             const dateFilter = document.getElementById('dateFilter').value;
@@ -1490,11 +1503,14 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
 
             filteredAppointments = appointments.filter(appointment => {
                 const matchesStatus = statusFilter === 'all' || appointment.status === statusFilter;
+                // Date filter is optional - if empty, show ALL appointments (including past months)
                 const matchesDate = !dateFilter || appointment.date.startsWith(dateFilter);
                 const matchesSearch = !searchInput || appointment.patientName.toLowerCase().includes(searchInput);
                 
                 return matchesStatus && matchesDate && matchesSearch;
             });
+            
+            console.log(`📊 Filtered appointments: ${filteredAppointments.length} of ${appointments.length} total (date filter: ${dateFilter || 'none - showing all'})`);
 
             // Sort by booking date/time (created_at) descending - latest booking first
             filteredAppointments.sort((a, b) => {
@@ -1504,6 +1520,16 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             });
 
             displayAppointments();
+        }
+
+        // Clear date filter to show all appointments (including past months)
+        function clearDateFilter() {
+            const dateFilter = document.getElementById('dateFilter');
+            if (dateFilter) {
+                dateFilter.value = '';
+                filterAppointments();
+                console.log('✅ Date filter cleared - showing all appointments including past months');
+            }
         }
 
         // Display appointments
