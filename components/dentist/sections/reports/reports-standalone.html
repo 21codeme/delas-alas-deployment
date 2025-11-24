@@ -273,12 +273,14 @@
         let allAppointments = [];
 
         // Load all reports data
+        // NOTE: This loads ALL appointments (past, present, and future) to preserve historical data
+        // DO NOT add date filters here - all months should remain accessible even after they end
         async function loadReportsData() {
             try {
                 console.log('📊 Loading reports data...');
                 
-                // Load appointments from database
-                allAppointments = await callSupabaseAPI('GET', 'appointments?select=id,service_type,appointment_date,status');
+                // Load ALL appointments from database (no date filtering - preserves all historical data)
+                allAppointments = await callSupabaseAPI('GET', 'appointments?select=id,service_type,appointment_date,status&order=appointment_date.desc');
                 
                 if (!Array.isArray(allAppointments) || allAppointments.length === 0) {
                     showError('No appointment data found.');
@@ -327,11 +329,12 @@
         }
 
         // Populate month selector with all months that have appointments
+        // NOTE: This includes ALL months (past, present, future) - historical data is preserved
         function populateMonthSelector(appointments) {
             const monthSelector = document.getElementById('monthSelector');
             if (!monthSelector) return;
             
-            // Extract all unique months from appointments
+            // Extract all unique months from appointments (including past months)
             const monthSet = new Set();
             appointments.forEach(apt => {
                 if (apt.appointment_date) {
@@ -341,10 +344,11 @@
                 }
             });
             
-            // Sort months (newest first)
+            // Sort months (newest first) - but keep ALL months available
             const sortedMonths = Array.from(monthSet).sort().reverse();
             
-            console.log('📅 Available months with appointments:', sortedMonths);
+            console.log('📅 Available months with appointments (including past months):', sortedMonths);
+            console.log(`📊 Total months with data: ${sortedMonths.length}`);
             
             // If no months found, use current month
             if (sortedMonths.length === 0) {
@@ -355,8 +359,19 @@
             }
             
             // Set the default to the most recent month with data
+            // But all months (including past ones) remain accessible via the month selector
             if (!monthSelector.value || !sortedMonths.includes(monthSelector.value)) {
                 monthSelector.value = sortedMonths[0];
+            }
+            
+            // Set min and max attributes to allow selection of all months
+            // HTML5 month input allows manual entry, but we ensure all months are accessible
+            if (sortedMonths.length > 0) {
+                const oldestMonth = sortedMonths[sortedMonths.length - 1];
+                const newestMonth = sortedMonths[0];
+                // Don't restrict min/max - allow all months to be accessible
+                // monthSelector.min = oldestMonth; // Optional: can set if needed
+                // monthSelector.max = newestMonth; // Optional: can set if needed
             }
         }
 
@@ -466,6 +481,7 @@
         }
 
         // Generate daily appointments bar chart for selected month
+        // NOTE: This works for ANY month (past, present, future) - all historical data is preserved
         function generateMonthlyChart(appointments) {
             try {
                 // Get selected month or use current month
