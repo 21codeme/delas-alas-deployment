@@ -218,11 +218,15 @@
             <div class="chart-card">
                 <div class="chart-header">
                     <i class="fas fa-chart-bar"></i>
-                    <h2>Monthly Appointments</h2>
+                    <h2>Daily Appointments</h2>
+                    <div style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
+                        <label for="monthSelector" style="font-size: 14px; color: #666;">Month:</label>
+                        <input type="month" id="monthSelector" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;" onchange="updateDailyChart()">
+                    </div>
                 </div>
                 <div id="monthlyChartLoading" class="loading">
                     <div class="spinner"></div>
-                    <p>Loading monthly data...</p>
+                    <p>Loading daily data...</p>
                 </div>
                 <div class="chart-container" style="display: none;">
                     <canvas id="monthlyChart"></canvas>
@@ -265,33 +269,45 @@
             loadReportsData();
         });
 
+        // Store appointments globally for chart regeneration
+        let allAppointments = [];
+
         // Load all reports data
         async function loadReportsData() {
             try {
                 console.log('📊 Loading reports data...');
                 
                 // Load appointments from database
-                const appointments = await callSupabaseAPI('GET', 'appointments?select=id,service_type,appointment_date,status');
+                allAppointments = await callSupabaseAPI('GET', 'appointments?select=id,service_type,appointment_date,status');
                 
-                if (!Array.isArray(appointments) || appointments.length === 0) {
+                if (!Array.isArray(allAppointments) || allAppointments.length === 0) {
                     showError('No appointment data found.');
                     return;
                 }
 
-                console.log('✅ Loaded', appointments.length, 'appointments');
+                console.log('✅ Loaded', allAppointments.length, 'appointments');
 
                 // Update stats summary
-                updateStatsSummary(appointments);
+                updateStatsSummary(allAppointments);
 
                 // Generate services pie chart
-                generateServicesChart(appointments);
+                generateServicesChart(allAppointments);
 
-                // Generate monthly bar chart
-                generateMonthlyChart(appointments);
+                // Generate daily bar chart for selected month
+                generateMonthlyChart(allAppointments);
 
             } catch (error) {
                 console.error('❌ Error loading reports data:', error);
                 showError('Failed to load reports data. Please try again later.');
+            }
+        }
+
+        // Update daily chart when month selector changes
+        function updateDailyChart() {
+            if (allAppointments && allAppointments.length > 0) {
+                generateMonthlyChart(allAppointments);
+            } else {
+                loadReportsData();
             }
         }
 
@@ -391,35 +407,61 @@
             }
         }
 
-        // Generate monthly bar chart
+        // Generate daily appointments bar chart for selected month
         function generateMonthlyChart(appointments) {
             try {
-                // Group appointments by month
-                const monthlyData = {};
+                // Get selected month or use current month
+                const monthSelector = document.getElementById('monthSelector');
+                let selectedMonth = monthSelector ? monthSelector.value : '';
                 
+                // If no month selected, use current month
+                if (!selectedMonth) {
+                    const now = new Date();
+                    selectedMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                    if (monthSelector) {
+                        monthSelector.value = selectedMonth;
+                    }
+                }
+
+                const [year, month] = selectedMonth.split('-').map(Number);
+                
+                // Get first and last day of the month
+                const firstDay = new Date(year, month - 1, 1);
+                const lastDay = new Date(year, month, 0);
+                const daysInMonth = lastDay.getDate();
+                
+                // Initialize daily data for all days in the month
+                const dailyData = {};
+                for (let day = 1; day <= daysInMonth; day++) {
+                    dailyData[day] = 0;
+                }
+                
+                // Count appointments per day in the selected month
                 appointments.forEach(apt => {
                     if (!apt.appointment_date) return;
                     
-                    const date = new Date(apt.appointment_date);
-                    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-                    const monthLabel = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+                    const aptDate = new Date(apt.appointment_date);
+                    const aptYear = aptDate.getFullYear();
+                    const aptMonth = aptDate.getMonth() + 1;
+                    const aptDay = aptDate.getDate();
                     
-                    if (!monthlyData[monthKey]) {
-                        monthlyData[monthKey] = {
-                            label: monthLabel,
-                            count: 0
-                        };
+                    // Check if appointment is in the selected month
+                    if (aptYear === year && aptMonth === month) {
+                        dailyData[aptDay] = (dailyData[aptDay] || 0) + 1;
                     }
-                    monthlyData[monthKey].count++;
                 });
 
-                // Sort by month key (chronological order)
-                const sortedMonths = Object.entries(monthlyData)
-                    .sort(([a], [b]) => a.localeCompare(b))
-                    .slice(-12); // Last 12 months
+                // Create labels and data arrays
+                const labels = [];
+                const data = [];
+                
+                for (let day = 1; day <= daysInMonth; day++) {
+                    labels.push(day);
+                    data.push(dailyData[day] || 0);
+                }
 
-                const labels = sortedMonths.map(([, data]) => data.label);
-                const data = sortedMonths.map(([, data]) => data.count);
+                // Format month name for display
+                const monthName = firstDay.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
                 // Hide loading, show chart
                 document.getElementById('monthlyChartLoading').style.display = 'none';
@@ -439,10 +481,17 @@
                         datasets: [{
                             label: 'Appointments',
                             data: data,
-                            backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                            backgroundColor: function(context) {
+                                const value = context.parsed.y;
+                                // Different colors based on appointment count
+                                if (value === 0) return 'rgba(200, 200, 200, 0.3)';
+                                if (value <= 2) return 'rgba(102, 126, 234, 0.6)';
+                                if (value <= 5) return 'rgba(102, 126, 234, 0.8)';
+                                return 'rgba(102, 126, 234, 1)';
+                            },
                             borderColor: '#667eea',
-                            borderWidth: 2,
-                            borderRadius: 8,
+                            borderWidth: 1,
+                            borderRadius: 4,
                             borderSkipped: false
                         }]
                     },
@@ -453,10 +502,31 @@
                             legend: {
                                 display: false
                             },
+                            title: {
+                                display: true,
+                                text: `Appointments per Day - ${monthName}`,
+                                font: {
+                                    size: 16,
+                                    weight: 'bold'
+                                },
+                                padding: {
+                                    bottom: 20
+                                }
+                            },
                             tooltip: {
                                 callbacks: {
+                                    title: function(context) {
+                                        const day = context[0].label;
+                                        const date = new Date(year, month - 1, day);
+                                        return date.toLocaleDateString('en-US', { 
+                                            weekday: 'long', 
+                                            month: 'short', 
+                                            day: 'numeric' 
+                                        });
+                                    },
                                     label: function(context) {
-                                        return `Appointments: ${context.parsed.y}`;
+                                        const count = context.parsed.y;
+                                        return `Appointments: ${count}`;
                                     }
                                 }
                             }
@@ -470,18 +540,44 @@
                                 },
                                 grid: {
                                     color: 'rgba(0, 0, 0, 0.05)'
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Number of Appointments',
+                                    font: {
+                                        size: 12
+                                    }
                                 }
                             },
                             x: {
                                 grid: {
                                     display: false
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Day of Month',
+                                    font: {
+                                        size: 12
+                                    }
+                                },
+                                ticks: {
+                                    maxRotation: 0,
+                                    autoSkip: false,
+                                    callback: function(value, index) {
+                                        // Show every 5th day or last day
+                                        const day = parseInt(value);
+                                        if (day % 5 === 0 || day === labels.length) {
+                                            return day;
+                                        }
+                                        return '';
+                                    }
                                 }
                             }
                         }
                     }
                 });
 
-                console.log('✅ Monthly chart generated');
+                console.log(`✅ Daily chart generated for ${monthName}`);
             } catch (error) {
                 console.error('❌ Error generating monthly chart:', error);
                 document.getElementById('monthlyChartLoading').innerHTML = 
