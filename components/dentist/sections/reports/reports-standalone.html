@@ -286,9 +286,33 @@
                 }
 
                 console.log('✅ Loaded', allAppointments.length, 'appointments');
+                
+                // Debug: Log sample appointment dates to see format
+                console.log('📅 Sample appointment dates:', 
+                    allAppointments.slice(0, 5).map(apt => ({
+                        id: apt.id,
+                        date: apt.appointment_date,
+                        type: typeof apt.appointment_date,
+                        service: apt.service_type
+                    }))
+                );
+                
+                // Group appointments by month for debugging
+                const monthGroups = {};
+                allAppointments.forEach(apt => {
+                    if (apt.appointment_date) {
+                        const dateStr = String(apt.appointment_date).split('T')[0];
+                        const monthKey = dateStr.substring(0, 7); // YYYY-MM
+                        monthGroups[monthKey] = (monthGroups[monthKey] || 0) + 1;
+                    }
+                });
+                console.log('📊 Appointments by month:', monthGroups);
 
                 // Update stats summary
                 updateStatsSummary(allAppointments);
+
+                // Populate month selector with available months
+                populateMonthSelector(allAppointments);
 
                 // Generate services pie chart
                 generateServicesChart(allAppointments);
@@ -299,6 +323,40 @@
             } catch (error) {
                 console.error('❌ Error loading reports data:', error);
                 showError('Failed to load reports data. Please try again later.');
+            }
+        }
+
+        // Populate month selector with all months that have appointments
+        function populateMonthSelector(appointments) {
+            const monthSelector = document.getElementById('monthSelector');
+            if (!monthSelector) return;
+            
+            // Extract all unique months from appointments
+            const monthSet = new Set();
+            appointments.forEach(apt => {
+                if (apt.appointment_date) {
+                    const dateStr = String(apt.appointment_date).split('T')[0];
+                    const monthKey = dateStr.substring(0, 7); // YYYY-MM
+                    monthSet.add(monthKey);
+                }
+            });
+            
+            // Sort months (newest first)
+            const sortedMonths = Array.from(monthSet).sort().reverse();
+            
+            console.log('📅 Available months with appointments:', sortedMonths);
+            
+            // If no months found, use current month
+            if (sortedMonths.length === 0) {
+                const now = new Date();
+                const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                monthSelector.value = currentMonth;
+                return;
+            }
+            
+            // Set the default to the most recent month with data
+            if (!monthSelector.value || !sortedMonths.includes(monthSelector.value)) {
+                monthSelector.value = sortedMonths[0];
             }
         }
 
@@ -414,16 +472,34 @@
                 const monthSelector = document.getElementById('monthSelector');
                 let selectedMonth = monthSelector ? monthSelector.value : '';
                 
-                // If no month selected, use current month
+                // If no month selected, find the month with most appointments
                 if (!selectedMonth) {
-                    const now = new Date();
-                    selectedMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                    // Find all unique months in the data
+                    const monthCounts = {};
+                    appointments.forEach(apt => {
+                        if (!apt.appointment_date) return;
+                        const dateStr = apt.appointment_date.split('T')[0];
+                        const monthKey = dateStr.substring(0, 7); // YYYY-MM
+                        monthCounts[monthKey] = (monthCounts[monthKey] || 0) + 1;
+                    });
+                    
+                    // Use month with most appointments, or current month if no data
+                    if (Object.keys(monthCounts).length > 0) {
+                        const sortedMonths = Object.entries(monthCounts).sort((a, b) => b[1] - a[1]);
+                        selectedMonth = sortedMonths[0][0];
+                    } else {
+                        const now = new Date();
+                        selectedMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                    }
+                    
                     if (monthSelector) {
                         monthSelector.value = selectedMonth;
                     }
                 }
 
                 const [year, month] = selectedMonth.split('-').map(Number);
+                
+                console.log(`📅 Generating chart for ${year}-${String(month).padStart(2, '0')}`);
                 
                 // Get first and last day of the month
                 const firstDay = new Date(year, month - 1, 1);
@@ -437,19 +513,50 @@
                 }
                 
                 // Count appointments per day in the selected month
+                let matchedCount = 0;
+                let totalChecked = 0;
+                
                 appointments.forEach(apt => {
                     if (!apt.appointment_date) return;
                     
-                    const aptDate = new Date(apt.appointment_date);
-                    const aptYear = aptDate.getFullYear();
-                    const aptMonth = aptDate.getMonth() + 1;
-                    const aptDay = aptDate.getDate();
+                    totalChecked++;
+                    
+                    // Parse date - handle both DATE and TIMESTAMP formats
+                    // Supabase DATE type returns as "YYYY-MM-DD" string
+                    let dateStr = apt.appointment_date;
+                    if (typeof dateStr === 'string') {
+                        // Remove time portion if present (for TIMESTAMP)
+                        dateStr = dateStr.split('T')[0];
+                    } else {
+                        // If it's already a Date object, convert to string
+                        dateStr = apt.appointment_date.toISOString().split('T')[0];
+                    }
+                    
+                    // Parse YYYY-MM-DD format directly to avoid timezone issues
+                    const dateParts = dateStr.split('-');
+                    if (dateParts.length !== 3) {
+                        console.warn('Invalid date format:', apt.appointment_date);
+                        return;
+                    }
+                    
+                    const aptYear = parseInt(dateParts[0], 10);
+                    const aptMonth = parseInt(dateParts[1], 10);
+                    const aptDay = parseInt(dateParts[2], 10);
+                    
+                    // Check if date is valid
+                    if (isNaN(aptYear) || isNaN(aptMonth) || isNaN(aptDay)) {
+                        console.warn('Invalid date values:', apt.appointment_date);
+                        return;
+                    }
                     
                     // Check if appointment is in the selected month
                     if (aptYear === year && aptMonth === month) {
                         dailyData[aptDay] = (dailyData[aptDay] || 0) + 1;
+                        matchedCount++;
                     }
                 });
+                
+                console.log(`📊 Checked ${totalChecked} appointments, found ${matchedCount} for ${year}-${String(month).padStart(2, '0')}`);
 
                 // Create labels and data arrays
                 const labels = [];
@@ -459,6 +566,14 @@
                     labels.push(day);
                     data.push(dailyData[day] || 0);
                 }
+
+                // Debug: Log the data being used
+                console.log('📊 Daily data for chart:', {
+                    month: `${year}-${String(month).padStart(2, '0')}`,
+                    daysInMonth: daysInMonth,
+                    totalAppointments: data.reduce((a, b) => a + b, 0),
+                    data: dailyData
+                });
 
                 // Format month name for display
                 const monthName = firstDay.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
