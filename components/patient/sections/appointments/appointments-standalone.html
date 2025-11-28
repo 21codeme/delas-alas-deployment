@@ -756,21 +756,10 @@
             loadAppointments();
             setMinDate();
             
-            // Add event listeners for date and dentist selectors to update available time slots
-            const aptDateInput = document.getElementById('aptDate');
-            const aptDentistSelect = document.getElementById('aptDentist');
-            
-            if (aptDateInput) {
-                aptDateInput.addEventListener('change', async function() {
-                    await updateAvailableTimeSlots();
-                });
-            }
-            
-            if (aptDentistSelect) {
-                aptDentistSelect.addEventListener('change', async function() {
-                    await updateAvailableTimeSlots();
-                });
-            }
+            // Setup time slot listeners after a short delay to ensure elements exist
+            setTimeout(() => {
+                setupTimeSlotListeners();
+            }, 500);
         });
 
         // Load user data from localStorage
@@ -1223,9 +1212,36 @@
             }
         }
 
+        // Setup event listeners for time slot updates (only once)
+        let timeSlotListenersSetup = false;
+        
+        function setupTimeSlotListeners() {
+            if (timeSlotListenersSetup) return;
+            
+            const aptDateInput = document.getElementById('aptDate');
+            const aptDentistSelect = document.getElementById('aptDentist');
+            
+            if (aptDateInput) {
+                aptDateInput.addEventListener('change', async function() {
+                    console.log('📅 Date changed:', this.value);
+                    await updateAvailableTimeSlots();
+                });
+            }
+            
+            if (aptDentistSelect) {
+                aptDentistSelect.addEventListener('change', async function() {
+                    console.log('🦷 Dentist changed:', this.value);
+                    await updateAvailableTimeSlots();
+                });
+            }
+            
+            timeSlotListenersSetup = true;
+        }
+
         // Open book appointment modal
         async function openBookAppointmentModal() {
-            document.getElementById('bookAppointmentModal').style.display = 'block';
+            const modal = document.getElementById('bookAppointmentModal');
+            modal.style.display = 'block';
             
             // Load dentists when modal opens
             await loadDentists();
@@ -1237,11 +1253,14 @@
                 document.getElementById('aptPhone').value = currentUser.phone || '';
             }
             
-            // Update available time slots
-            await updateAvailableTimeSlots();
-            
             // Set minimum date
             setMinDate();
+            
+            // Setup event listeners for date and dentist changes
+            setupTimeSlotListeners();
+            
+            // Initialize time slots (will show "Select Date First" until date is selected)
+            await updateAvailableTimeSlots();
         }
 
         // Close modal
