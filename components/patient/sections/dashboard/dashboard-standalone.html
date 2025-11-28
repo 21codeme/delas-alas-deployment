@@ -1896,30 +1896,45 @@
                 const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
                 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
                 
+                console.log('🔍 Checking booked time slots for date:', appointmentDate, 'dentist:', dentistId);
+                
                 // Fetch appointments for the selected date and dentist
                 // Only count pending and confirmed appointments (not completed or cancelled)
-                const response = await fetch(
-                    `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${appointmentDate}&dentist_id=eq.${dentistId}&status=in.(pending,confirmed)&select=appointment_time`,
-                    {
-                        headers: {
-                            'apikey': SUPABASE_KEY,
-                            'Authorization': `Bearer ${SUPABASE_KEY}`
-                        }
+                const url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${appointmentDate}&dentist_id=eq.${dentistId}&status=in.(pending,confirmed)&select=appointment_time,status`;
+                console.log('🔗 Fetching from URL:', url);
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
                     }
-                );
+                });
                 
                 if (response.ok) {
                     const appointments = await response.json();
-                    // Extract booked times and return as array
-                    const bookedTimes = appointments.map(apt => apt.appointment_time);
-                    console.log('📅 Booked time slots for', appointmentDate, 'dentist', dentistId, ':', bookedTimes);
+                    console.log('📅 Raw appointments response:', appointments);
+                    
+                    // Extract booked times and normalize format (handle both HH:MM:SS and HH:MM formats)
+                    const bookedTimes = appointments.map(apt => {
+                        let time = apt.appointment_time || '';
+                        // Normalize to HH:MM:SS format
+                        if (time && time.length === 5) {
+                            time = time + ':00';
+                        }
+                        return time;
+                    }).filter(time => time); // Remove empty values
+                    
+                    console.log('📅 Booked time slots (normalized) for', appointmentDate, 'dentist', dentistId, ':', bookedTimes);
+                    console.log('📅 Appointment details:', appointments.map(apt => ({ time: apt.appointment_time, status: apt.status })));
+                    
                     return bookedTimes;
                 } else {
-                    console.error('Failed to check booked time slots:', response.status);
+                    const errorText = await response.text();
+                    console.error('❌ Failed to check booked time slots:', response.status, errorText);
                     return [];
                 }
             } catch (error) {
-                console.error('Error checking booked time slots:', error);
+                console.error('❌ Error checking booked time slots:', error);
                 return [];
             }
         }
@@ -1976,17 +1991,40 @@
                 option.textContent = slot.label;
                 
                 // Only disable if both date and dentist are selected AND the slot is booked
-                if (appointmentDate && dentistId && bookedTimes.includes(slot.value)) {
-                    option.disabled = true;
-                    option.textContent += ' (Booked)';
+                if (appointmentDate && dentistId) {
+                    // Check if this time slot is booked (normalize comparison to handle different formats)
+                    const isBooked = bookedTimes.some(bookedTime => {
+                        // Normalize booked time to HH:MM:SS format for comparison
+                        let normalizedBooked = bookedTime || '';
+                        if (normalizedBooked && normalizedBooked.length === 5) {
+                            normalizedBooked = normalizedBooked + ':00';
+                        }
+                        return normalizedBooked === slot.value;
+                    });
+                    
+                    if (isBooked) {
+                        option.disabled = true;
+                        option.textContent += ' (Booked)';
+                        console.log('🚫 Time slot', slot.value, 'is booked');
+                    }
                 }
                 
                 timeSelect.appendChild(option);
             });
             
             // Restore previous selection if it's still available
-            if (currentValue && (!appointmentDate || !dentistId || !bookedTimes.includes(currentValue))) {
-                timeSelect.value = currentValue;
+            if (currentValue) {
+                const isCurrentBooked = appointmentDate && dentistId && bookedTimes.some(bookedTime => {
+                    let normalizedBooked = bookedTime || '';
+                    if (normalizedBooked && normalizedBooked.length === 5) {
+                        normalizedBooked = normalizedBooked + ':00';
+                    }
+                    return normalizedBooked === currentValue;
+                });
+                
+                if (!isCurrentBooked) {
+                    timeSelect.value = currentValue;
+                }
             }
         }
 
