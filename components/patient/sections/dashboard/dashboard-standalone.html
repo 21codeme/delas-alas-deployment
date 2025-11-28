@@ -1913,19 +1913,28 @@
                 if (response.ok) {
                     const appointments = await response.json();
                     console.log('📅 Raw appointments response:', appointments);
+                    console.log('📅 Number of appointments found:', appointments.length);
+                    
+                    if (appointments.length === 0) {
+                        console.log('✅ No booked appointments found - all time slots available');
+                    }
+                    
+                    // Store appointments with full data for status checking
+                    window.currentBookedAppointments = appointments;
                     
                     // Extract booked times and normalize format (handle both HH:MM:SS and HH:MM formats)
                     const bookedTimes = appointments.map(apt => {
                         let time = apt.appointment_time || '';
-                        // Normalize to HH:MM:SS format
-                        if (time && time.length === 5) {
-                            time = time + ':00';
-                        }
+                        // Keep original format for comparison
                         return time;
                     }).filter(time => time); // Remove empty values
                     
-                    console.log('📅 Booked time slots (normalized) for', appointmentDate, 'dentist', dentistId, ':', bookedTimes);
-                    console.log('📅 Appointment details:', appointments.map(apt => ({ time: apt.appointment_time, status: apt.status })));
+                    console.log('📅 Booked time slots for', appointmentDate, 'dentist', dentistId, ':', bookedTimes);
+                    console.log('📅 Appointment details:', appointments.map(apt => ({ 
+                        time: apt.appointment_time, 
+                        timeLength: apt.appointment_time?.length,
+                        status: apt.status 
+                    })));
                     
                     return bookedTimes;
                 } else {
@@ -1976,9 +1985,12 @@
             // If date is selected but no dentist, show all time slots as enabled
             // User can select time, but we'll check availability when dentist is selected
             let bookedTimes = [];
+            let appointments = [];
             if (appointmentDate && dentistId) {
                 // Get booked time slots only when both date and dentist are selected
                 bookedTimes = await getBookedTimeSlots(appointmentDate, dentistId);
+                appointments = window.currentBookedAppointments || [];
+                console.log('📋 Using appointments for status check:', appointments);
             }
             
             // Clear and rebuild time selector
@@ -1988,25 +2000,51 @@
             allTimeSlots.forEach(slot => {
                 const option = document.createElement('option');
                 option.value = slot.value;
-                option.textContent = slot.label;
                 
                 // Only disable if both date and dentist are selected AND the slot is booked
                 if (appointmentDate && dentistId) {
                     // Check if this time slot is booked (normalize comparison to handle different formats)
-                    const isBooked = bookedTimes.some(bookedTime => {
-                        // Normalize booked time to HH:MM:SS format for comparison
-                        let normalizedBooked = bookedTime || '';
-                        if (normalizedBooked && normalizedBooked.length === 5) {
-                            normalizedBooked = normalizedBooked + ':00';
+                    let isBooked = false;
+                    let bookedStatus = '';
+                    
+                    bookedTimes.forEach(bookedTime => {
+                        // Normalize booked time for comparison (handle HH:MM:SS and HH:MM formats)
+                        let normalizedBooked = (bookedTime || '').trim();
+                        // Remove seconds if present (HH:MM:SS -> HH:MM)
+                        if (normalizedBooked && normalizedBooked.length >= 5) {
+                            normalizedBooked = normalizedBooked.substring(0, 5);
                         }
-                        return normalizedBooked === slot.value;
+                        
+                        // Compare with slot value (also normalize slot value HH:MM:SS -> HH:MM)
+                        let normalizedSlot = slot.value.substring(0, 5);
+                        
+                        console.log('🔍 Comparing:', normalizedBooked, 'with', normalizedSlot);
+                        
+                        if (normalizedBooked === normalizedSlot) {
+                            isBooked = true;
+                            // Try to get status if available
+                            const appointment = appointments.find(apt => {
+                                let aptTime = (apt.appointment_time || '').trim();
+                                if (aptTime.length >= 5) aptTime = aptTime.substring(0, 5);
+                                return aptTime === normalizedSlot;
+                            });
+                            bookedStatus = appointment?.status || 'booked';
+                            console.log('🎯 Found matching appointment:', appointment);
+                        }
                     });
                     
                     if (isBooked) {
                         option.disabled = true;
-                        option.textContent += ' (Booked)';
-                        console.log('🚫 Time slot', slot.value, 'is booked');
+                        const statusLabel = bookedStatus === 'pending' ? ' (Pending)' : bookedStatus === 'confirmed' ? ' (Confirmed)' : ' (Booked)';
+                        option.textContent = slot.label + statusLabel;
+                        console.log('🚫 Time slot', slot.value, 'is booked - Status:', bookedStatus);
+                    } else {
+                        option.textContent = slot.label + ' (Available)';
+                        console.log('✅ Time slot', slot.value, 'is available');
                     }
+                } else {
+                    // If no date or dentist selected, just show the time
+                    option.textContent = slot.label;
                 }
                 
                 timeSelect.appendChild(option);
