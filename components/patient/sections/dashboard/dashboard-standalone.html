@@ -1136,6 +1136,22 @@
             loadUserData();
             await loadDashboardData();
             // Calendar will render after appointments are loaded
+            
+            // Add event listeners for date and dentist selectors to update available time slots
+            const aptDateInput = document.getElementById('aptDate');
+            const aptDentistSelect = document.getElementById('aptDentist');
+            
+            if (aptDateInput) {
+                aptDateInput.addEventListener('change', async function() {
+                    await updateAvailableTimeSlots();
+                });
+            }
+            
+            if (aptDentistSelect) {
+                aptDentistSelect.addEventListener('change', async function() {
+                    await updateAvailableTimeSlots();
+                });
+            }
         });
 
         // Load user data
@@ -1676,6 +1692,115 @@
             }
         }
 
+        // Check booked time slots for a specific date and dentist
+        async function getBookedTimeSlots(appointmentDate, dentistId) {
+            try {
+                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                
+                // Fetch appointments for the selected date and dentist
+                // Only count pending and confirmed appointments (not completed or cancelled)
+                const response = await fetch(
+                    `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${appointmentDate}&dentist_id=eq.${dentistId}&status=in.(pending,confirmed)&select=appointment_time`,
+                    {
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`
+                        }
+                    }
+                );
+                
+                if (response.ok) {
+                    const appointments = await response.json();
+                    // Extract booked times and return as array
+                    const bookedTimes = appointments.map(apt => apt.appointment_time);
+                    console.log('📅 Booked time slots for', appointmentDate, 'dentist', dentistId, ':', bookedTimes);
+                    return bookedTimes;
+                } else {
+                    console.error('Failed to check booked time slots:', response.status);
+                    return [];
+                }
+            } catch (error) {
+                console.error('Error checking booked time slots:', error);
+                return [];
+            }
+        }
+
+        // Update available time slots based on selected date and dentist
+        async function updateAvailableTimeSlots() {
+            const appointmentDate = document.getElementById('aptDate').value;
+            const dentistId = document.getElementById('aptDentist').value;
+            const timeSelect = document.getElementById('aptTime');
+            
+            if (!appointmentDate || !dentistId) {
+                // If date or dentist not selected, show all time slots but disable them
+                const allTimeSlots = [
+                    { value: '08:00:00', label: '8:00 AM' },
+                    { value: '09:00:00', label: '9:00 AM' },
+                    { value: '10:00:00', label: '10:00 AM' },
+                    { value: '11:00:00', label: '11:00 AM' },
+                    { value: '12:00:00', label: '12:00 PM' },
+                    { value: '13:00:00', label: '1:00 PM' },
+                    { value: '14:00:00', label: '2:00 PM' },
+                    { value: '15:00:00', label: '3:00 PM' },
+                    { value: '16:00:00', label: '4:00 PM' },
+                    { value: '17:00:00', label: '5:00 PM' },
+                    { value: '18:00:00', label: '6:00 PM' }
+                ];
+                
+                timeSelect.innerHTML = '<option value="">Select Time</option>';
+                allTimeSlots.forEach(slot => {
+                    const option = document.createElement('option');
+                    option.value = slot.value;
+                    option.textContent = slot.label;
+                    option.disabled = true;
+                    timeSelect.appendChild(option);
+                });
+                return;
+            }
+            
+            // Get booked time slots
+            const bookedTimes = await getBookedTimeSlots(appointmentDate, dentistId);
+            
+            // All available time slots
+            const allTimeSlots = [
+                { value: '08:00:00', label: '8:00 AM' },
+                { value: '09:00:00', label: '9:00 AM' },
+                { value: '10:00:00', label: '10:00 AM' },
+                { value: '11:00:00', label: '11:00 AM' },
+                { value: '12:00:00', label: '12:00 PM' },
+                { value: '13:00:00', label: '1:00 PM' },
+                { value: '14:00:00', label: '2:00 PM' },
+                { value: '15:00:00', label: '3:00 PM' },
+                { value: '16:00:00', label: '4:00 PM' },
+                { value: '17:00:00', label: '5:00 PM' },
+                { value: '18:00:00', label: '6:00 PM' }
+            ];
+            
+            // Clear and rebuild time selector
+            const currentValue = timeSelect.value;
+            timeSelect.innerHTML = '<option value="">Select Time</option>';
+            
+            allTimeSlots.forEach(slot => {
+                const option = document.createElement('option');
+                option.value = slot.value;
+                option.textContent = slot.label;
+                
+                // Disable if already booked
+                if (bookedTimes.includes(slot.value)) {
+                    option.disabled = true;
+                    option.textContent += ' (Booked)';
+                }
+                
+                timeSelect.appendChild(option);
+            });
+            
+            // Restore previous selection if it's still available
+            if (currentValue && !bookedTimes.includes(currentValue)) {
+                timeSelect.value = currentValue;
+            }
+        }
+
         // Open booking modal for available dates
         async function openBookAppointmentModal(selectedDate) {
             const modal = document.getElementById('bookAppointmentModal');
@@ -1699,6 +1824,9 @@
             
             // Show modal
             modal.classList.add('show');
+            
+            // Update available time slots (will show all as disabled until dentist is selected)
+            await updateAvailableTimeSlots();
             
             // Verify the date was set correctly
             console.log('✅ Date input value set to:', aptDateInput.value);
@@ -2067,6 +2195,10 @@
             
             const modal = document.getElementById('bookAppointmentModal');
             modal.classList.add('show');
+            
+            // Update available time slots (will show all as disabled until dentist is selected)
+            await updateAvailableTimeSlots();
+            
             showToast('Appointment booking form opened', 'info');
         }
 
@@ -2187,6 +2319,7 @@
             
             const selectedTime = document.getElementById('aptTime').value;
             const selectedDentist = document.getElementById('aptDentist').value;
+            const selectedDate = document.getElementById('aptDate').value;
             
             if (!selectedTime) {
                 alert('Please select a preferred time');
@@ -2195,6 +2328,15 @@
             
             if (!selectedDentist) {
                 alert('Please select a dentist');
+                return;
+            }
+            
+            // Double-check if time slot is still available before submitting
+            const bookedTimes = await getBookedTimeSlots(selectedDate, selectedDentist);
+            if (bookedTimes.includes(selectedTime)) {
+                alert('This time slot has been booked by another user. Please select a different time.');
+                // Refresh available time slots
+                await updateAvailableTimeSlots();
                 return;
             }
             
