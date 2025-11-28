@@ -1427,13 +1427,28 @@
                     loadAppointments();
                     return;
                 } else {
-                    const error = await response.json();
-                    throw new Error(error.message || 'Failed to book appointment');
+                    // Try to get error message from response
+                    let errorMessage = 'Failed to book appointment';
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.message || errorData.error || errorData.hint || JSON.stringify(errorData);
+                    } catch (e) {
+                        // If response is not JSON, get text
+                        const errorText = await response.text();
+                        errorMessage = errorText || `HTTP ${response.status}: ${response.statusText}`;
+                    }
+                    console.error('❌ Booking error response:', response.status, errorMessage);
+                    throw new Error(errorMessage);
                 }
                 
             } catch (error) {
                 console.error('❌ Appointment booking error:', error);
-                alert('Error booking appointment: ' + error.message);
+                console.error('❌ Error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    appointmentData: appointmentData
+                });
+                alert('Error booking appointment: ' + (error.message || 'Please check your connection and try again.'));
             }
         };
 
