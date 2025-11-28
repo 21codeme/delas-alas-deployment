@@ -1025,6 +1025,32 @@
             </div>
         </div>
 
+        <!-- QR Code Modal (shown after booking) -->
+        <div id="bookingQRModal" class="modal" style="display: none;">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px 25px; border-radius: 15px 15px 0 0;">
+                    <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-qrcode"></i> Appointment QR Code
+                    </h3>
+                    <span class="close-button" onclick="closeBookingQRModal()" style="color: white;">&times;</span>
+                </div>
+                <div class="modal-body" style="padding: 30px; text-align: center;">
+                    <div id="bookingQRCodeView"></div>
+                    <p style="margin-top: 15px; font-size: 14px; color: #666;">
+                        <i class="fas fa-mobile-alt"></i> Scan with your phone camera or QR scanner app to view appointment details
+                    </p>
+                    <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+                        <button class="btn btn-primary" onclick="downloadBookingQR()" style="padding: 10px 20px;">
+                            <i class="fas fa-download"></i> Download QR
+                        </button>
+                        <button class="btn btn-secondary" onclick="printBookingQR()" style="padding: 10px 20px;">
+                            <i class="fas fa-print"></i> Print QR
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Mobile Menu Toggle (visible on mobile only) -->
         <button class="menu-toggle" onclick="toggleMobileMenu()" style="display: none;">
             <i class="fas fa-bars"></i>
@@ -1639,6 +1665,178 @@
                 console.error('❌ Error loading appointments for month:', error);
                 return [];
             }
+        }
+
+        // QR Code Generation Functions
+        let cachedDeploymentUrl = null;
+        
+        // Get deployment URL from Supabase (cached)
+        async function getDeploymentUrl() {
+            if (cachedDeploymentUrl) {
+                return cachedDeploymentUrl;
+            }
+            
+            const deploymentUrlPromise = (async () => {
+                let baseUrl = window.location.origin + '/appointment-schedule.html';
+                
+                try {
+                    const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                    
+                    const settingsResponse = await fetch(`${SUPABASE_URL}/rest/v1/clinic_settings?id=eq.clinic&select=deployment_url`, {
+                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                    });
+                    
+                    if (settingsResponse.ok) {
+                        const settingsData = await settingsResponse.json();
+                        if (Array.isArray(settingsData) && settingsData.length > 0 && settingsData[0].deployment_url) {
+                            baseUrl = settingsData[0].deployment_url.trim();
+                            
+                            if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+                                baseUrl = 'https://' + baseUrl;
+                            }
+                            
+                            if (!baseUrl.includes('appointment-schedule.html')) {
+                                baseUrl = baseUrl.replace(/\/$/, '');
+                                baseUrl = baseUrl + '/appointment-schedule.html';
+                            }
+                        }
+                    }
+                    
+                    cachedDeploymentUrl = baseUrl;
+                    return baseUrl;
+                } catch (error) {
+                    console.warn('⚠️ Could not fetch deployment URL from Supabase:', error);
+                    const fallbackUrl = window.location.origin + '/appointment-schedule.html';
+                    cachedDeploymentUrl = fallbackUrl;
+                    return fallbackUrl;
+                }
+            })();
+            
+            return deploymentUrlPromise;
+        }
+
+        // Generate QR code using web URL
+        async function generateOnlineQRCode(appointmentId) {
+            let baseUrl = await getDeploymentUrl();
+            
+            if (!baseUrl || (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://'))) {
+                console.error('❌ Invalid base URL, using fallback');
+                baseUrl = window.location.origin + '/appointment-schedule.html';
+            }
+            
+            const qrData = `${baseUrl}?id=${appointmentId}`;
+            
+            try {
+                new URL(qrData);
+                console.log('✅ Valid QR code URL:', qrData);
+            } catch (e) {
+                console.error('❌ Invalid QR code URL format:', qrData, e);
+                const fallbackUrl = window.location.origin + `/appointment-schedule.html?id=${appointmentId}`;
+                return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(fallbackUrl)}&ecc=M&margin=10`;
+            }
+            
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData)}&ecc=M&margin=10`;
+            return qrUrl;
+        }
+
+        // Show QR code modal after booking
+        async function showBookingQRCode(appointmentId) {
+            try {
+                const qrUrl = await generateOnlineQRCode(appointmentId);
+                const qrViewContainer = document.getElementById('bookingQRCodeView');
+                
+                if (qrViewContainer) {
+                    qrViewContainer.innerHTML = `
+                        <div style="background: white; padding: 20px; border: 4px solid #28a745; border-radius: 15px; display: inline-block;">
+                            <img src="${qrUrl}" alt="Appointment QR Code" style="width: 300px; height: 300px; border-radius: 10px;">
+                        </div>
+                    `;
+                }
+                
+                // Store QR data for download/print
+                window.bookingQRUrl = qrUrl;
+                window.bookingQRData = `${await getDeploymentUrl()}?id=${appointmentId}`;
+                window.bookingAppointmentId = appointmentId;
+                
+                // Show modal
+                const qrModal = document.getElementById('bookingQRModal');
+                qrModal.style.display = 'flex';
+                qrModal.classList.add('show');
+                console.log('✅ QR Code modal opened for appointment:', appointmentId);
+            } catch (error) {
+                console.error('❌ Error generating QR code:', error);
+                alert('Error generating QR code. Please try again.');
+            }
+        }
+
+        // Close QR code modal
+        function closeBookingQRModal() {
+            const modal = document.getElementById('bookingQRModal');
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+        }
+        
+        // Close QR modal when clicking outside
+        window.addEventListener('click', function(event) {
+            const qrModal = document.getElementById('bookingQRModal');
+            if (event.target === qrModal) {
+                closeBookingQRModal();
+            }
+        });
+
+        // Download QR code
+        function downloadBookingQR() {
+            if (!window.bookingQRUrl) {
+                alert('No QR code to download');
+                return;
+            }
+            
+            const link = document.createElement('a');
+            link.href = window.bookingQRUrl;
+            link.download = `appointment-qr-${window.bookingAppointmentId || Date.now()}.png`;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Print QR code
+        function printBookingQR() {
+            if (!window.bookingQRUrl) {
+                alert('No QR code to print');
+                return;
+            }
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Appointment QR Code</title>
+                    <style>
+                        body { margin: 0; padding: 40px; text-align: center; font-family: Arial, sans-serif; }
+                        .qr-container { display: inline-block; padding: 40px; border: 5px solid #28a745; border-radius: 20px; }
+                        img { width: 400px; height: 400px; }
+                        h1 { color: #333; }
+                        p { color: #666; margin-top: 20px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Appointment QR Code</h1>
+                    <div class="qr-container">
+                        <img src="${window.bookingQRUrl}" alt="QR Code">
+                    </div>
+                    <p>Scan with your phone to view appointment details</p>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.focus();
+            
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
         }
 
         // Load dentists from Supabase
@@ -2369,11 +2567,30 @@
                 });
                 
                 if (response.ok) {
-                    alert('Appointment booked successfully! You will receive a confirmation soon.');
-                    closeBookAppointmentModal();
-                    // Refresh calendar and appointments
-                    loadAppointmentsFromSupabase();
-                    renderCalendar();
+                    const newAppointment = await response.json();
+                    // Get appointment ID from response (could be array or single object)
+                    const appointmentId = Array.isArray(newAppointment) ? newAppointment[0]?.id : newAppointment?.id;
+                    
+                    if (appointmentId) {
+                        // Close booking modal first
+                        closeBookAppointmentModal();
+                        
+                        // Show success message and QR code
+                        showToast('Appointment booked successfully!', 'success');
+                        
+                        // Generate and show QR code
+                        await showBookingQRCode(appointmentId);
+                        
+                        // Refresh calendar and appointments
+                        loadAppointmentsFromSupabase();
+                        renderCalendar();
+                    } else {
+                        alert('Appointment booked successfully! You will receive a confirmation soon.');
+                        closeBookAppointmentModal();
+                        // Refresh calendar and appointments
+                        loadAppointmentsFromSupabase();
+                        renderCalendar();
+                    }
                 } else {
                     const error = await response.json();
                     alert('Error booking appointment: ' + (error.message || 'Unknown error'));
