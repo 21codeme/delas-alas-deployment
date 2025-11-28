@@ -1156,9 +1156,14 @@
 
         // Update available time slots based on selected date and dentist
         async function updateAvailableTimeSlots() {
-            const appointmentDate = document.getElementById('aptDate').value;
-            const dentistId = document.getElementById('aptDentist').value;
+            const appointmentDate = document.getElementById('aptDate')?.value || '';
+            const dentistId = document.getElementById('aptDentist')?.value || '';
             const timeSelect = document.getElementById('aptTime');
+            
+            if (!timeSelect) {
+                console.warn('Time select element not found');
+                return;
+            }
             
             const allTimeSlots = [
                 { value: '08:00:00', label: '8:00 AM' },
@@ -1174,6 +1179,7 @@
                 { value: '18:00:00', label: '6:00 PM' }
             ];
             
+            // If no date selected, disable all time slots
             if (!appointmentDate) {
                 timeSelect.innerHTML = '<option value="">Select Date First</option>';
                 allTimeSlots.forEach(slot => {
@@ -1186,6 +1192,8 @@
                 return;
             }
             
+            // If date is selected, enable all time slots
+            // Only disable if both date AND dentist are selected AND the slot is booked
             let bookedTimes = [];
             if (appointmentDate && dentistId) {
                 bookedTimes = await getBookedTimeSlots(appointmentDate, dentistId);
@@ -1199,14 +1207,17 @@
                 option.value = slot.value;
                 option.textContent = slot.label;
                 
+                // Only disable if both date and dentist are selected AND the slot is booked
                 if (appointmentDate && dentistId && bookedTimes.includes(slot.value)) {
                     option.disabled = true;
                     option.textContent += ' (Booked)';
                 }
+                // Otherwise, the option is enabled (not disabled)
                 
                 timeSelect.appendChild(option);
             });
             
+            // Restore previous selection if it's still available
             if (currentValue && (!appointmentDate || !dentistId || !bookedTimes.includes(currentValue))) {
                 timeSelect.value = currentValue;
             }
