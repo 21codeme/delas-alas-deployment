@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - Delas Alas Dental Clinic</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦷</text></svg>">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../images/tooth.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../images/tooth.png">
+    <link rel="shortcut icon" href="../../../images/tooth.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../images/tooth.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .notifications-container {
+            padding: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .notifications-header {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px rgba(243, 156, 18, 0.3);
+        }
+
+        .notifications-header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notifications-header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .notifications-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: #333;
+        }
+
+        .filter-btn:hover {
+            border-color: #f39c12;
+            color: #f39c12;
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .refresh-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-left: auto;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .notifications-list {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 25px;
+            min-height: 400px;
+        }
+
+        .notification-item {
+            padding: 20px;
+            border-left: 4px solid #f39c12;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: start;
+            gap: 15px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .notification-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .notification-item.read {
+            opacity: 0.7;
+            border-left-color: #6c757d;
+        }
+
+        .notification-item.rescheduled {
+            border-left-color: #17a2b8;
+        }
+
+        .notification-item.confirmed {
+            border-left-color: #28a745;
+        }
+
+        .notification-item.message {
+            border-left-color: #667eea;
+        }
+
+        .notification-item.pending {
+            border-left-color: #f39c12;
+        }
+
+        .notification-icon {
+            font-size: 24px;
+            margin-top: 5px;
+            min-width: 30px;
+        }
+
+        .notification-icon.rescheduled {
+            color: #17a2b8;
+        }
+
+        .notification-icon.confirmed {
+            color: #28a745;
+        }
+
+        .notification-icon.message {
+            color: #667eea;
+        }
+
+        .notification-icon.pending {
+            color: #f39c12;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-content h3 {
+            margin: 0 0 8px 0;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .notification-content p {
+            margin: 0 0 8px 0;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .notification-meta {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        .notification-date {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 5px 10px;
+            background: transparent;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: #e9ecef;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .loading-state i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .mark-all-read-btn {
+            padding: 10px 20px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .mark-all-read-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="notifications-container">
+        <div class="notifications-header">
+            <h1>
+                <i class="fas fa-bell"></i>
+                Notifications
+            </h1>
+            <p>Stay updated with your appointments, messages, and important updates</p>
+        </div>
+
+        <div class="notifications-controls">
+            <button class="filter-btn active" onclick="filterNotifications('all')">
+                <i class="fas fa-list"></i> All
+            </button>
+            <button class="filter-btn" onclick="filterNotifications('unread')">
+                <i class="fas fa-circle"></i> Unread
+            </button>
+            <button class="filter-btn" onclick="filterNotifications('appointment')">
+                <i class="fas fa-calendar-check"></i> Appointments
+            </button>
+            <button class="filter-btn" onclick="filterNotifications('message')">
+                <i class="fas fa-comments"></i> Messages
+            </button>
+            <button class="mark-all-read-btn" onclick="markAllAsRead()">
+                <i class="fas fa-check-double"></i> Mark All as Read
+            </button>
+            <button class="refresh-btn" onclick="loadNotifications()">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+        </div>
+
+        <div class="notifications-list" id="notificationsList">
+            <div class="loading-state">
+                <i class="fas fa-spinner"></i>
+                <p>Loading notifications...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let allNotifications = [];
+        let currentFilter = 'all';
+        const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadNotifications();
+        });
+
+        // Load notifications
+        async function loadNotifications() {
+            const notificationsList = document.getElementById('notificationsList');
+            notificationsList.innerHTML = `
+                <div class="loading-state">
+                    <i class="fas fa-spinner"></i>
+                    <p>Loading notifications...</p>
+                </div>
+            `;
+
+            try {
+                const userData = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                if (!userData.id) {
+                    notificationsList.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <h3>Please login first</h3>
+                            <p>You need to be logged in to view notifications</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Fetch notifications from notifications table
+                const dbNotificationsResponse = await fetch(`${SUPABASE_URL}/rest/v1/notifications?user_id=eq.${userData.id}&order=created_at.desc&limit=50`, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+                const dbNotifications = await dbNotificationsResponse.json();
+
+                // Fetch appointments
+                const appointmentsResponse = await fetch(`${SUPABASE_URL}/rest/v1/appointments?patient_id=eq.${userData.id}&select=id,appointment_date,appointment_time,status,service_type,created_at&order=created_at.desc&limit=20`, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+                const appointments = await appointmentsResponse.json();
+
+                // Fetch unread messages
+                const messagesResponse = await fetch(`${SUPABASE_URL}/rest/v1/messages?receiver_id=eq.${userData.id}&is_read=eq.false&select=id,sender_id,content,created_at&order=created_at.desc&limit=10`, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+                const messages = await messagesResponse.json();
+                const messagesArray = Array.isArray(messages) ? messages : [];
+
+                // Get sender names if there are messages
+                let senderMap = {};
+                if (messagesArray.length > 0) {
+                    const senderIds = [...new Set(messagesArray.map(msg => msg.sender_id))];
+                    if (senderIds.length > 0) {
+                        const sendersResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?id=in.(${senderIds.join(',')})&select=id,name`, {
+                            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                        });
+                        const senders = await sendersResponse.json();
+                        if (Array.isArray(senders)) {
+                            senders.forEach(sender => {
+                                senderMap[sender.id] = sender.name;
+                            });
+                        }
+                    }
+                }
+
+                // Combine notifications
+                allNotifications = [];
+
+                // Add notifications from database (includes reschedule notifications)
+                if (Array.isArray(dbNotifications)) {
+                    dbNotifications.forEach(notif => {
+                        allNotifications.push({
+                            id: notif.id,
+                            type: notif.type || 'appointment',
+                            title: notif.title || 'Notification',
+                            message: notif.message || '',
+                            date: notif.created_at,
+                            read: notif.is_read || false,
+                            status: notif.type === 'appointment' && notif.title && notif.title.includes('Rescheduled') ? 'rescheduled' : (notif.type === 'message' ? 'message' : 'appointment'),
+                            source: 'database'
+                        });
+                    });
+                }
+
+                // Add appointment notifications (only if not already in dbNotifications)
+                if (Array.isArray(appointments)) {
+                    appointments.forEach(apt => {
+                        const hasNotification = Array.isArray(dbNotifications) && dbNotifications.some(notif => 
+                            notif.data && notif.data.appointment_id === apt.id
+                        );
+                        
+                        if (!hasNotification) {
+                            const date = new Date(apt.appointment_date);
+                            const status = apt.status;
+                            const service = apt.service_type || 'General';
+                            
+                            if (status === 'confirmed') {
+                                allNotifications.push({
+                                    id: `apt-${apt.id}`,
+                                    type: 'appointment',
+                                    title: `Appointment Confirmed: ${service}`,
+                                    message: `Your appointment on ${date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} has been confirmed.`,
+                                    date: apt.created_at || apt.appointment_date,
+                                    read: false,
+                                    status: 'confirmed',
+                                    source: 'appointment'
+                                });
+                            } else if (status === 'pending') {
+                                allNotifications.push({
+                                    id: `apt-${apt.id}`,
+                                    type: 'appointment',
+                                    title: `Pending Appointment: ${service}`,
+                                    message: `Your appointment on ${date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} is pending confirmation.`,
+                                    date: apt.created_at || apt.appointment_date,
+                                    read: false,
+                                    status: 'pending',
+                                    source: 'appointment'
+                                });
+                            }
+                        }
+                    });
+                }
+
+                // Add message notifications (only if not already in dbNotifications)
+                messagesArray.forEach(msg => {
+                    const hasNotification = Array.isArray(dbNotifications) && dbNotifications.some(notif => 
+                        notif.type === 'message' && notif.data && notif.data.message_id === msg.id
+                    );
+                    
+                    if (!hasNotification) {
+                        const senderName = senderMap[msg.sender_id] || 'Dentist';
+                        const truncatedContent = msg.content && msg.content.length > 50 ? msg.content.substring(0, 50) + '...' : (msg.content || 'No content');
+                        allNotifications.push({
+                            id: `msg-${msg.id}`,
+                            type: 'message',
+                            title: `New Message from ${senderName}`,
+                            message: truncatedContent,
+                            date: msg.created_at,
+                            read: false,
+                            status: 'message',
+                            source: 'message'
+                        });
+                    }
+                });
+
+                // Sort notifications by date (newest first)
+                allNotifications.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                // Display notifications
+                displayNotifications();
+
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+                notificationsList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Error loading notifications</h3>
+                        <p>Please try again later</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Display notifications
+        function displayNotifications() {
+            const notificationsList = document.getElementById('notificationsList');
+            
+            // Filter notifications based on current filter
+            let filteredNotifications = allNotifications;
+            
+            if (currentFilter === 'unread') {
+                filteredNotifications = allNotifications.filter(n => !n.read);
+            } else if (currentFilter === 'appointment') {
+                filteredNotifications = allNotifications.filter(n => n.type === 'appointment' || n.status === 'confirmed' || n.status === 'pending' || n.status === 'rescheduled');
+            } else if (currentFilter === 'message') {
+                filteredNotifications = allNotifications.filter(n => n.type === 'message' || n.status === 'message');
+            }
+
+            if (filteredNotifications.length === 0) {
+                notificationsList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-bell-slash"></i>
+                        <h3>No notifications</h3>
+                        <p>${currentFilter === 'all' ? 'You have no notifications yet' : `No ${currentFilter} notifications found`}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            notificationsList.innerHTML = filteredNotifications.map(notif => {
+                const isRescheduled = notif.status === 'rescheduled' || (notif.title && notif.title.includes('Rescheduled'));
+                const statusClass = isRescheduled ? 'rescheduled' : notif.status;
+                const iconClass = isRescheduled ? 'fa-calendar-alt' : notif.status === 'confirmed' ? 'fa-check-circle' : notif.status === 'message' ? 'fa-comment' : 'fa-clock';
+                const readClass = notif.read ? 'read' : '';
+                
+                return `
+                    <div class="notification-item ${statusClass} ${readClass}" onclick="viewNotification('${notif.id}')">
+                        <div class="notification-icon ${statusClass}">
+                            <i class="fas ${iconClass}"></i>
+                        </div>
+                        <div class="notification-content">
+                            <h3>${notif.title}</h3>
+                            <p>${notif.message}</p>
+                            <div class="notification-meta">
+                                <div class="notification-date">
+                                    <i class="fas fa-clock"></i>
+                                    <span>${new Date(notif.date).toLocaleDateString()} ${new Date(notif.date).toLocaleTimeString()}</span>
+                                </div>
+                                ${!notif.read ? '<span style="color: #f39c12; font-weight: bold;">New</span>' : ''}
+                            </div>
+                        </div>
+                        <div class="notification-actions">
+                            ${!notif.read ? `
+                                <button class="action-btn" onclick="event.stopPropagation(); markAsRead('${notif.id}')" title="Mark as read">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            ` : ''}
+                            <button class="action-btn" onclick="event.stopPropagation(); deleteNotification('${notif.id}')" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Filter notifications
+        function filterNotifications(filter) {
+            currentFilter = filter;
+            
+            // Update active filter button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            displayNotifications();
+        }
+
+        // Mark notification as read
+        async function markAsRead(notificationId) {
+            try {
+                // Check if it's a database notification
+                const notification = allNotifications.find(n => n.id === notificationId);
+                if (!notification) return;
+
+                if (notification.source === 'database') {
+                    // Update in database
+                    await fetch(`${SUPABASE_URL}/rest/v1/notifications?id=eq.${notificationId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=representation'
+                        },
+                        body: JSON.stringify({
+                            is_read: true,
+                            updated_at: new Date().toISOString()
+                        })
+                    });
+                } else if (notification.source === 'message') {
+                    // Mark message as read
+                    const messageId = notificationId.replace('msg-', '');
+                    await fetch(`${SUPABASE_URL}/rest/v1/messages?id=eq.${messageId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            is_read: true,
+                            updated_at: new Date().toISOString()
+                        })
+                    });
+                }
+
+                // Update local notification
+                notification.read = true;
+                displayNotifications();
+
+                // Notify parent if in iframe
+                if (window !== window.top) {
+                    window.parent.postMessage({ action: 'updateNotificationBadge' }, '*');
+                }
+
+            } catch (error) {
+                console.error('Error marking notification as read:', error);
+            }
+        }
+
+        // Mark all as read
+        async function markAllAsRead() {
+            if (confirm('Mark all notifications as read?')) {
+                try {
+                    const userData = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                    if (!userData.id) return;
+
+                    // Mark all database notifications as read
+                    await fetch(`${SUPABASE_URL}/rest/v1/notifications?user_id=eq.${userData.id}&is_read=eq.false`, {
+                        method: 'PATCH',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=representation'
+                        },
+                        body: JSON.stringify({
+                            is_read: true,
+                            updated_at: new Date().toISOString()
+                        })
+                    });
+
+                    // Mark all local notifications as read
+                    allNotifications.forEach(notif => {
+                        notif.read = true;
+                    });
+
+                    displayNotifications();
+
+                    // Notify parent if in iframe
+                    if (window !== window.top) {
+                        window.parent.postMessage({ action: 'updateNotificationBadge' }, '*');
+                    }
+
+                } catch (error) {
+                    console.error('Error marking all as read:', error);
+                }
+            }
+        }
+
+        // Delete notification
+        async function deleteNotification(notificationId) {
+            if (confirm('Delete this notification?')) {
+                try {
+                    const notification = allNotifications.find(n => n.id === notificationId);
+                    if (!notification) return;
+
+                    if (notification.source === 'database') {
+                        // Delete from database
+                        await fetch(`${SUPABASE_URL}/rest/v1/notifications?id=eq.${notificationId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`
+                            }
+                        });
+                    }
+
+                    // Remove from local array
+                    allNotifications = allNotifications.filter(n => n.id !== notificationId);
+                    displayNotifications();
+
+                } catch (error) {
+                    console.error('Error deleting notification:', error);
+                }
+            }
+        }
+
+        // View notification
+        function viewNotification(notificationId) {
+            const notification = allNotifications.find(n => n.id === notificationId);
+            if (!notification) return;
+
+            // Mark as read if not already read
+            if (!notification.read) {
+                markAsRead(notificationId);
+            }
+
+            // If it's an appointment notification, navigate to appointments
+            if (notification.type === 'appointment' || notification.status === 'confirmed' || notification.status === 'pending' || notification.status === 'rescheduled') {
+                if (window !== window.top) {
+                    window.parent.postMessage({ action: 'loadSection', section: 'appointments' }, '*');
+                }
+            }
+            // If it's a message notification, navigate to messages
+            else if (notification.type === 'message' || notification.status === 'message') {
+                if (window !== window.top) {
+                    window.parent.postMessage({ action: 'loadSection', section: 'messages' }, '*');
+                }
+            }
+        }
+
+        // Navigation function (for iframe communication)
+        function navigateToSection(section) {
+            if (window !== window.top) {
+                window.parent.postMessage({ action: 'loadSection', section: section }, '*');
+            } else {
+                window.location.href = `../${section}/${section}-standalone.html`;
+            }
+        }
+    </script>
+</body>
+</html>
+
