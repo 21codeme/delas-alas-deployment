@@ -2364,7 +2364,9 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             
             const appointment = appointments.find(apt => apt.id === currentAppointmentId);
             if (appointment) {
-                // Store old status to check if it changed to confirmed
+                // Store old values to check if date/time changed
+                const oldDate = appointment.date;
+                const oldTime = appointment.time;
                 const oldStatus = appointment.status;
                 
                 // Update appointment data
@@ -2377,6 +2379,9 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 const selDentistName = document.getElementById('editDentist').selectedOptions[0]?.textContent || '';
                 appointment.dentistId = selDentist;
                 appointment.dentistName = selDentistName;
+                
+                // Check if date or time changed (rescheduled)
+                const isRescheduled = (oldDate !== appointment.date) || (oldTime !== appointment.time);
                 
                 // Update in database
                 await updateAppointmentInDatabase(appointment);
@@ -2392,9 +2397,55 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                         appointment.time = updatedAppointment[0].appointment_time || appointment.time;
                         appointment.service = updatedAppointment[0].service_type || appointment.service;
                         appointment.notes = updatedAppointment[0].notes || appointment.notes;
+                        appointment.patientId = updatedAppointment[0].patient_id || appointment.patientId;
                     }
                 } catch (e) {
                     console.warn('⚠️ Could not reload appointment from database:', e);
+                }
+                
+                // Create notification for patient if appointment was rescheduled
+                if (isRescheduled && appointment.patientId) {
+                    try {
+                        // Format the new date and time for display
+                        const newDate = new Date(appointment.date);
+                        const formattedDate = newDate.toLocaleDateString('en-US', { 
+                            weekday: 'long', 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        });
+                        
+                        // Format time (convert 24h to 12h format)
+                        const [hours, minutes] = appointment.time.split(':');
+                        const hour = parseInt(hours);
+                        const ampm = hour >= 12 ? 'PM' : 'AM';
+                        const displayHour = (hour % 12) || 12;
+                        const formattedTime = `${displayHour}:${minutes} ${ampm}`;
+                        
+                        // Create notification for patient
+                        const notificationData = {
+                            user_id: appointment.patientId,
+                            type: 'appointment',
+                            title: 'Appointment Rescheduled',
+                            message: `Your appointment for ${appointment.service} has been rescheduled to ${formattedDate} at ${formattedTime}.`,
+                            data: {
+                                appointment_id: appointment.id,
+                                service_type: appointment.service,
+                                appointment_date: appointment.date,
+                                appointment_time: appointment.time,
+                                old_date: oldDate,
+                                old_time: oldTime,
+                                status: appointment.status
+                            },
+                            priority: 'high',
+                            expires_at: new Date(new Date(appointment.date).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString()
+                        };
+                        
+                        await callSupabaseAPI('POST', 'notifications', notificationData);
+                        console.log('✅ Reschedule notification created for patient:', appointment.patientId);
+                    } catch (error) {
+                        console.error('❌ Error creating reschedule notification:', error);
+                    }
                 }
                 
                 // If status changed to "confirmed", send confirmation email
