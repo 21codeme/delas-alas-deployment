@@ -2005,11 +2005,17 @@
                 let userDeleted = false;
                 try {
                     console.log('🗑️ Attempting to delete user from users table:', user.id);
+                    console.log('🗑️ User email:', user.email);
                     
                     // First, try to get the user's auth session token for authenticated deletion
                     const currentSession = await supabase.auth.getSession();
                     const authToken = currentSession?.data?.session?.access_token;
                     
+                    if (!authToken) {
+                        console.warn('⚠️ No auth token available, trying with anon key');
+                    }
+                    
+                    // Try DELETE with user's auth token first (respects RLS)
                     const deleteUserResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
                         method: 'DELETE',
                         headers: {
@@ -2021,6 +2027,7 @@
                     });
                     
                     console.log('🗑️ Delete response status:', deleteUserResponse.status);
+                    console.log('🗑️ Delete response headers:', Object.fromEntries(deleteUserResponse.headers.entries()));
                     
                     if (deleteUserResponse.ok) {
                         const deletedData = await deleteUserResponse.json();
@@ -2033,8 +2040,10 @@
                         
                         // Check if it's an RLS policy error
                         if (deleteUserResponse.status === 401 || deleteUserResponse.status === 403) {
-                            console.error('⚠️ RLS Policy Error: User may not have DELETE permission. Check if DELETE policy exists.');
+                            console.error('⚠️ RLS Policy Error: User may not have DELETE permission.');
+                            console.error('⚠️ Status 401/403 usually means RLS policy is blocking the deletion.');
                             console.error('⚠️ Run the SQL in database/ADD_USER_DELETE_POLICY.sql to add DELETE policy.');
+                            console.error('⚠️ Or check if the DELETE policy exists and allows: auth.uid() = id');
                         }
                         
                         // If hard delete fails, try soft delete (mark as deleted)
@@ -2053,12 +2062,16 @@
                                     phone: null
                                 })
                             });
+                            
+                            console.log('⚠️ Soft delete response status:', softDeleteResponse.status);
+                            
                             if (softDeleteResponse.ok) {
                                 console.log('⚠️ Marked user as deleted (soft delete) - will be filtered from patient list');
                                 userDeleted = true;
                             } else {
                                 const softDeleteError = await softDeleteResponse.text();
                                 console.error('❌ Soft delete also failed:', softDeleteError);
+                                console.error('❌ Soft delete status:', softDeleteResponse.status);
                             }
                         } catch (softDeleteError) {
                             console.error('❌ Could not soft delete user:', softDeleteError);
@@ -2066,6 +2079,7 @@
                     }
                 } catch (error) {
                     console.error('⚠️ Error deleting user profile:', error);
+                    console.error('⚠️ Error details:', error.message, error.stack);
                 }
                 
                 // Delete appointments
