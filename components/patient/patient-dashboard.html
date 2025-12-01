@@ -149,19 +149,29 @@
         .notification-btn {
             margin-bottom: 10px;
             width: 100%;
-            padding: 12px;
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
             background: transparent;
             color: white;
             border: none;
             border-radius: 10px;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 500;
             transition: all 0.3s ease;
             position: relative;
+            text-decoration: none;
         }
 
         .notification-btn:hover {
             background: rgba(255,255,255,0.1);
+            transform: translateX(5px);
+        }
+
+        .notification-btn i {
+            margin-right: 15px;
+            font-size: 1.2rem;
+            width: 20px;
         }
 
         .notification-badge {
