@@ -243,14 +243,23 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 25px;
-            border-bottom: 1px solid #eee;
+            padding: 25px 30px;
+            border-bottom: 1px solid #f0f0f0;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
         }
 
         .section-header h2 {
             color: #2c3e50;
             margin: 0;
-            font-size: 1.5rem;
+            font-size: 1.6rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-header h2 i {
+            color: #667eea;
         }
 
         .btn-primary {
@@ -271,45 +280,104 @@
 
         .appointments-list {
             padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
 
         .appointment-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 0;
-            border-bottom: 1px solid #f0f0f0;
+            padding: 20px 25px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-radius: 15px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .appointment-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+            border-left-color: #764ba2;
         }
 
         .appointment-item:last-child {
             border-bottom: none;
         }
 
+        .appointment-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .appointment-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .appointment-details {
+            flex: 1;
+        }
+
         .appointment-info h4 {
             color: #2c3e50;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .appointment-info p {
             color: #666;
             font-size: 14px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .appointment-info p i {
+            color: #667eea;
+            width: 16px;
         }
 
         .appointment-status {
-            padding: 5px 15px;
-            border-radius: 20px;
+            padding: 8px 18px;
+            border-radius: 25px;
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .status-confirmed {
-            background: #d4edda;
-            color: #155724;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
         }
 
         .status-pending {
-            background: #fff3cd;
-            color: #856404;
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            color: white;
+        }
+
+        .status-cancelled {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
         }
 
         .quick-actions {
@@ -857,9 +925,9 @@
                 <!-- Recent Appointments -->
                 <div class="section-card">
                     <div class="section-header">
-                        <h2>Recent Appointments</h2>
+                        <h2><i class="fas fa-calendar-check"></i> Recent Appointments</h2>
                         <button class="btn-primary" onclick="navigateToSection('appointments')">
-                            View All
+                            <i class="fas fa-arrow-right"></i> View All
                         </button>
                     </div>
                     <div class="appointments-list" id="recentAppointments">
@@ -1445,15 +1513,36 @@
                 const appointmentDate = new Date(appointment.appointment_date);
                 const appointmentTime = appointment.appointment_time || '10:00:00';
                 const [hours, minutes] = appointmentTime.split(':');
-                const timeString = `${hours}:${minutes}`;
+                const hour = parseInt(hours);
+                const ampm = hour >= 12 ? 'PM' : 'AM';
+                const displayHour = (hour % 12) || 12;
+                const timeString = `${displayHour}:${minutes} ${ampm}`;
+                
+                const formattedDate = appointmentDate.toLocaleDateString('en-US', { 
+                    weekday: 'short', 
+                    month: 'short', 
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+                
+                const statusText = appointment.status === 'confirmed' ? 'Confirmed' : 
+                                 appointment.status === 'pending' ? 'Pending' : 
+                                 appointment.status === 'cancelled' ? 'Cancelled' : 
+                                 appointment.status;
                 
                 return `
                     <div class="appointment-item">
                         <div class="appointment-info">
-                            <h4>${appointment.service_type || 'Dental Service'}</h4>
-                            <p>${appointmentDate.toLocaleDateString()} at ${timeString}</p>
+                            <div class="appointment-icon">
+                                <i class="fas fa-tooth"></i>
+                            </div>
+                            <div class="appointment-details">
+                                <h4>${appointment.service_type || 'Dental Service'}</h4>
+                                <p><i class="fas fa-calendar"></i> ${formattedDate}</p>
+                                <p><i class="fas fa-clock"></i> ${timeString}</p>
+                            </div>
                         </div>
-                        <div class="appointment-status status-${appointment.status}">${appointment.status}</div>
+                        <div class="appointment-status status-${appointment.status}">${statusText}</div>
                     </div>
                 `;
             }).join('');
