@@ -389,13 +389,18 @@
                         const isRescheduled = (notif.type === 'appointment' && notif.title && notif.title.includes('Rescheduled')) ||
                                              (notif.data && notif.data.status === 'rescheduled');
                         
+                        // Check read status - prioritize database value, but also check localStorage as backup
+                        const dbReadStatus = notif.is_read === true || notif.is_read === 'true';
+                        const localReadStatus = readNotifications[notif.id] === true;
+                        const finalReadStatus = dbReadStatus || localReadStatus;
+                        
                         allNotifications.push({
                             id: notif.id,
                             type: notif.type || 'appointment',
                             title: notif.title || 'Notification',
                             message: notif.message || '',
                             date: notif.created_at,
-                            read: notif.is_read || false,
+                            read: finalReadStatus,
                             status: isRescheduled ? 'rescheduled' : (notif.type === 'message' ? 'message' : 'appointment'),
                             source: 'database'
                         });
@@ -628,8 +633,8 @@
                     const userData = JSON.parse(localStorage.getItem('currentUser') || '{}');
                     if (!userData.id) return;
 
-                    // Mark all database notifications as read
-                    await fetch(`${SUPABASE_URL}/rest/v1/notifications?user_id=eq.${userData.id}&is_read=eq.false`, {
+                    // Mark all database notifications as read (including all, not just unread)
+                    const dbUpdateResponse = await fetch(`${SUPABASE_URL}/rest/v1/notifications?user_id=eq.${userData.id}&is_read=eq.false`, {
                         method: 'PATCH',
                         headers: {
                             'apikey': SUPABASE_KEY,
@@ -643,8 +648,12 @@
                         })
                     });
 
+                    if (!dbUpdateResponse.ok) {
+                        console.error('Failed to update database notifications');
+                    }
+
                     // Mark all messages as read
-                    await fetch(`${SUPABASE_URL}/rest/v1/messages?receiver_id=eq.${userData.id}&is_read=eq.false`, {
+                    const messagesUpdateResponse = await fetch(`${SUPABASE_URL}/rest/v1/messages?receiver_id=eq.${userData.id}&is_read=eq.false`, {
                         method: 'PATCH',
                         headers: {
                             'apikey': SUPABASE_KEY,
@@ -657,17 +666,21 @@
                         })
                     });
 
+                    if (!messagesUpdateResponse.ok) {
+                        console.error('Failed to update messages');
+                    }
+
                     // Mark all appointment notifications as read in localStorage
                     const readNotifications = JSON.parse(localStorage.getItem('readNotifications') || '{}');
                     allNotifications.forEach(notif => {
                         notif.read = true;
-                        if (notif.source === 'appointment') {
-                            readNotifications[notif.id] = true;
-                        }
+                        // Store read status for all notification types in localStorage as backup
+                        readNotifications[notif.id] = true;
                     });
                     localStorage.setItem('readNotifications', JSON.stringify(readNotifications));
 
-                    displayNotifications();
+                    // Reload notifications to get fresh data from database
+                    await loadNotifications();
 
                     // Notify parent if in iframe
                     if (window !== window.top) {
@@ -676,6 +689,7 @@
 
                 } catch (error) {
                     console.error('Error marking all as read:', error);
+                    alert('Error marking notifications as read. Please try again.');
                 }
             }
         }
