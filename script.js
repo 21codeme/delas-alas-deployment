@@ -310,16 +310,31 @@ function initializeMobileMenu() {
     console.log('Mobile menu element:', document.querySelector('.mobile-menu'));
 }
 
-function toggleMobileMenu() {
+function toggleMobileMenu(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
     console.log('Toggle mobile menu called');
     const mobileMenu = document.querySelector('.mobile-menu');
     if (mobileMenu) {
         console.log('Mobile menu found, toggling...');
         mobileMenu.classList.toggle('show');
         console.log('Mobile menu classes:', mobileMenu.className);
+        
+        // Close menu when clicking outside
+        if (mobileMenu.classList.contains('show')) {
+            document.body.addEventListener('click', function closeMenuOnOutsideClick(e) {
+                if (!mobileMenu.contains(e.target) && !e.target.closest('.mobile-menu-toggle')) {
+                    mobileMenu.classList.remove('show');
+                    document.body.removeEventListener('click', closeMenuOnOutsideClick);
+                }
+            });
+        }
     } else {
         console.error('Mobile menu not found!');
     }
+    return false;
 }
 
 function closeMobileMenu() {
