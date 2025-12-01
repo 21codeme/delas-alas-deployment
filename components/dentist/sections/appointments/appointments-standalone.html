@@ -1680,18 +1680,6 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                             <button class="btn btn-sm btn-secondary" onclick="editAppointment('${appointment.id}')">
                                 Reschedule
                             </button>
-                            ${appointment.status === 'confirmed' ? 
-                                `<button class="btn btn-sm btn-info" onclick="completeAppointment('${appointment.id}')">
-                                    Completed
-                                </button>` :
-                                appointment.status === 'completed' ?
-                                `<button class="btn btn-sm btn-secondary" disabled>
-                                    Completed
-                                </button>` :
-                                `<button class="btn btn-sm btn-success" onclick="confirmAppointment('${appointment.id}')">
-                                    Confirm
-                                </button>`
-                            }
                         </div>
                     </td>
                 </tr>
