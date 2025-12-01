@@ -927,7 +927,7 @@ async function handleAppointment(event) {
                 patient_name: name,
                 patient_email: email,
                 patient_phone: phone,
-                status: 'pending'
+                status: 'confirmed'
             }]);
         
         if (error) {
@@ -935,17 +935,18 @@ async function handleAppointment(event) {
         return;
     }
     
-    showToast('Appointment booked successfully! We will contact you soon.', 'success');
+    showToast('Appointment booked and confirmed successfully! Confirmation email sent.', 'success');
     closeModal('appointmentModal');
     
-    // Send confirmation email (simulated)
-        sendAppointmentConfirmation({
-            name,
-            email,
-            service,
-            date,
-            time: '10:00 AM' // Default time display
-        });
+    // Send confirmation email
+    await sendAppointmentConfirmation({
+        name,
+        email,
+        service,
+        date,
+        time: '10:00 AM', // Default time display
+        dentistName: 'Dr. Delas Alas' // Default dentist name
+    });
         
     } catch (error) {
         console.error('Appointment booking error:', error);
@@ -1034,10 +1035,50 @@ async function makeAuthenticatedRequest(url, options = {}) {
 }
 
 
-// Send appointment confirmation (simulated)
-function sendAppointmentConfirmation(appointment) {
-    console.log('Sending appointment confirmation:', appointment);
-    // In a real application, this would send an email
+// Send appointment confirmation email
+async function sendAppointmentConfirmation(appointment) {
+    try {
+        if (!appointment.email || appointment.email.trim() === '') {
+            console.warn('No email provided, skipping email confirmation');
+            return;
+        }
+        
+        // Determine API base URL
+        const apiBaseUrl = window.location.origin.includes('vercel.app') 
+            ? window.location.origin 
+            : (window.location.origin.includes('localhost') 
+                ? 'http://localhost:3000' 
+                : window.location.origin);
+        
+        const emailData = {
+            email: appointment.email,
+            patientName: appointment.name,
+            serviceType: appointment.service,
+            appointmentDate: appointment.date,
+            appointmentTime: appointment.time || '10:00 AM',
+            dentistName: appointment.dentistName || 'Dr. Delas Alas',
+            notes: appointment.notes || ''
+        };
+        
+        console.log('📧 Sending confirmation email to:', appointment.email);
+        
+        const emailResponse = await fetch(`${apiBaseUrl}/api/send-appointment-email`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(emailData)
+        });
+        
+        if (emailResponse.ok) {
+            console.log('✅ Confirmation email sent successfully');
+        } else {
+            console.error('❌ Failed to send confirmation email');
+        }
+    } catch (error) {
+        console.error('❌ Error sending confirmation email:', error);
+        // Continue even if email fails - appointment is still confirmed
+    }
 }
 
 // Toast notification system

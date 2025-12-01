@@ -1678,7 +1678,7 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                                 View
                             </button>
                             <button class="btn btn-sm btn-secondary" onclick="editAppointment('${appointment.id}')">
-                                Edit
+                                Reschedule
                             </button>
                             ${appointment.status === 'confirmed' ? 
                                 `<button class="btn btn-sm btn-info" onclick="completeAppointment('${appointment.id}')">
