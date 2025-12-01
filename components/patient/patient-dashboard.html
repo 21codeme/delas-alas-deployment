@@ -698,7 +698,7 @@
             if (event.data && event.data.action === 'loadSection') {
                 loadSection(event.data.section);
             } else if (event.data && event.data.action === 'logout') {
-                logout();
+                logout(event.data.skipConfirmation || false);
             } else if (event.data && event.data.action === 'updateProfilePicture') {
                 updateSidebarProfilePicture(event.data.imageData);
             } else if (event.data && event.data.action === 'updateProfile') {
@@ -960,13 +960,31 @@
 
 
         // Logout function
-        function logout() {
-            if (confirm('Are you sure you want to logout?')) {
-                showToast('Logged out successfully!', 'success');
-                setTimeout(() => {
-                    window.location.href = '../../index.html';
-                }, 1000);
+        function logout(skipConfirmation = false) {
+            if (!skipConfirmation && !confirm('Are you sure you want to logout?')) {
+                return;
             }
+            
+            // Sign out from Supabase if available
+            try {
+                if (window.supabase && window.supabase.auth) {
+                    window.supabase.auth.signOut().catch(err => console.warn('Sign out error:', err));
+                }
+            } catch (error) {
+                console.warn('Error signing out:', error);
+            }
+            
+            // Clear all storage
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            if (!skipConfirmation) {
+                showToast('Logged out successfully!', 'success');
+            }
+            
+            setTimeout(() => {
+                window.location.href = '../../index.html';
+            }, skipConfirmation ? 0 : 1000);
         }
 
         // Toast notification system
