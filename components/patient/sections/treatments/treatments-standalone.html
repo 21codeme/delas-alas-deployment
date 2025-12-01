@@ -170,22 +170,32 @@
         }
 
         .section-header {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.3);
             margin-bottom: 30px;
+            color: white;
         }
 
         .section-header h2 {
-            color: #2c3e50;
-            margin: 0 0 5px 0;
-            font-size: 1.8rem;
+            color: white;
+            margin: 0 0 10px 0;
+            font-size: 2.2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .section-header h2 i {
+            font-size: 2rem;
         }
 
         .section-header p {
-            color: #666;
+            color: rgba(255, 255, 255, 0.9);
             margin: 0;
+            font-size: 1.1rem;
         }
 
         .stats-grid {
@@ -197,64 +207,76 @@
 
         .stat-card {
             background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.1);
             display: flex;
             align-items: center;
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
+            border: 1px solid #f0f0f0;
         }
 
         .stat-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-8px);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.15);
         }
 
         .stat-icon {
-            width: 60px;
-            height: 60px;
+            width: 70px;
+            height: 70px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 15px;
+            border-radius: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 20px;
+            margin-right: 25px;
             color: white;
-            font-size: 24px;
+            font-size: 28px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
 
         .stat-info h3 {
             font-size: 14px;
             color: #666;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
         }
 
         .stat-value {
-            font-size: 28px;
-            font-weight: bold;
+            font-size: 36px;
+            font-weight: 700;
             color: #2c3e50;
             margin-bottom: 5px;
+            line-height: 1;
         }
 
         .stat-change {
-            font-size: 12px;
-            color: #27ae60;
+            font-size: 13px;
+            color: #667eea;
+            font-weight: 500;
         }
 
         .treatments-list {
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-radius: 20px;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.1);
             overflow: hidden;
+            border: 1px solid #f0f0f0;
         }
 
         .treatment-item {
-            padding: 20px 25px;
+            padding: 25px 30px;
             border-bottom: 1px solid #f0f0f0;
-            transition: background 0.3s ease;
+            transition: all 0.3s ease;
+            position: relative;
         }
 
         .treatment-item:hover {
-            background: #f8f9fa;
+            background: linear-gradient(to right, #f8f9fa 0%, #ffffff 100%);
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
         .treatment-item:last-child {
@@ -265,13 +287,24 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
 
         .treatment-title {
             color: #2c3e50;
-            font-size: 1.1rem;
-            font-weight: 600;
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .treatment-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
         }
 
         .treatment-date {
@@ -280,31 +313,52 @@
         }
 
         .treatment-description {
-            color: #666;
-            margin-bottom: 10px;
+            color: #555;
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+
+        .treatment-description p {
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .treatment-description strong {
+            color: #2c3e50;
+            min-width: 80px;
+            font-weight: 600;
+        }
+
+        .treatment-description i {
+            color: #667eea;
+            width: 18px;
         }
 
         .treatment-status {
-            padding: 4px 12px;
-            border-radius: 12px;
+            padding: 8px 16px;
+            border-radius: 20px;
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .status-completed {
-            background: #d4edda;
-            color: #155724;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
         }
 
         .status-in-progress {
-            background: #fff3cd;
-            color: #856404;
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            color: white;
         }
 
         .status-scheduled {
-            background: #cce5ff;
-            color: #004085;
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
         }
 
         .empty-state {
@@ -425,7 +479,7 @@
             <div class="treatments-content">
                 <!-- Header -->
                 <div class="section-header">
-                    <h2>My Treatments</h2>
+                    <h2><i class="fas fa-tooth"></i> My Treatments</h2>
                     <p>Track your dental treatments and procedures</p>
                 </div>
 
@@ -693,12 +747,11 @@
                         <div class="treatment-status status-${treatment.status}">Completed</div>
                     </div>
                     <div class="treatment-description">
-                        <p><strong>Service:</strong> ${treatment.name || treatment.treatment_name}</p>
-                        <p><strong>Dentist:</strong> ${treatment.dentist_name || treatment.dentist}</p>
-                        <p><strong>Date:</strong> ${new Date(treatment.date).toLocaleDateString()}</p>
-                        <p><strong>Time:</strong> ${treatment.time || '10:00 AM'}</p>
-                        ${treatment.notes ? `<p><strong>Notes:</strong> ${treatment.notes}</p>` : ''}
-                        <p><strong>Status:</strong> <span class="status-badge completed">Completed</span></p>
+                        <p><i class="fas fa-tooth"></i><strong>Service:</strong> ${treatment.name || treatment.treatment_name}</p>
+                        <p><i class="fas fa-user-md"></i><strong>Dentist:</strong> ${treatment.dentist_name || treatment.dentist}</p>
+                        <p><i class="fas fa-calendar"></i><strong>Date:</strong> ${new Date(treatment.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                        <p><i class="fas fa-clock"></i><strong>Time:</strong> ${treatment.time ? (treatment.time.includes(':') ? new Date('2000-01-01T' + treatment.time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : treatment.time) : '10:00 AM'}</p>
+                        ${treatment.notes ? `<p><i class="fas fa-sticky-note"></i><strong>Notes:</strong> ${treatment.notes}</p>` : ''}
                     </div>
                 </div>
             `).join('');
