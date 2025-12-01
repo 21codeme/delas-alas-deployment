@@ -926,6 +926,7 @@ async function handleRegister(event) {
         // Method 3: Try direct insert (only if user exists)
         if (!profileCreated && authData.user) {
             try {
+                console.log('🔄 Attempting direct insert for user profile...');
                 const { data: directData, error: directError } = await supabase
                     .from('users')
                     .insert([{
@@ -938,19 +939,38 @@ async function handleRegister(event) {
                 
                 if (!directError) {
                     profileCreated = true;
-                    console.log('Profile created via direct insert');
+                    console.log('✅ Profile created via direct insert');
                 } else {
-                    console.log('Direct insert failed:', directError.message);
+                    console.error('❌ Direct insert failed:', directError);
+                    console.error('❌ Error details:', {
+                        message: directError.message,
+                        details: directError.details,
+                        hint: directError.hint,
+                        code: directError.code
+                    });
+                    
+                    // Check if it's a unique constraint violation (user already exists)
+                    if (directError.code === '23505' || directError.message.includes('duplicate')) {
+                        console.log('ℹ️ User profile already exists, treating as success');
+                        profileCreated = true; // User already exists, that's okay
+                    }
                 }
             } catch (directInsertError) {
-                console.log('Direct insert error:', directInsertError.message);
+                console.error('❌ Direct insert error:', directInsertError);
             }
         }
         
-        // If all methods failed, show error but don't block registration
+        // If all methods failed, show warning but don't block registration
+        // The trigger should create the profile automatically, or it will be created on first login
         if (!profileCreated) {
-            console.warn('Profile creation failed, but user is registered in auth');
-            showToast('Account created successfully! Profile will be created when you first login.', 'success');
+            console.warn('⚠️ Profile creation failed, but user is registered in auth');
+            console.warn('⚠️ Profile may be created by database trigger or on first login');
+            console.warn('⚠️ If this persists, check RLS policies and RPC functions in Supabase');
+            
+            // Show a more informative message
+            showToast('Account created! Your profile will be set up automatically. You can login now.', 'success');
+        } else {
+            console.log('✅ User profile created successfully');
         }
         
         // Check if email confirmation is required
