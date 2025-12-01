@@ -3,11 +3,19 @@
 -- ========================================
 -- This fixes the "Profile creation failed, but user is registered in auth" error
 
--- Step 1: Create/Update RPC functions for profile creation
+-- Step 1: Drop existing functions with conflicting names
+-- ========================================
+-- Drop the trigger function (no parameters)
+DROP FUNCTION IF EXISTS create_user_profile() CASCADE;
+
+-- Drop the RPC function (with parameters) - specify full signature
+DROP FUNCTION IF EXISTS create_user_profile(UUID, TEXT, TEXT, TEXT, TEXT) CASCADE;
+
+-- Step 2: Create/Update RPC functions for profile creation
 -- ========================================
 
--- Function 1: create_user_profile (returns JSON)
-CREATE OR REPLACE FUNCTION create_user_profile(
+-- Function 1: create_user_profile_rpc (returns JSON) - renamed to avoid conflicts
+CREATE OR REPLACE FUNCTION create_user_profile_rpc(
     user_id UUID,
     user_name TEXT,
     user_email TEXT,
@@ -55,6 +63,8 @@ END;
 $$;
 
 -- Function 2: insert_user_profile (returns BOOLEAN)
+DROP FUNCTION IF EXISTS insert_user_profile(UUID, TEXT, TEXT, TEXT, TEXT) CASCADE;
+
 CREATE OR REPLACE FUNCTION insert_user_profile(
     user_id UUID,
     user_name TEXT,
@@ -78,14 +88,14 @@ EXCEPTION
 END;
 $$;
 
--- Step 2: Grant permissions on RPC functions
+-- Step 3: Grant permissions on RPC functions (specify full signatures)
 -- ========================================
-GRANT EXECUTE ON FUNCTION create_user_profile TO anon;
-GRANT EXECUTE ON FUNCTION create_user_profile TO authenticated;
-GRANT EXECUTE ON FUNCTION insert_user_profile TO anon;
-GRANT EXECUTE ON FUNCTION insert_user_profile TO authenticated;
+GRANT EXECUTE ON FUNCTION create_user_profile_rpc(UUID, TEXT, TEXT, TEXT, TEXT) TO anon;
+GRANT EXECUTE ON FUNCTION create_user_profile_rpc(UUID, TEXT, TEXT, TEXT, TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION insert_user_profile(UUID, TEXT, TEXT, TEXT, TEXT) TO anon;
+GRANT EXECUTE ON FUNCTION insert_user_profile(UUID, TEXT, TEXT, TEXT, TEXT) TO authenticated;
 
--- Step 3: Fix RLS policies to allow profile creation during signup
+-- Step 4: Fix RLS policies to allow profile creation during signup
 -- ========================================
 
 -- Drop existing restrictive INSERT policy
@@ -103,8 +113,11 @@ CREATE POLICY "Allow user profile creation during signup" ON users
         auth.uid() IS NULL
     );
 
--- Step 4: Create/Update trigger function for auto-profile creation
+-- Step 5: Create/Update trigger function for auto-profile creation
 -- ========================================
+
+-- Drop existing trigger function if it exists
+DROP FUNCTION IF EXISTS create_user_profile_trigger() CASCADE;
 
 -- Update the trigger function to handle errors gracefully
 CREATE OR REPLACE FUNCTION create_user_profile_trigger()
@@ -139,23 +152,24 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Step 5: Create/Update trigger
+-- Step 6: Create/Update trigger
 -- ========================================
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION create_user_profile_trigger();
 
--- Step 6: Verify the setup
+-- Step 7: Verify the setup
 -- ========================================
 -- Check if functions exist
 SELECT 
     routine_name, 
     routine_type,
-    security_type
+    security_type,
+    routine_definition
 FROM information_schema.routines
 WHERE routine_schema = 'public'
-AND routine_name IN ('create_user_profile', 'insert_user_profile', 'create_user_profile_trigger')
+AND routine_name IN ('create_user_profile_rpc', 'insert_user_profile', 'create_user_profile_trigger')
 ORDER BY routine_name;
 
 -- Check if policies exist

@@ -881,7 +881,7 @@ async function handleRegister(event) {
         if (authData.user) {
             try {
                 const { data: profileData, error: profileError } = await supabase
-                    .rpc('create_user_profile', {
+                    .rpc('create_user_profile_rpc', {
                         user_id: authData.user.id,
                         user_name: name,
                         user_email: email,
