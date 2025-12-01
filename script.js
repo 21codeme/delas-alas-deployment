@@ -8,6 +8,52 @@ let currentUser = null;
 let appointments = [];
 let users = [];
 
+// Define toggleMobileMenu early so it's available for onclick handlers
+function toggleMobileMenu(event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    console.log('Toggle mobile menu called');
+    const mobileMenu = document.querySelector('.mobile-menu');
+    const mobileToggle = document.querySelector('.mobile-menu-toggle');
+    
+    if (mobileMenu) {
+        console.log('Mobile menu found, toggling...');
+        const isShowing = mobileMenu.classList.contains('show');
+        
+        if (isShowing) {
+            mobileMenu.classList.remove('show');
+            console.log('Mobile menu hidden');
+        } else {
+            mobileMenu.classList.add('show');
+            console.log('Mobile menu shown');
+        }
+        
+        console.log('Mobile menu classes:', mobileMenu.className);
+        
+        // Close menu when clicking outside
+        if (mobileMenu.classList.contains('show')) {
+            setTimeout(() => {
+                document.body.addEventListener('click', function closeMenuOnOutsideClick(e) {
+                    if (!mobileMenu.contains(e.target) && 
+                        !e.target.closest('.mobile-menu-toggle') && 
+                        mobileMenu.classList.contains('show')) {
+                        mobileMenu.classList.remove('show');
+                        document.body.removeEventListener('click', closeMenuOnOutsideClick);
+                    }
+                });
+            }, 100);
+        }
+    } else {
+        console.error('Mobile menu not found!');
+    }
+    return false;
+}
+
+// Make it globally available immediately
+window.toggleMobileMenu = toggleMobileMenu;
+
 // Initialize Supabase
 const supabaseUrl = 'https://xlubjwiumytdkxrzojdg.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
@@ -80,8 +126,8 @@ function initializeApp() {
     
     // Check if redirected after account deletion - auto-show login modal
     const urlParams = new URLSearchParams(window.location.search);
-    const hash = window.location.hash;
-    if (urlParams.get('deleted') === 'true' || hash === '#login') {
+    const urlHash = window.location.hash;
+    if (urlParams.get('deleted') === 'true' || urlHash === '#login') {
         // Clear any remaining localStorage data
         localStorage.clear();
         sessionStorage.clear();
@@ -327,47 +373,7 @@ function initializeMobileMenu() {
     console.log('Mobile menu element:', document.querySelector('.mobile-menu'));
 }
 
-function toggleMobileMenu(event) {
-    if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-    }
-    console.log('Toggle mobile menu called');
-    const mobileMenu = document.querySelector('.mobile-menu');
-    const mobileToggle = document.querySelector('.mobile-menu-toggle');
-    
-    if (mobileMenu) {
-        console.log('Mobile menu found, toggling...');
-        const isShowing = mobileMenu.classList.contains('show');
-        
-        if (isShowing) {
-            mobileMenu.classList.remove('show');
-            console.log('Mobile menu hidden');
-        } else {
-            mobileMenu.classList.add('show');
-            console.log('Mobile menu shown');
-        }
-        
-        console.log('Mobile menu classes:', mobileMenu.className);
-        
-        // Close menu when clicking outside
-        if (mobileMenu.classList.contains('show')) {
-            setTimeout(() => {
-                document.body.addEventListener('click', function closeMenuOnOutsideClick(e) {
-                    if (!mobileMenu.contains(e.target) && 
-                        !e.target.closest('.mobile-menu-toggle') && 
-                        mobileMenu.classList.contains('show')) {
-                        mobileMenu.classList.remove('show');
-                        document.body.removeEventListener('click', closeMenuOnOutsideClick);
-                    }
-                });
-            }, 100);
-        }
-    } else {
-        console.error('Mobile menu not found!');
-    }
-    return false;
-}
+// toggleMobileMenu is already defined at the top of the file
 
 function closeMobileMenu() {
     const mobileMenu = document.querySelector('.mobile-menu');
@@ -1580,15 +1586,15 @@ function showFallbackServices() {
     `;
 }
 
-// Export functions for global access
+// Export functions for global access - make sure toggleMobileMenu is available immediately
+window.toggleMobileMenu = toggleMobileMenu;
+window.closeMobileMenu = closeMobileMenu;
 window.showLoginModal = showLoginModal;
 window.showRegisterModal = showRegisterModal;
 window.showAppointmentModal = showAppointmentModal;
 window.closeModal = closeModal;
 window.togglePasswordVisibility = togglePasswordVisibility;
 window.scrollToSection = scrollToSection;
-window.toggleMobileMenu = toggleMobileMenu;
-window.closeMobileMenu = closeMobileMenu;
 window.logout = logout;
 window.resendVerificationEmail = resendVerificationEmail;
 window.checkEmailVerification = checkEmailVerification;
