@@ -1572,9 +1572,10 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 return;
             }
 
-            // Pre-generate QR codes for confirmed appointments that haven't passed yet
+            // Pre-generate QR codes for ALL confirmed appointments (regardless of time)
+            // We'll hide the display later if time has passed
             const qrCodePromises = filteredAppointments
-                .filter(apt => apt.status === 'confirmed' && !isAppointmentTimePassed(apt))
+                .filter(apt => apt.status === 'confirmed')
                 .map(async (appointment) => {
                     try {
                         const qrUrl = await generateOnlineQRCode(appointment);
