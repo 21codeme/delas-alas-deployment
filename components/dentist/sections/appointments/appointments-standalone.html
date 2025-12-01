@@ -1425,6 +1425,30 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             filterAppointments();
         }
 
+        // Helper function to check if appointment time has passed (global scope)
+        function isAppointmentTimePassed(appointment) {
+            try {
+                if (!appointment.date || !appointment.time) {
+                    return false; // If no date/time, don't hide QR code
+                }
+                
+                // Parse appointment date and time
+                const appointmentDate = new Date(appointment.date);
+                const [hours, minutes, seconds] = appointment.time.split(':').map(Number);
+                
+                // Set the time on the appointment date
+                appointmentDate.setHours(hours || 0, minutes || 0, seconds || 0, 0);
+                
+                // Get current date/time
+                const now = new Date();
+                
+                // Check if appointment time has passed
+                return appointmentDate < now;
+            } catch (error) {
+                console.warn('Error checking appointment time:', error);
+                return false; // On error, don't hide QR code
+            }
+        }
 
         // Load data from localStorage (temporary - replace with your real-time source)
         function loadFromLocalStorage() {
@@ -1548,9 +1572,9 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 return;
             }
 
-            // Pre-generate QR codes for confirmed appointments
+            // Pre-generate QR codes for confirmed appointments that haven't passed yet
             const qrCodePromises = filteredAppointments
-                .filter(apt => apt.status === 'confirmed')
+                .filter(apt => apt.status === 'confirmed' && !isAppointmentTimePassed(apt))
                 .map(async (appointment) => {
                     try {
                         const qrUrl = await generateOnlineQRCode(appointment);
@@ -1656,7 +1680,7 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                     <td><span class="status-badge status-${appointment.status}">${appointment.status}</span></td>
                     <td>
                         <div class="qr-code-cell">
-                            ${appointment.status === 'confirmed' && appointment._qrCodeUrl ? 
+                            ${appointment.status === 'confirmed' && appointment._qrCodeUrl && !isAppointmentTimePassed(appointment) ? 
                                 `<div class="qr-code-mini" id="qr-mini-${appointment.id}">
                                     <img src="${appointment._qrCodeUrl}" width="60" height="60" alt="QR Code" style="border-radius: 4px;">
                                 </div>` : 
@@ -1664,9 +1688,14 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                             <i class="fas fa-qrcode"></i>
                                 </div>`
                             }
-                            <button class="btn btn-sm btn-info" onclick="showQRCode('${appointment.id}')" title="View QR Code">
-                                <i class="fas fa-eye"></i>
-                            </button>
+                            ${!isAppointmentTimePassed(appointment) ? 
+                                `<button class="btn btn-sm btn-info" onclick="showQRCode('${appointment.id}')" title="View QR Code">
+                                    <i class="fas fa-eye"></i>
+                                </button>` : 
+                                `<button class="btn btn-sm btn-secondary" disabled title="Appointment time has passed">
+                                    <i class="fas fa-eye-slash"></i>
+                                </button>`
+                            }
                         </div>
                     </td>
                     <td>
@@ -2162,6 +2191,12 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
         async function showQRCode(id) {
             const appointment = appointments.find(apt => apt.id === id);
             if (appointment) {
+                // Check if appointment time has passed
+                if (isAppointmentTimePassed(appointment)) {
+                    alert('This appointment time has already passed. QR code is no longer available.');
+                    return;
+                }
+                
                 // Ensure dentist name is present
                 if ((!appointment.dentistName || appointment.dentistName === '') && appointment.dentistId) {
                     try {
