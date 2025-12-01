@@ -891,6 +891,7 @@ async function handleRegister(event) {
         // Method 1: Try RPC function (only if user exists)
         if (authData.user) {
             try {
+                console.log('🔄 Attempting to create profile via RPC function...');
                 const { data: profileData, error: profileError } = await supabase
                     .rpc('create_user_profile_rpc', {
                         user_id: authData.user.id,
@@ -902,12 +903,20 @@ async function handleRegister(event) {
                 
                 if (!profileError && profileData && profileData.success) {
                     profileCreated = true;
-                    console.log('Profile created via RPC:', profileData);
+                    console.log('✅ Profile created via RPC:', profileData);
                 } else if (profileError) {
-                    console.log('RPC function error:', profileError.message);
+                    console.error('❌ RPC function error:', profileError);
+                    console.error('❌ Error details:', {
+                        message: profileError.message,
+                        details: profileError.details,
+                        hint: profileError.hint,
+                        code: profileError.code
+                    });
+                } else {
+                    console.warn('⚠️ RPC returned no error but profileData.success is false:', profileData);
                 }
             } catch (rpcError) {
-                console.log('RPC function failed:', rpcError.message);
+                console.error('❌ RPC function failed:', rpcError);
             }
         }
         
