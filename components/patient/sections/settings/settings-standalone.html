@@ -1999,6 +1999,55 @@
                 // Step 1: Delete user data from all tables
                 console.log('🗑️ Deleting user data from Supabase...');
                 
+                // IMPORTANT: Delete user from users table FIRST to remove from dentist's patient list
+                // This must happen before other deletions to ensure the user disappears from patient lists
+                let userDeleted = false;
+                try {
+                    const deleteUserResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=representation'
+                        }
+                    });
+                    
+                    if (deleteUserResponse.ok) {
+                        const deletedData = await deleteUserResponse.json();
+                        console.log('✅ Deleted user profile from users table:', deletedData);
+                        userDeleted = true;
+                    } else {
+                        const errorText = await deleteUserResponse.text();
+                        console.error('❌ Failed to delete user profile. Status:', deleteUserResponse.status);
+                        console.error('❌ Error response:', errorText);
+                        // If hard delete fails, try soft delete (mark as deleted)
+                        try {
+                            const softDeleteResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
+                                method: 'PATCH',
+                                headers: {
+                                    'apikey': SUPABASE_KEY,
+                                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    name: '[DELETED]',
+                                    email: `deleted_${Date.now()}_${user.id}@deleted.local`,
+                                    phone: null
+                                })
+                            });
+                            if (softDeleteResponse.ok) {
+                                console.log('⚠️ Marked user as deleted (soft delete) - will be filtered from patient list');
+                                userDeleted = true;
+                            }
+                        } catch (softDeleteError) {
+                            console.error('❌ Could not soft delete user:', softDeleteError);
+                        }
+                    }
+                } catch (error) {
+                    console.error('⚠️ Error deleting user profile:', error);
+                }
+                
                 // Delete appointments
                 try {
                     const deleteAppointmentsResponse = await fetch(`${SUPABASE_URL}/rest/v1/appointments?patient_id=eq.${user.id}`, {
@@ -2059,20 +2108,7 @@
                     console.error('⚠️ Error deleting treatments:', error);
                 }
                 
-                // Delete user profile from users table
-                try {
-                    const deleteUserResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'apikey': SUPABASE_KEY,
-                            'Authorization': `Bearer ${SUPABASE_KEY}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    console.log('✅ Deleted user profile:', deleteUserResponse.status);
-                } catch (error) {
-                    console.error('⚠️ Error deleting user profile:', error);
-                }
+                // User deletion already handled above in Step 1
                 
                 // Step 2: Sign in to get access token for auth deletion
                 console.log('🔐 Getting access token for auth deletion...');

@@ -1056,14 +1056,21 @@
             try {
                 console.log('🔄 Loading patients from database...');
                 
-                // Direct API call to Supabase
+                // Direct API call to Supabase - get all patients, we'll filter deleted ones in code
                 const data = await callSupabaseAPI('GET', 'users?user_type=eq.patient');
                 
                 console.log('📊 Raw data from API:', data);
                 
                 if (data && data.length > 0) {
-                    // Filter out any null or undefined users first
-                    const validUsers = data.filter(user => user != null && user !== undefined && user.id);
+                    // Filter out any null, undefined, or deleted users
+                    const validUsers = data.filter(user => 
+                        user != null && 
+                        user !== undefined && 
+                        user.id &&
+                        user.user_type !== 'deleted' &&
+                        !user.email?.includes('@deleted.local') &&
+                        !user.name?.includes('[DELETED]')
+                    );
                     // Convert Supabase data to the format expected by the UI
                     patients = validUsers.map(user => ({
                         id: user.id,
