@@ -802,11 +802,17 @@ async function handleRegister(event) {
         
         while (retryCount < maxRetries) {
             try {
+                // Get current site URL for email confirmation redirect
+                const currentUrl = window.location.origin + window.location.pathname;
+                const emailRedirectTo = `${currentUrl}#email_confirmed=true`;
+                
                 // Include user metadata in signup so the database trigger has the data it needs
+                // Add emailRedirectTo to ensure confirmation emails are sent with correct redirect URL
                 const result = await supabase.auth.signUp({
                     email,
                     password,
                     options: {
+                        emailRedirectTo: emailRedirectTo,
                         data: {
                             name: name,
                             phone: phone,
