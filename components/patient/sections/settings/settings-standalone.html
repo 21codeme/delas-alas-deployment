@@ -2001,85 +2001,124 @@
                 
                 // IMPORTANT: Delete user from users table FIRST to remove from dentist's patient list
                 // This must happen before other deletions to ensure the user disappears from patient lists
-                // NOTE: Requires DELETE RLS policy to be enabled (see database/ADD_USER_DELETE_POLICY.sql)
+                // We'll use the RPC function which bypasses RLS using SECURITY DEFINER
                 let userDeleted = false;
+                
+                // Method 1: Try RPC function first (most reliable - bypasses RLS)
                 try {
-                    console.log('🗑️ Attempting to delete user from users table:', user.id);
+                    console.log('🗑️ Attempting to delete user via RPC function:', user.id);
                     console.log('🗑️ User email:', user.email);
                     
-                    // First, try to get the user's auth session token for authenticated deletion
+                    // Get auth token for authenticated request
                     const currentSession = await supabase.auth.getSession();
                     const authToken = currentSession?.data?.session?.access_token;
                     
-                    if (!authToken) {
-                        console.warn('⚠️ No auth token available, trying with anon key');
-                    }
-                    
-                    // Try DELETE with user's auth token first (respects RLS)
-                    const deleteUserResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
-                        method: 'DELETE',
+                    const rpcResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/delete_user_account`, {
+                        method: 'POST',
                         headers: {
                             'apikey': SUPABASE_KEY,
                             'Authorization': authToken ? `Bearer ${authToken}` : `Bearer ${SUPABASE_KEY}`,
                             'Content-Type': 'application/json',
                             'Prefer': 'return=representation'
-                        }
+                        },
+                        body: JSON.stringify({ user_id_to_delete: user.id })
                     });
                     
-                    console.log('🗑️ Delete response status:', deleteUserResponse.status);
-                    console.log('🗑️ Delete response headers:', Object.fromEntries(deleteUserResponse.headers.entries()));
+                    console.log('🗑️ RPC delete response status:', rpcResponse.status);
                     
-                    if (deleteUserResponse.ok) {
-                        const deletedData = await deleteUserResponse.json();
-                        console.log('✅ Deleted user profile from users table:', deletedData);
-                        userDeleted = true;
+                    if (rpcResponse.ok) {
+                        const rpcData = await rpcResponse.json();
+                        console.log('✅ RPC delete response:', rpcData);
+                        
+                        if (rpcData && rpcData.success) {
+                            console.log('✅ User account deleted successfully via RPC function');
+                            userDeleted = true;
+                        } else {
+                            console.error('❌ RPC function returned success=false:', rpcData);
+                        }
                     } else {
-                        const errorText = await deleteUserResponse.text();
-                        console.error('❌ Failed to delete user profile. Status:', deleteUserResponse.status);
-                        console.error('❌ Error response:', errorText);
-                        
-                        // Check if it's an RLS policy error
-                        if (deleteUserResponse.status === 401 || deleteUserResponse.status === 403) {
-                            console.error('⚠️ RLS Policy Error: User may not have DELETE permission.');
-                            console.error('⚠️ Status 401/403 usually means RLS policy is blocking the deletion.');
-                            console.error('⚠️ Run the SQL in database/ADD_USER_DELETE_POLICY.sql to add DELETE policy.');
-                            console.error('⚠️ Or check if the DELETE policy exists and allows: auth.uid() = id');
-                        }
-                        
-                        // If hard delete fails, try soft delete (mark as deleted)
-                        try {
-                            console.log('⚠️ Attempting soft delete (mark as deleted)...');
-                            const softDeleteResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
-                                method: 'PATCH',
-                                headers: {
-                                    'apikey': SUPABASE_KEY,
-                                    'Authorization': authToken ? `Bearer ${authToken}` : `Bearer ${SUPABASE_KEY}`,
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                    name: '[DELETED]',
-                                    email: `deleted_${Date.now()}_${user.id}@deleted.local`,
-                                    phone: null
-                                })
-                            });
-                            
-                            console.log('⚠️ Soft delete response status:', softDeleteResponse.status);
-                            
-                            if (softDeleteResponse.ok) {
-                                console.log('⚠️ Marked user as deleted (soft delete) - will be filtered from patient list');
-                                userDeleted = true;
-                            } else {
-                                const softDeleteError = await softDeleteResponse.text();
-                                console.error('❌ Soft delete also failed:', softDeleteError);
-                                console.error('❌ Soft delete status:', softDeleteResponse.status);
-                            }
-                        } catch (softDeleteError) {
-                            console.error('❌ Could not soft delete user:', softDeleteError);
-                        }
+                        const rpcError = await rpcResponse.text();
+                        console.error('❌ RPC delete failed. Status:', rpcResponse.status);
+                        console.error('❌ RPC error response:', rpcError);
                     }
-                } catch (error) {
-                    console.error('⚠️ Error deleting user profile:', error);
-                    console.error('⚠️ Error details:', error.message, error.stack);
+                } catch (rpcError) {
+                    console.error('❌ RPC function error:', rpcError);
+                }
+                
+                // Method 2: Fallback to direct DELETE if RPC fails
+                if (!userDeleted) {
+                    try {
+                        console.log('🔄 RPC failed, trying direct DELETE...');
+                        
+                        const currentSession = await supabase.auth.getSession();
+                        const authToken = currentSession?.data?.session?.access_token;
+                        
+                        const deleteUserResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': authToken ? `Bearer ${authToken}` : `Bearer ${SUPABASE_KEY}`,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'return=representation'
+                            }
+                        });
+                        
+                        console.log('🗑️ Direct DELETE response status:', deleteUserResponse.status);
+                        
+                        if (deleteUserResponse.ok) {
+                            const deletedData = await deleteUserResponse.json();
+                            console.log('✅ Deleted user profile via direct DELETE:', deletedData);
+                            userDeleted = true;
+                        } else {
+                            const errorText = await deleteUserResponse.text();
+                            console.error('❌ Direct DELETE failed. Status:', deleteUserResponse.status);
+                            console.error('❌ Error response:', errorText);
+                            
+                            if (deleteUserResponse.status === 401 || deleteUserResponse.status === 403) {
+                                console.error('⚠️ RLS Policy Error: DELETE permission denied.');
+                                console.error('⚠️ Run database/CREATE_DELETE_USER_FUNCTION.sql to create RPC function.');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('❌ Direct DELETE error:', error);
+                    }
+                }
+                
+                // Method 3: Last resort - soft delete (mark as deleted)
+                if (!userDeleted) {
+                    try {
+                        console.log('⚠️ Hard delete failed, attempting soft delete...');
+                        const currentSession = await supabase.auth.getSession();
+                        const authToken = currentSession?.data?.session?.access_token;
+                        
+                        const softDeleteResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': authToken ? `Bearer ${authToken}` : `Bearer ${SUPABASE_KEY}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                name: '[DELETED]',
+                                email: `deleted_${Date.now()}_${user.id}@deleted.local`,
+                                phone: null
+                            })
+                        });
+                        
+                        if (softDeleteResponse.ok) {
+                            console.log('⚠️ Marked user as deleted (soft delete) - will be filtered from patient list');
+                            userDeleted = true;
+                        } else {
+                            console.error('❌ Soft delete also failed:', await softDeleteResponse.text());
+                        }
+                    } catch (softDeleteError) {
+                        console.error('❌ Soft delete error:', softDeleteError);
+                    }
+                }
+                
+                if (!userDeleted) {
+                    console.error('❌ CRITICAL: All deletion methods failed. User account NOT deleted from Supabase.');
+                    console.error('❌ Please run database/CREATE_DELETE_USER_FUNCTION.sql to create the RPC function.');
                 }
                 
                 // Delete appointments
