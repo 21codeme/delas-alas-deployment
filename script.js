@@ -317,19 +317,34 @@ function toggleMobileMenu(event) {
     }
     console.log('Toggle mobile menu called');
     const mobileMenu = document.querySelector('.mobile-menu');
+    const mobileToggle = document.querySelector('.mobile-menu-toggle');
+    
     if (mobileMenu) {
         console.log('Mobile menu found, toggling...');
-        mobileMenu.classList.toggle('show');
+        const isShowing = mobileMenu.classList.contains('show');
+        
+        if (isShowing) {
+            mobileMenu.classList.remove('show');
+            console.log('Mobile menu hidden');
+        } else {
+            mobileMenu.classList.add('show');
+            console.log('Mobile menu shown');
+        }
+        
         console.log('Mobile menu classes:', mobileMenu.className);
         
         // Close menu when clicking outside
         if (mobileMenu.classList.contains('show')) {
-            document.body.addEventListener('click', function closeMenuOnOutsideClick(e) {
-                if (!mobileMenu.contains(e.target) && !e.target.closest('.mobile-menu-toggle')) {
-                    mobileMenu.classList.remove('show');
-                    document.body.removeEventListener('click', closeMenuOnOutsideClick);
-                }
-            });
+            setTimeout(() => {
+                document.body.addEventListener('click', function closeMenuOnOutsideClick(e) {
+                    if (!mobileMenu.contains(e.target) && 
+                        !e.target.closest('.mobile-menu-toggle') && 
+                        mobileMenu.classList.contains('show')) {
+                        mobileMenu.classList.remove('show');
+                        document.body.removeEventListener('click', closeMenuOnOutsideClick);
+                    }
+                });
+            }, 100);
         }
     } else {
         console.error('Mobile menu not found!');

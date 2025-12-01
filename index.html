@@ -31,13 +31,13 @@
                 <button class="btn btn-outline" onclick="showLoginModal()">Login</button>
                 <button class="btn btn-primary" onclick="showRegisterModal()">Register</button>
             </div>
-            <button class="mobile-menu-toggle" onclick="toggleMobileMenu(event)" type="button" aria-label="Toggle menu">
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu(event); return false;" type="button" aria-label="Toggle menu">
                 <i class="fas fa-bars"></i>
             </button>
             <div class="mobile-menu">
                 <ul class="mobile-nav-menu">
-                    <li><button class="btn btn-outline mobile-btn" onclick="showLoginModal()">Login</button></li>
-                    <li><button class="btn btn-primary mobile-btn" onclick="showRegisterModal()">Register</button></li>
+                    <li><button class="btn btn-outline mobile-btn" onclick="closeMobileMenu(); showLoginModal();">Login</button></li>
+                    <li><button class="btn btn-primary mobile-btn" onclick="closeMobileMenu(); showRegisterModal();">Register</button></li>
                 </ul>
             </div>
         </nav>
