@@ -38,6 +38,16 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     setMinDate();
     
+    // Ensure mobile menu toggle is clickable after DOM loads
+    setTimeout(() => {
+        const mobileToggle = document.querySelector('.mobile-menu-toggle') || document.getElementById('mobileMenuToggle');
+        if (mobileToggle) {
+            mobileToggle.style.pointerEvents = 'auto';
+            mobileToggle.style.cursor = 'pointer';
+            console.log('Mobile toggle made clickable');
+        }
+    }, 100);
+    
     // Test mobile menu toggle
     setTimeout(() => {
         const toggle = document.querySelector('.mobile-menu-toggle');
@@ -201,33 +211,40 @@ async function loadClinicSettings() {
 // Setup all event listeners
 function setupEventListeners() {
     // Mobile menu toggle - try multiple approaches
-    const mobileToggle = document.querySelector('.mobile-menu-toggle');
+    const mobileToggle = document.querySelector('.mobile-menu-toggle') || document.getElementById('mobileMenuToggle');
     if (mobileToggle) {
         console.log('Mobile toggle found, adding event listener');
         
         // Remove any existing listeners first
-        mobileToggle.removeEventListener('click', toggleMobileMenu);
+        const newToggle = mobileToggle.cloneNode(true);
+        mobileToggle.parentNode.replaceChild(newToggle, mobileToggle);
         
-        // Add new listener
-        mobileToggle.addEventListener('click', function(event) {
+        // Add click listener
+        newToggle.addEventListener('click', function(event) {
             console.log('Mobile toggle clicked!');
             event.preventDefault();
             event.stopPropagation();
-            toggleMobileMenu();
-        });
+            event.stopImmediatePropagation();
+            toggleMobileMenu(event);
+            return false;
+        }, true); // Use capture phase
         
-        // Also try mousedown as backup
-        mobileToggle.addEventListener('mousedown', function(event) {
-            console.log('Mobile toggle mousedown!');
+        // Also add touchstart for mobile devices
+        newToggle.addEventListener('touchstart', function(event) {
+            console.log('Mobile toggle touched!');
             event.preventDefault();
             event.stopPropagation();
-            toggleMobileMenu();
-        });
+            toggleMobileMenu(event);
+            return false;
+        }, true);
         
         // Make sure it's clickable
-        mobileToggle.style.pointerEvents = 'auto';
-        mobileToggle.style.cursor = 'pointer';
+        newToggle.style.pointerEvents = 'auto';
+        newToggle.style.cursor = 'pointer';
+        newToggle.style.position = 'relative';
+        newToggle.style.zIndex = '10001';
         
+        console.log('Mobile toggle event listeners added');
     } else {
         console.error('Mobile toggle element not found!');
     }

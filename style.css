@@ -376,16 +376,7 @@ p {
     box-shadow: var(--shadow);
 }
 
-/* Ensure mobile menu toggle is always visible and clickable */
-.mobile-menu-toggle {
-    display: none; /* Hidden by default on desktop */
-}
-
-@media (max-width: 768px) {
-    .mobile-menu-toggle {
-        display: flex !important;
-    }
-}
+/* Hamburger menu is always visible - removed conflicting rules */
 
 .nav {
     display: flex;
@@ -476,6 +467,8 @@ p {
     min-width: 44px;
     min-height: 44px;
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
 }
 
 .mobile-menu-toggle:hover {
