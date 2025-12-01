@@ -382,6 +382,10 @@
                 // Add notifications from database (includes reschedule notifications)
                 if (Array.isArray(dbNotifications)) {
                     dbNotifications.forEach(notif => {
+                        // Check if it's a rescheduled notification
+                        const isRescheduled = (notif.type === 'appointment' && notif.title && notif.title.includes('Rescheduled')) ||
+                                             (notif.data && notif.data.status === 'rescheduled');
+                        
                         allNotifications.push({
                             id: notif.id,
                             type: notif.type || 'appointment',
@@ -389,7 +393,7 @@
                             message: notif.message || '',
                             date: notif.created_at,
                             read: notif.is_read || false,
-                            status: notif.type === 'appointment' && notif.title && notif.title.includes('Rescheduled') ? 'rescheduled' : (notif.type === 'message' ? 'message' : 'appointment'),
+                            status: isRescheduled ? 'rescheduled' : (notif.type === 'message' ? 'message' : 'appointment'),
                             source: 'database'
                         });
                     });
