@@ -381,6 +381,249 @@
         // Global variables
         let currentUser = null;
 
+        // Notification function (defined early for global access)
+        function showNotifications() {
+            // Show modal immediately with loading state
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;';
+            modal.innerHTML = `
+                <div style="background: white; border-radius: 15px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                    <div style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); padding: 20px; border-radius: 15px 15px 0 0; color: white;">
+                        <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-bell"></i> Notifications
+                        </h2>
+                        <button onclick="this.closest('div[style*=\\'position: fixed\\']').remove()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
+                    </div>
+                    <div style="padding: 20px; text-align: center;">
+                        <div style="padding: 40px; color: #999;">
+                            <i class="fas fa-spinner fa-spin" style="font-size: 48px; margin-bottom: 10px;"></i>
+                            <p>Loading notifications...</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // Load appointments and messages count
+            const userData = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            if (!userData.id) {
+                modal.remove();
+                alert('Please login first');
+                return;
+            }
+
+            const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+
+            // Fetch notifications from notifications table
+            fetch(`${SUPABASE_URL}/rest/v1/notifications?user_id=eq.${userData.id}&order=created_at.desc&limit=50`, {
+                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+            })
+            .then(response => response.json())
+            .then(dbNotifications => {
+                // Fetch appointments - get more and sort by created_at to get newest bookings/confirmations
+                return fetch(`${SUPABASE_URL}/rest/v1/appointments?patient_id=eq.${userData.id}&select=id,appointment_date,appointment_time,status,service_type,created_at&order=created_at.desc&limit=20`, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                })
+                .then(response => response.json())
+                .then(appointments => {
+                    
+                    // Fetch unread messages
+                    return fetch(`${SUPABASE_URL}/rest/v1/messages?receiver_id=eq.${userData.id}&is_read=eq.false&select=id,sender_id,content,created_at&order=created_at.desc&limit=10`, {
+                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                    })
+                    .then(response => response.json())
+                    .then(messages => {
+                        // Ensure messages is an array
+                        const messagesArray = Array.isArray(messages) ? messages : [];
+                        
+                        // Get sender names if there are messages
+                        let senderIds = [];
+                        if (messagesArray.length > 0) {
+                            senderIds = [...new Set(messagesArray.map(msg => msg.sender_id))];
+                        }
+                        
+                        if (senderIds.length === 0) {
+                            return { appointments, messages: messagesArray, senderMap: {}, dbNotifications: Array.isArray(dbNotifications) ? dbNotifications : [] };
+                        }
+                        
+                        return fetch(`${SUPABASE_URL}/rest/v1/users?id=in.(${senderIds.join(',')})&select=id,name`, {
+                            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                        })
+                        .then(response => response.json())
+                        .then(senders => {
+                            const senderMap = {};
+                            if (Array.isArray(senders)) {
+                                senders.forEach(sender => {
+                                    senderMap[sender.id] = sender.name;
+                                });
+                            }
+                            
+                            return { appointments, messages: messagesArray, senderMap, dbNotifications: Array.isArray(dbNotifications) ? dbNotifications : [] };
+                        });
+                    })
+                    .then(({ appointments, messages, senderMap, dbNotifications }) => {
+                        // Show notifications modal
+                        const notifications = [];
+                        
+                        // Add notifications from database (includes reschedule notifications)
+                        dbNotifications.forEach(notif => {
+                            notifications.push({
+                                type: notif.type || 'appointment',
+                                title: notif.title || 'Notification',
+                                message: notif.message || '',
+                                date: notif.created_at,
+                                status: notif.type === 'appointment' && notif.title && notif.title.includes('Rescheduled') ? 'rescheduled' : (notif.type === 'message' ? 'message' : 'appointment')
+                            });
+                        });
+                        
+                        // Add appointment notifications (only if not already in dbNotifications)
+                        appointments.forEach(apt => {
+                            // Check if this appointment already has a notification in dbNotifications
+                            const hasNotification = dbNotifications.some(notif => 
+                                notif.data && notif.data.appointment_id === apt.id
+                            );
+                            
+                            if (!hasNotification) {
+                                const date = new Date(apt.appointment_date);
+                                const status = apt.status;
+                                const service = apt.service_type || 'General';
+                                
+                                if (status === 'confirmed') {
+                                    notifications.push({
+                                        type: 'appointment_confirmed',
+                                        title: `Appointment Confirmed: ${service}`,
+                                        message: `Your appointment on ${date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} has been confirmed.`,
+                                        date: apt.created_at || apt.appointment_date,
+                                        status: status
+                                    });
+                                } else if (status === 'pending') {
+                                    notifications.push({
+                                        type: 'appointment_pending',
+                                        title: `Pending Appointment: ${service}`,
+                                        message: `Your appointment on ${date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} is pending confirmation.`,
+                                        date: apt.created_at || apt.appointment_date,
+                                        status: status
+                                    });
+                                }
+                            }
+                        });
+                        
+                        // Add message notifications (only if not already in dbNotifications)
+                        messages.forEach(msg => {
+                            // Check if this message already has a notification in dbNotifications
+                            const hasNotification = dbNotifications.some(notif => 
+                                notif.type === 'message' && notif.data && notif.data.message_id === msg.id
+                            );
+                            
+                            if (!hasNotification) {
+                                const senderName = senderMap[msg.sender_id] || 'Dentist';
+                                const truncatedContent = msg.content && msg.content.length > 50 ? msg.content.substring(0, 50) + '...' : (msg.content || 'No content');
+                                notifications.push({
+                                    type: 'message',
+                                    title: `New Message from ${senderName}`,
+                                    message: truncatedContent,
+                                    date: msg.created_at,
+                                    status: 'message'
+                                });
+                            }
+                        });
+                    
+                    // Sort notifications by date (newest first)
+                    notifications.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    
+                    // Update existing modal with notifications
+                    const existingModal = document.querySelector('div[style*="position: fixed"][style*="z-index: 10000"]');
+                    if (existingModal) {
+                        existingModal.innerHTML = `
+                        <div style="background: white; border-radius: 15px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                            <div style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); padding: 20px; border-radius: 15px 15px 0 0; color: white;">
+                                <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                                    <i class="fas fa-bell"></i> Notifications
+                                </h2>
+                                <button onclick="this.closest('div[style*=\\'position: fixed\\']').remove()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
+                            </div>
+                            <div style="padding: 20px;">
+                                ${notifications.length === 0 ? `
+                                    <div style="text-align: center; padding: 40px; color: #999;">
+                                        <i class="fas fa-bell-slash" style="font-size: 48px; margin-bottom: 10px;"></i>
+                                        <p>No notifications</p>
+                                    </div>
+                                ` : notifications.map(notif => {
+                                    const isRescheduled = notif.status === 'rescheduled' || (notif.title && notif.title.includes('Rescheduled'));
+                                    const borderColor = isRescheduled ? '#17a2b8' : notif.status === 'confirmed' ? '#28a745' : notif.status === 'message' ? '#667eea' : '#f39c12';
+                                    const icon = isRescheduled ? 'fa-calendar-alt' : notif.status === 'confirmed' ? 'fa-check-circle' : notif.status === 'message' ? 'fa-comment' : 'fa-clock';
+                                    const iconColor = isRescheduled ? '#17a2b8' : notif.status === 'confirmed' ? '#28a745' : notif.status === 'message' ? '#667eea' : '#f39c12';
+                                    
+                                    return `
+                                        <div style="padding: 15px; border-left: 4px solid ${borderColor}; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: start; gap: 10px;">
+                                            <i class="fas ${icon}" style="color: ${iconColor}; font-size: 24px; margin-top: 5px;"></i>
+                                            <div style="flex: 1;">
+                                                <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${notif.title}</h4>
+                                                <p style="margin: 0; color: #666;">${notif.message}</p>
+                                                <small style="color: #999; display: block; margin-top: 5px;">
+                                                    <i class="fas fa-clock"></i> ${new Date(notif.date).toLocaleDateString()} ${new Date(notif.date).toLocaleTimeString()}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                    } else {
+                        // If modal was removed, create new one
+                        const newModal = document.createElement('div');
+                        newModal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;';
+                        newModal.innerHTML = `
+                            <div style="background: white; border-radius: 15px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                                <div style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); padding: 20px; border-radius: 15px 15px 0 0; color: white;">
+                                    <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                                        <i class="fas fa-bell"></i> Notifications
+                                    </h2>
+                                    <button onclick="this.closest('div[style*=\\'position: fixed\\']').remove()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
+                                </div>
+                                <div style="padding: 20px;">
+                                    ${notifications.length === 0 ? `
+                                        <div style="text-align: center; padding: 40px; color: #999;">
+                                            <i class="fas fa-bell-slash" style="font-size: 48px; margin-bottom: 10px;"></i>
+                                            <p>No notifications</p>
+                                        </div>
+                                    ` : notifications.map(notif => {
+                                        const isRescheduled = notif.status === 'rescheduled' || (notif.title && notif.title.includes('Rescheduled'));
+                                        const borderColor = isRescheduled ? '#17a2b8' : notif.status === 'confirmed' ? '#28a745' : notif.status === 'message' ? '#667eea' : '#f39c12';
+                                        const icon = isRescheduled ? 'fa-calendar-alt' : notif.status === 'confirmed' ? 'fa-check-circle' : notif.status === 'message' ? 'fa-comment' : 'fa-clock';
+                                        const iconColor = isRescheduled ? '#17a2b8' : notif.status === 'confirmed' ? '#28a745' : notif.status === 'message' ? '#667eea' : '#f39c12';
+                                        
+                                        return `
+                                            <div style="padding: 15px; border-left: 4px solid ${borderColor}; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: start; gap: 10px;">
+                                                <i class="fas ${icon}" style="color: ${iconColor}; font-size: 24px; margin-top: 5px;"></i>
+                                                <div style="flex: 1;">
+                                                    <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${notif.title}</h4>
+                                                    <p style="margin: 0; color: #666;">${notif.message}</p>
+                                                    <small style="color: #999; display: block; margin-top: 5px;">
+                                                        <i class="fas fa-clock"></i> ${new Date(notif.date).toLocaleDateString()} ${new Date(notif.date).toLocaleTimeString()}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        `;
+                        document.body.appendChild(newModal);
+                    }
+                });
+            })
+            .catch(error => {
+                const existingModal = document.querySelector('div[style*="position: fixed"][style*="z-index: 10000"]');
+                if (existingModal) {
+                    existingModal.remove();
+                }
+                alert('Unable to load notifications. Please try again.');
+            });
+        }
+
         // Initialize the dashboard
         document.addEventListener('DOMContentLoaded', function() {
             // Load user data
@@ -861,248 +1104,6 @@
             showToast('Late appointment notifications cleared! Reload the page to test.', 'success');
         }
 
-        // Notification function (global scope)
-        window.showNotifications = function showNotifications() {
-            // Show modal immediately with loading state
-            const modal = document.createElement('div');
-            modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;';
-            modal.innerHTML = `
-                <div style="background: white; border-radius: 15px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
-                    <div style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); padding: 20px; border-radius: 15px 15px 0 0; color: white;">
-                        <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
-                            <i class="fas fa-bell"></i> Notifications
-                        </h2>
-                        <button onclick="this.closest('div[style*=\\'position: fixed\\']').remove()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
-                    </div>
-                    <div style="padding: 20px; text-align: center;">
-                        <div style="padding: 40px; color: #999;">
-                            <i class="fas fa-spinner fa-spin" style="font-size: 48px; margin-bottom: 10px;"></i>
-                            <p>Loading notifications...</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-            
-            // Load appointments and messages count
-            const userData = JSON.parse(localStorage.getItem('currentUser') || '{}');
-            if (!userData.id) {
-                modal.remove();
-                alert('Please login first');
-                return;
-            }
-
-            const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
-            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
-
-            // Fetch notifications from notifications table
-            fetch(`${SUPABASE_URL}/rest/v1/notifications?user_id=eq.${userData.id}&order=created_at.desc&limit=50`, {
-                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-            })
-            .then(response => response.json())
-            .then(dbNotifications => {
-                // Fetch appointments - get more and sort by created_at to get newest bookings/confirmations
-                return fetch(`${SUPABASE_URL}/rest/v1/appointments?patient_id=eq.${userData.id}&select=id,appointment_date,appointment_time,status,service_type,created_at&order=created_at.desc&limit=20`, {
-                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-                })
-                .then(response => response.json())
-                .then(appointments => {
-                    
-                    // Fetch unread messages
-                    return fetch(`${SUPABASE_URL}/rest/v1/messages?receiver_id=eq.${userData.id}&is_read=eq.false&select=id,sender_id,content,created_at&order=created_at.desc&limit=10`, {
-                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-                    })
-                    .then(response => response.json())
-                    .then(messages => {
-                        // Ensure messages is an array
-                        const messagesArray = Array.isArray(messages) ? messages : [];
-                        
-                        // Get sender names if there are messages
-                        let senderIds = [];
-                        if (messagesArray.length > 0) {
-                            senderIds = [...new Set(messagesArray.map(msg => msg.sender_id))];
-                        }
-                        
-                        if (senderIds.length === 0) {
-                            return { appointments, messages: messagesArray, senderMap: {}, dbNotifications: Array.isArray(dbNotifications) ? dbNotifications : [] };
-                        }
-                        
-                        return fetch(`${SUPABASE_URL}/rest/v1/users?id=in.(${senderIds.join(',')})&select=id,name`, {
-                            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-                        })
-                        .then(response => response.json())
-                        .then(senders => {
-                            const senderMap = {};
-                            if (Array.isArray(senders)) {
-                                senders.forEach(sender => {
-                                    senderMap[sender.id] = sender.name;
-                                });
-                            }
-                            
-                            return { appointments, messages: messagesArray, senderMap, dbNotifications: Array.isArray(dbNotifications) ? dbNotifications : [] };
-                        });
-                    })
-                    .then(({ appointments, messages, senderMap, dbNotifications }) => {
-                        // Show notifications modal
-                        const notifications = [];
-                        
-                        // Add notifications from database (includes reschedule notifications)
-                        dbNotifications.forEach(notif => {
-                            notifications.push({
-                                type: notif.type || 'appointment',
-                                title: notif.title || 'Notification',
-                                message: notif.message || '',
-                                date: notif.created_at,
-                                status: notif.type === 'appointment' && notif.title && notif.title.includes('Rescheduled') ? 'rescheduled' : (notif.type === 'message' ? 'message' : 'appointment')
-                            });
-                        });
-                        
-                        // Add appointment notifications (only if not already in dbNotifications)
-                        appointments.forEach(apt => {
-                            // Check if this appointment already has a notification in dbNotifications
-                            const hasNotification = dbNotifications.some(notif => 
-                                notif.data && notif.data.appointment_id === apt.id
-                            );
-                            
-                            if (!hasNotification) {
-                                const date = new Date(apt.appointment_date);
-                                const status = apt.status;
-                                const service = apt.service_type || 'General';
-                                
-                                if (status === 'confirmed') {
-                                    notifications.push({
-                                        type: 'appointment_confirmed',
-                                        title: `Appointment Confirmed: ${service}`,
-                                        message: `Your appointment on ${date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} has been confirmed.`,
-                                        date: apt.created_at || apt.appointment_date,
-                                        status: status
-                                    });
-                                } else if (status === 'pending') {
-                                    notifications.push({
-                                        type: 'appointment_pending',
-                                        title: `Pending Appointment: ${service}`,
-                                        message: `Your appointment on ${date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} is pending confirmation.`,
-                                        date: apt.created_at || apt.appointment_date,
-                                        status: status
-                                    });
-                                }
-                            }
-                        });
-                        
-                        // Add message notifications (only if not already in dbNotifications)
-                        messages.forEach(msg => {
-                            // Check if this message already has a notification in dbNotifications
-                            const hasNotification = dbNotifications.some(notif => 
-                                notif.type === 'message' && notif.data && notif.data.message_id === msg.id
-                            );
-                            
-                            if (!hasNotification) {
-                                const senderName = senderMap[msg.sender_id] || 'Dentist';
-                                const truncatedContent = msg.content && msg.content.length > 50 ? msg.content.substring(0, 50) + '...' : (msg.content || 'No content');
-                                notifications.push({
-                                    type: 'message',
-                                    title: `New Message from ${senderName}`,
-                                    message: truncatedContent,
-                                    date: msg.created_at,
-                                    status: 'message'
-                                });
-                            }
-                        });
-                    
-                    // Sort notifications by date (newest first)
-                    notifications.sort((a, b) => new Date(b.date) - new Date(a.date));
-                    
-                    // Update existing modal with notifications
-                    const existingModal = document.querySelector('div[style*="position: fixed"][style*="z-index: 10000"]');
-                    if (existingModal) {
-                        existingModal.innerHTML = `
-                        <div style="background: white; border-radius: 15px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
-                            <div style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); padding: 20px; border-radius: 15px 15px 0 0; color: white;">
-                                <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
-                                    <i class="fas fa-bell"></i> Notifications
-                                </h2>
-                                <button onclick="this.closest('div[style*=\\'position: fixed\\']').remove()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
-                            </div>
-                            <div style="padding: 20px;">
-                                ${notifications.length === 0 ? `
-                                    <div style="text-align: center; padding: 40px; color: #999;">
-                                        <i class="fas fa-bell-slash" style="font-size: 48px; margin-bottom: 10px;"></i>
-                                        <p>No notifications</p>
-                                    </div>
-                                ` : notifications.map(notif => {
-                                    const isRescheduled = notif.status === 'rescheduled' || (notif.title && notif.title.includes('Rescheduled'));
-                                    const borderColor = isRescheduled ? '#17a2b8' : notif.status === 'confirmed' ? '#28a745' : notif.status === 'message' ? '#667eea' : '#f39c12';
-                                    const icon = isRescheduled ? 'fa-calendar-alt' : notif.status === 'confirmed' ? 'fa-check-circle' : notif.status === 'message' ? 'fa-comment' : 'fa-clock';
-                                    const iconColor = isRescheduled ? '#17a2b8' : notif.status === 'confirmed' ? '#28a745' : notif.status === 'message' ? '#667eea' : '#f39c12';
-                                    
-                                    return `
-                                        <div style="padding: 15px; border-left: 4px solid ${borderColor}; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: start; gap: 10px;">
-                                            <i class="fas ${icon}" style="color: ${iconColor}; font-size: 24px; margin-top: 5px;"></i>
-                                            <div style="flex: 1;">
-                                                <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${notif.title}</h4>
-                                                <p style="margin: 0; color: #666;">${notif.message}</p>
-                                                <small style="color: #999; display: block; margin-top: 5px;">
-                                                    <i class="fas fa-clock"></i> ${new Date(notif.date).toLocaleDateString()} ${new Date(notif.date).toLocaleTimeString()}
-                                                </small>
-                                            </div>
-                                        </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                        </div>
-                    `;
-                    } else {
-                        // If modal was removed, create new one
-                        const newModal = document.createElement('div');
-                        newModal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;';
-                        newModal.innerHTML = `
-                            <div style="background: white; border-radius: 15px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
-                                <div style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); padding: 20px; border-radius: 15px 15px 0 0; color: white;">
-                                    <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
-                                        <i class="fas fa-bell"></i> Notifications
-                                    </h2>
-                                    <button onclick="this.closest('div[style*=\\'position: fixed\\']').remove()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
-                                </div>
-                                <div style="padding: 20px;">
-                                    ${notifications.length === 0 ? `
-                                        <div style="text-align: center; padding: 40px; color: #999;">
-                                            <i class="fas fa-bell-slash" style="font-size: 48px; margin-bottom: 10px;"></i>
-                                            <p>No notifications</p>
-                                        </div>
-                                    ` : notifications.map(notif => {
-                                        const isRescheduled = notif.status === 'rescheduled' || (notif.title && notif.title.includes('Rescheduled'));
-                                        const borderColor = isRescheduled ? '#17a2b8' : notif.status === 'confirmed' ? '#28a745' : notif.status === 'message' ? '#667eea' : '#f39c12';
-                                        const icon = isRescheduled ? 'fa-calendar-alt' : notif.status === 'confirmed' ? 'fa-check-circle' : notif.status === 'message' ? 'fa-comment' : 'fa-clock';
-                                        const iconColor = isRescheduled ? '#17a2b8' : notif.status === 'confirmed' ? '#28a745' : notif.status === 'message' ? '#667eea' : '#f39c12';
-                                        
-                                        return `
-                                            <div style="padding: 15px; border-left: 4px solid ${borderColor}; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: start; gap: 10px;">
-                                                <i class="fas ${icon}" style="color: ${iconColor}; font-size: 24px; margin-top: 5px;"></i>
-                                                <div style="flex: 1;">
-                                                    <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${notif.title}</h4>
-                                                    <p style="margin: 0; color: #666;">${notif.message}</p>
-                                                    <small style="color: #999; display: block; margin-top: 5px;">
-                                                        <i class="fas fa-clock"></i> ${new Date(notif.date).toLocaleDateString()} ${new Date(notif.date).toLocaleTimeString()}
-                                                    </small>
-                                                </div>
-                                            </div>
-                                        `;
-                                    }).join('')}
-                                </div>
-                            </div>
-                        `;
-                        document.body.appendChild(newModal);
-                    }
-                });
-            })
-            .catch(error => {
-                const existingModal = document.querySelector('div[style*="position: fixed"][style*="z-index: 10000"]');
-                if (existingModal) {
-                    existingModal.remove();
-                }
-                alert('Unable to load notifications. Please try again.');
-            });
-        };
 
         // Logout function
         function logout() {
