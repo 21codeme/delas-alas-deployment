@@ -857,9 +857,9 @@
                             <i class="fas fa-calendar-check"></i>
                         </div>
                         <div class="stat-info">
-                            <h3>Upcoming Appointments</h3>
+                            <h3>Today's Appointments</h3>
                             <p class="stat-value" id="upcomingAppointments">0</p>
-                            <span class="stat-change positive">Next: Tomorrow</span>
+                            <span class="stat-change positive">Scheduled today</span>
                         </div>
                     </div>
 
@@ -1463,9 +1463,18 @@
 
         // Update statistics
         function updateStats() {
-            const upcomingAppointments = appointments.filter(apt => 
-                new Date(apt.appointment_date) >= new Date() && apt.status !== 'cancelled'
-            ).length;
+            // Get today's date in YYYY-MM-DD format
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayStr = today.toISOString().split('T')[0];
+            
+            // Count appointments for today
+            const todaysAppointments = appointments.filter(apt => {
+                const aptDate = new Date(apt.appointment_date);
+                aptDate.setHours(0, 0, 0, 0);
+                const aptDateStr = aptDate.toISOString().split('T')[0];
+                return aptDateStr === todayStr && apt.status !== 'cancelled';
+            }).length;
             
             const completedTreatments = treatments.filter(treatment => 
                 treatment.status === 'completed'
@@ -1479,7 +1488,7 @@
                 .filter(apt => new Date(apt.appointment_date) >= new Date())
                 .sort((a, b) => new Date(a.appointment_date) - new Date(b.appointment_date))[0];
 
-            document.getElementById('upcomingAppointments').textContent = upcomingAppointments;
+            document.getElementById('upcomingAppointments').textContent = todaysAppointments;
             document.getElementById('completedTreatments').textContent = completedTreatments;
             document.getElementById('unreadMessages').textContent = unreadMessages;
             document.getElementById('nextCheckup').textContent = nextAppointment ? 
