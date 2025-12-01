@@ -2142,14 +2142,15 @@
                     // Continue - user data is already deleted from public tables
                 }
                 
-                // Step 4: Clear all localStorage data
+                // Step 4: Clear all localStorage data FIRST
                 localStorage.clear();
+                sessionStorage.clear();
                 
                 // Step 5: Show success message and redirect
                 showToast('✅ Your account and all data have been deleted successfully.', 'success');
                 
-                // Use absolute path or calculate relative path correctly
-                const redirectUrl = window.location.origin + '/index.html';
+                // Use absolute path with login parameter to auto-show login modal
+                const redirectUrl = window.location.origin + '/index.html?deleted=true#login';
                 
                 setTimeout(() => {
                     alert('Account deleted successfully. You will now be redirected to the login page.');
@@ -2164,14 +2165,15 @@
                 // Even on error, clear localStorage and redirect after a delay
                 try {
                     localStorage.clear();
+                    sessionStorage.clear();
                     setTimeout(() => {
-                        const redirectUrl = window.location.origin + '/index.html';
+                        const redirectUrl = window.location.origin + '/index.html?deleted=true#login';
                         window.location.replace(redirectUrl);
                     }, 3000);
                 } catch (redirectError) {
                     console.error('❌ Error redirecting:', redirectError);
                     // Last resort - try relative path
-                    window.location.href = '../../index.html';
+                    window.location.href = '../../index.html?deleted=true#login';
                 }
             }
         }

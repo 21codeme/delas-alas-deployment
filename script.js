@@ -68,11 +68,35 @@ function initializeApp() {
     // Check for email confirmation redirect (access_token in URL hash)
     handleEmailConfirmation();
     
-    // Check if user is logged in
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-        currentUser = JSON.parse(savedUser);
-        updateUIForLoggedInUser();
+    // Check if redirected after account deletion - auto-show login modal
+    const urlParams = new URLSearchParams(window.location.search);
+    const hash = window.location.hash;
+    if (urlParams.get('deleted') === 'true' || hash === '#login') {
+        // Clear any remaining localStorage data
+        localStorage.clear();
+        sessionStorage.clear();
+        // Show login modal after a short delay
+        setTimeout(() => {
+            if (typeof showLoginModal === 'function') {
+                showLoginModal();
+            }
+        }, 500);
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
+    // Check if user is logged in (only if not redirected from deletion)
+    if (!urlParams.get('deleted')) {
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+            try {
+                currentUser = JSON.parse(savedUser);
+                updateUIForLoggedInUser();
+            } catch (e) {
+                // If parsing fails, clear it
+                localStorage.removeItem('currentUser');
+            }
+        }
     }
     
     // Initialize smooth scrolling
