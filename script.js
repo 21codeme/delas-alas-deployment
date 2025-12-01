@@ -389,16 +389,27 @@ function initializeSmoothScrolling() {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             const targetId = this.getAttribute('href');
-            const targetSection = document.querySelector(targetId);
             
-            if (targetSection) {
-                const headerHeight = document.querySelector('.header').offsetHeight;
-                const targetPosition = targetSection.offsetTop - headerHeight;
+            // Skip if targetId is just "#" or empty
+            if (!targetId || targetId === '#' || targetId.length <= 1) {
+                return;
+            }
+            
+            // Validate selector before using querySelector
+            try {
+                const targetSection = document.querySelector(targetId);
                 
-                window.scrollTo({
-                    top: targetPosition,
-                    behavior: 'smooth'
-                });
+                if (targetSection) {
+                    const headerHeight = document.querySelector('.header')?.offsetHeight || 0;
+                    const targetPosition = targetSection.offsetTop - headerHeight;
+                    
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            } catch (error) {
+                console.warn('Invalid selector for smooth scroll:', targetId, error);
             }
         });
     });
