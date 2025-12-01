@@ -806,6 +806,9 @@ async function handleRegister(event) {
                 const currentUrl = window.location.origin + window.location.pathname;
                 const emailRedirectTo = `${currentUrl}#email_confirmed=true`;
                 
+                console.log('📧 Signing up user with email confirmation...');
+                console.log('📧 Email redirect URL:', emailRedirectTo);
+                
                 // Include user metadata in signup so the database trigger has the data it needs
                 // Add emailRedirectTo to ensure confirmation emails are sent with correct redirect URL
                 const result = await supabase.auth.signUp({
@@ -819,6 +822,12 @@ async function handleRegister(event) {
                             user_type: userType
                         }
                     }
+                });
+                
+                console.log('📧 Signup result:', {
+                    user: result.data?.user ? 'User created' : 'No user',
+                    session: result.data?.session ? 'Session created' : 'No session (email confirmation required)',
+                    error: result.error ? result.error.message : 'No error'
                 });
                 authData = result.data;
                 authError = result.error;
