@@ -624,6 +624,55 @@
             });
         }
 
+        // Navigation function (defined early for global access)
+        function showSection(sectionId) {
+            loadSection(sectionId, event.target);
+        }
+
+        // Load section content dynamically (defined early for global access)
+        function loadSection(section, clickedElement = null) {
+            try {
+                const frame = document.getElementById('contentFrame');
+                if (!frame) {
+                    return;
+                }
+                
+                const navItems = document.querySelectorAll('.nav-item a');
+                
+                // Update active nav item
+                navItems.forEach(item => item.classList.remove('active'));
+                
+                // Find and activate the correct nav item
+                if (clickedElement) {
+                    const navItem = clickedElement.closest('.nav-item a');
+                    if (navItem) {
+                        navItem.classList.add('active');
+                    }
+                } else {
+                    // Fallback: find nav item by section name
+                    const targetNavItem = document.querySelector(`[onclick*="${section}"]`);
+                    if (targetNavItem) {
+                        targetNavItem.classList.add('active');
+                    }
+                }
+                
+                // Load section - use standalone version for all sections
+                const sectionUrl = `sections/${section}/${section}-standalone.html`;
+                
+                frame.src = sectionUrl;
+
+                // Close mobile menu if open
+                if (window.innerWidth <= 768) {
+                    const sidebar = document.querySelector('.sidebar');
+                    if (sidebar) {
+                        sidebar.classList.remove('mobile-open');
+                    }
+                }
+            } catch (error) {
+                // Error handling
+            }
+        }
+
         // Initialize the dashboard
         document.addEventListener('DOMContentLoaded', function() {
             // Load user data
@@ -794,49 +843,6 @@
             }
         }
 
-        // Load section content dynamically
-        function loadSection(section, clickedElement = null) {
-            try {
-                const frame = document.getElementById('contentFrame');
-                if (!frame) {
-                    return;
-                }
-                
-                const navItems = document.querySelectorAll('.nav-item a');
-                
-                // Update active nav item
-                navItems.forEach(item => item.classList.remove('active'));
-                
-                // Find and activate the correct nav item
-                if (clickedElement) {
-                    const navItem = clickedElement.closest('.nav-item a');
-                    if (navItem) {
-                        navItem.classList.add('active');
-                    }
-                } else {
-                    // Fallback: find nav item by section name
-                    const targetNavItem = document.querySelector(`[onclick*="${section}"]`);
-                    if (targetNavItem) {
-                        targetNavItem.classList.add('active');
-                    }
-                }
-                
-                // Load section - use standalone version for all sections
-                const sectionUrl = `sections/${section}/${section}-standalone.html`;
-                
-                frame.src = sectionUrl;
-
-                // Close mobile menu if open
-                if (window.innerWidth <= 768) {
-                    const sidebar = document.querySelector('.sidebar');
-                    if (sidebar) {
-                        sidebar.classList.remove('mobile-open');
-                    }
-                }
-            } catch (error) {
-                // Error handling
-            }
-        }
 
         // Listen for messages from iframe
         window.addEventListener('message', function(event) {
@@ -872,10 +878,6 @@
             }
         });
 
-        // Navigation functions
-        function showSection(sectionId) {
-            loadSection(sectionId, event.target);
-        }
 
         // Mobile menu toggle
         function toggleMobileMenu() {
