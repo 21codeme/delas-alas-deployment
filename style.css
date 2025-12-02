@@ -293,9 +293,10 @@ body {
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 30px;
+    width: 100%;
 }
 
 /* Typography */
@@ -807,24 +808,25 @@ p {
 
 .services-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.2rem;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
     margin-top: 1rem;
     max-width: 100%;
     width: 100%;
+    padding: 0 20px;
 }
 
 .service-card {
     background: var(--white);
-    padding: 1.5rem;
-    border-radius: 10px;
+    padding: 2rem;
+    border-radius: 12px;
     box-shadow: var(--shadow);
     text-align: center;
     transition: var(--transition);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 320px;
+    min-height: 380px;
     width: 100%;
 }
 
@@ -834,40 +836,40 @@ p {
 }
 
 .service-icon {
-    width: 70px;
-    height: 70px;
+    width: 80px;
+    height: 80px;
     background: var(--primary-color);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1rem;
-    font-size: 1.8rem;
+    margin: 0 auto 1.2rem;
+    font-size: 2rem;
     color: var(--white);
 }
 
 .service-card h3 {
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.8rem;
     color: var(--text-color);
-    font-size: 1.3rem;
+    font-size: 1.4rem;
     line-height: 1.4;
     font-weight: 600;
 }
 
 .service-features {
     list-style: none;
-    margin: 1rem 0;
+    margin: 1.2rem 0;
     text-align: left;
-    font-size: 0.95rem;
+    font-size: 1rem;
     flex-grow: 1;
 }
 
 .service-features li {
-    padding: 0.4rem 0;
+    padding: 0.5rem 0;
     color: var(--text-color);
     position: relative;
     padding-left: 1.5rem;
-    line-height: 1.5;
+    line-height: 1.6;
 }
 
 .service-features li::before {
@@ -1366,13 +1368,14 @@ p {
     }
     
     .services-grid {
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.2rem;
+        padding: 0 15px;
     }
     
     .service-card {
-        padding: 1.2rem;
-        min-height: 300px;
+        padding: 1.5rem;
+        min-height: 350px;
     }
     
     .footer-content {
