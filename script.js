@@ -976,52 +976,9 @@ async function handleResetPassword(event) {
     try {
         showToast('Resetting password...', 'info');
         
-        // Use Supabase to update password
-        // First, we need to sign in or use admin API to update password
-        // Since we don't have the old password, we'll use a different approach
+        console.log('🔐 Resetting password for:', email);
         
-        // Try to sign in with a temporary method or use admin API
-        // For now, let's use the Supabase auth admin API if available
-        const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
-        
-        // Get user ID from email
-        const userResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?email=eq.${encodeURIComponent(email)}&select=id`, {
-            headers: {
-                'apikey': SUPABASE_KEY,
-                'Authorization': `Bearer ${SUPABASE_KEY}`
-            }
-        });
-        
-        if (!userResponse.ok) {
-            showToast('User not found. Please contact support.', 'error');
-            return;
-        }
-        
-        const users = await userResponse.json();
-        if (!users || users.length === 0) {
-            showToast('User not found. Please contact support.', 'error');
-            return;
-        }
-        
-        const userId = users[0].id;
-        
-        // Update password using Supabase auth API
-        // Note: This requires the user to be authenticated or use admin API
-        // For password reset, we should use Supabase's built-in password reset flow
-        // But since we're using OTP, we'll need to use a different approach
-        
-        // Try to update password via Supabase client
-        if (supabase && supabase.auth) {
-            // We need to use updateUser or admin API
-            // For now, show a message that they need to login first
-            showToast('Password reset requires authentication. Please login first and change your password from settings.', 'info');
-            closeModal('resetPasswordModal');
-            showLoginModal();
-            return;
-        }
-        
-        // Alternative: Use a serverless function to update password
+        // Use API endpoint to reset password (it handles auth.users lookup)
         const API_URL = window.location.origin.includes('vercel.app') 
             ? window.location.origin 
             : 'http://localhost:3000';
@@ -1037,18 +994,27 @@ async function handleResetPassword(event) {
             })
         });
         
+        console.log('📡 Reset Password Response Status:', resetResponse.status);
+        const result = await resetResponse.json();
+        console.log('📦 Reset Password Result:', result);
+        
         if (resetResponse.ok) {
-            const result = await resetResponse.json();
             if (result.success) {
                 showToast('Password reset successfully! Please login with your new password.', 'success');
                 closeModal('resetPasswordModal');
                 passwordResetEmail = null;
-                showLoginModal();
+                setTimeout(() => {
+                    showLoginModal();
+                }, 1500);
             } else {
-                showToast(result.error || 'Failed to reset password. Please try again.', 'error');
+                const errorMsg = result.error || 'Failed to reset password. Please try again.';
+                console.error('❌ Password reset failed:', errorMsg);
+                showToast(errorMsg, 'error');
             }
         } else {
-            showToast('Password reset service is not available. Please contact support.', 'error');
+            const errorMsg = result.error || `Server error (${resetResponse.status}). Please try again.`;
+            console.error('❌ HTTP Error:', resetResponse.status, result);
+            showToast(errorMsg, 'error');
         }
         
     } catch (error) {
