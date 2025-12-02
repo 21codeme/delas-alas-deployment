@@ -19,7 +19,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { email, name } = req.body;
+    const { email, name, otp } = req.body;
 
     if (!email) {
       return res.status(400).json({ 
@@ -28,8 +28,17 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // Use provided OTP or generate new one if not provided
+    let otpCode;
+    if (otp) {
+      // Use the OTP that was already generated and stored
+      otpCode = otp.toString();
+      console.log('📧 Using provided OTP:', otpCode);
+    } else {
+      // Generate 6-digit OTP if not provided (for backward compatibility)
+      otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      console.log('📧 Generated new OTP:', otpCode);
+    }
     
     // OTP expires in 10 minutes
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
@@ -47,26 +56,32 @@ module.exports = async (req, res) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Store OTP in Supabase
-    const { error: dbError } = await supabase
-      .from('otps')
-      .insert([{
-        email: email,
-        otp: otp,
-        expires_at: expiresAt,
-        verified: false
-      }]);
-
-    if (dbError) {
-      console.error('❌ Error storing OTP in Supabase:', dbError);
-      return res.status(500).json({
-        success: false,
-        error: 'Failed to store OTP',
-        details: dbError.message
-      });
+    // Store OTP in Supabase (only if not already stored by the caller)
+    // The OTP should already be stored by the frontend via store_otp_code RPC
+    // So we don't need to store it again here, but we'll try to update if it exists
+    // This is just a backup in case the frontend storage failed
+    try {
+      const { error: dbError } = await supabase
+        .from('otps')
+        .upsert([{
+          email: email,
+          otp: otpCode,
+          expires_at: expiresAt,
+          verified: false
+        }], {
+          onConflict: 'email'
+        });
+      
+      if (dbError) {
+        console.warn('⚠️ Could not store OTP in otps table (may already be in otp_codes):', dbError.message);
+        // Don't fail if this errors - the OTP might already be stored via RPC
+      }
+    } catch (storageError) {
+      console.warn('⚠️ OTP storage warning (may already be stored):', storageError.message);
     }
 
-    console.log('✅ OTP stored in Supabase for:', email);
+    // Note: OTP should already be stored via store_otp_code RPC from frontend
+    // This is just a backup storage attempt
 
     // Get Gmail credentials from environment variables
     const GMAIL_USER = process.env.GMAIL_USER || '';
@@ -105,7 +120,7 @@ module.exports = async (req, res) => {
             <p style="color: #333; font-size: 16px;">Hello ${name || 'User'},</p>
             <p style="color: #333; font-size: 16px;">You have requested to change your password. Please use the following confirmation code:</p>
             <div style="background: #f0f0f0; padding: 30px; border-radius: 8px; text-align: center; margin: 30px 0;">
-              <h1 style="color: #667eea; font-size: 48px; margin: 0; font-family: monospace; letter-spacing: 5px;">${otp}</h1>
+              <h1 style="color: #667eea; font-size: 48px; margin: 0; font-family: monospace; letter-spacing: 5px;">${otpCode}</h1>
             </div>
             <p style="color: #666; font-size: 14px; margin-top: 20px;">This code will expire in <strong>10 minutes</strong>.</p>
             <p style="color: #666; font-size: 14px;">If you did not request this password change, please ignore this email.</p>
