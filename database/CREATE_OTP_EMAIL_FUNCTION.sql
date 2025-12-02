@@ -95,8 +95,8 @@ BEGIN
     );
   END IF;
   
-  -- Verify OTP
-  IF stored_otp.otp_code = code THEN
+  -- Verify OTP (trim and compare as text to avoid type issues)
+  IF TRIM(stored_otp.otp_code) = TRIM(code) THEN
     -- Delete OTP after successful verification
     DELETE FROM otp_codes WHERE email = user_email;
     RETURN json_build_object(
@@ -104,8 +104,11 @@ BEGIN
       'message', 'OTP verified successfully'
     );
   ELSE
+    -- Log the mismatch for debugging (optional)
+    RAISE NOTICE 'OTP mismatch: stored=%, provided=%', stored_otp.otp_code, code;
     RETURN json_build_object(
       'success', false,
+      'error', 'Invalid OTP code',
       'message', 'Invalid OTP code'
     );
   END IF;

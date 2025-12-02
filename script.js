@@ -805,6 +805,8 @@ async function handleForgotPassword(event) {
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
         
         // Store OTP in database
+        console.log('💾 Storing OTP:', { email, otp });
+        
         const storeOTPResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/store_otp_code`, {
             method: 'POST',
             headers: {
@@ -819,11 +821,24 @@ async function handleForgotPassword(event) {
             })
         });
         
+        console.log('📡 Store OTP Response Status:', storeOTPResponse.status);
+        const storeResult = await storeOTPResponse.json();
+        console.log('📦 Store OTP Result:', storeResult);
+        
         if (!storeOTPResponse.ok) {
-            console.error('Failed to store OTP:', await storeOTPResponse.text());
+            const errorText = await storeOTPResponse.text();
+            console.error('❌ Failed to store OTP:', errorText);
             showToast('Failed to generate OTP. Please try again.', 'error');
             return;
         }
+        
+        if (storeResult && !storeResult.success) {
+            console.error('❌ Store OTP returned success=false:', storeResult);
+            showToast('Failed to store OTP. Please try again.', 'error');
+            return;
+        }
+        
+        console.log('✅ OTP stored successfully');
         
         // Send OTP via Vercel API (using Nodemailer with Gmail SMTP)
         const API_URL = window.location.origin.includes('vercel.app') 
@@ -888,6 +903,8 @@ async function handleOTPVerification(event) {
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
         
         // Verify OTP
+        console.log('🔐 Verifying OTP:', { email, otpCode: otpCode });
+        
         const verifyOTPResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/verify_otp_code`, {
             method: 'POST',
             headers: {
@@ -901,13 +918,28 @@ async function handleOTPVerification(event) {
             })
         });
         
+        console.log('📡 Verify OTP Response Status:', verifyOTPResponse.status);
         const verifyResult = await verifyOTPResponse.json();
+        console.log('📦 Verify OTP Result:', verifyResult);
         
-        if (verifyOTPResponse.ok && verifyResult.success) {
-            showToast('OTP verified successfully!', 'success');
-            showResetPasswordModal();
+        // Check if response is successful
+        if (verifyOTPResponse.ok) {
+            // The RPC function returns JSON with success field
+            if (verifyResult && verifyResult.success === true) {
+                showToast('OTP verified successfully!', 'success');
+                showResetPasswordModal();
+            } else {
+                // Check for error message
+                const errorMsg = verifyResult.error || verifyResult.message || 'Invalid or expired OTP code. Please try again.';
+                console.error('❌ OTP Verification Failed:', errorMsg);
+                showToast(errorMsg, 'error');
+                document.getElementById('otpCode').value = '';
+            }
         } else {
-            showToast(verifyResult.error || 'Invalid or expired OTP code. Please try again.', 'error');
+            // HTTP error
+            console.error('❌ HTTP Error:', verifyOTPResponse.status, verifyResult);
+            const errorMsg = verifyResult.error || verifyResult.message || `Server error (${verifyOTPResponse.status}). Please try again.`;
+            showToast(errorMsg, 'error');
             document.getElementById('otpCode').value = '';
         }
         
