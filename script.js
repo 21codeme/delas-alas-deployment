@@ -306,6 +306,11 @@ function setupEventListeners() {
         registerForm.addEventListener('submit', handleRegister);
     }
 
+    const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+    if (forgotPasswordForm) {
+        forgotPasswordForm.addEventListener('submit', handleForgotPassword);
+    }
+
     const appointmentForm = document.getElementById('appointmentForm');
     if (appointmentForm) {
         appointmentForm.addEventListener('submit', handleAppointment);
