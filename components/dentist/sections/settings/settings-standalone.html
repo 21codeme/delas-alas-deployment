@@ -2465,19 +2465,31 @@
                 
             } catch (error) {
                 console.error('❌ Error deleting account:', error);
-                showNotification('Failed to delete account. Please try again later.', 'error');
+                showNotification('Failed to delete account. Please try again or contact support.', 'error');
                 
-                // Even on error, clear localStorage and redirect after a delay
+                // Even on error, sign out and clear localStorage and redirect after a delay
                 try {
+                    // Try to sign out from Supabase
+                    try {
+                        if (window.supabase && window.supabase.auth) {
+                            await window.supabase.auth.signOut();
+                        } else if (window.parent && window.parent.supabase && window.parent.supabase.auth) {
+                            await window.parent.supabase.auth.signOut();
+                        }
+                    } catch (signOutError) {
+                        console.warn('⚠️ Error signing out on error path:', signOutError);
+                    }
+                    
                     localStorage.clear();
+                    sessionStorage.clear();
                     setTimeout(() => {
-                        const redirectUrl = window.location.origin + '/index.html';
+                        const redirectUrl = window.location.origin + '/index.html?deleted=true#login';
                         window.location.replace(redirectUrl);
                     }, 3000);
                 } catch (redirectError) {
                     console.error('❌ Error redirecting:', redirectError);
                     // Last resort - try relative path
-                    window.location.href = '../../../index.html';
+                    window.location.href = '../../index.html?deleted=true#login';
                 }
             }
         }
