@@ -47,6 +47,8 @@ module.exports = async (req, res) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    console.log('🔍 Looking for user with email:', email);
+
     // Get user by email from auth.users
     const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
     
@@ -54,18 +56,31 @@ module.exports = async (req, res) => {
       console.error('❌ Error fetching users:', authError);
       return res.status(500).json({
         success: false,
-        error: 'Failed to fetch user information'
+        error: 'Failed to fetch user information',
+        details: authError.message
       });
+    }
+
+    console.log('📊 Total users found:', authUsers?.users?.length || 0);
+    
+    // Log first few user emails for debugging (without exposing full data)
+    if (authUsers?.users && authUsers.users.length > 0) {
+      const sampleEmails = authUsers.users.slice(0, 5).map(u => u.email);
+      console.log('📧 Sample user emails:', sampleEmails);
     }
 
     const user = authUsers.users.find(u => u.email === email);
     
     if (!user) {
+      console.error('❌ User not found in auth.users:', email);
       return res.status(404).json({
         success: false,
-        error: 'User not found'
+        error: 'User not found. Please make sure you are using the correct email address.',
+        hint: 'User might not exist in auth.users table'
       });
     }
+    
+    console.log('✅ User found:', { id: user.id, email: user.email });
 
     // Update password using admin API
     const { data: updateData, error: updateError } = await supabase.auth.admin.updateUserById(
