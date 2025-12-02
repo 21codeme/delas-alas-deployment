@@ -2222,19 +2222,12 @@
         async function deleteAccount() {
             try {
                 // First confirmation
-                if (!confirm('⚠️ Are you sure you want to delete your account? This action cannot be undone.')) {
+                if (!confirm('⚠️ WARNING: This will permanently delete your account and all your data!\n\nThis action cannot be undone.\n\nAre you sure you want to continue?')) {
                     return;
                 }
                 
-                // Second confirmation
-                if (!confirm('⚠️ This will permanently delete all your data. Are you absolutely sure?')) {
-                    return;
-                }
-                
-                // Final confirmation
-                const finalConfirmation = prompt('Type "DELETE" to confirm account deletion:');
-                if (finalConfirmation !== 'DELETE') {
-                    showNotification('Account deletion cancelled', 'info');
+                // Second confirmation with more details
+                if (!confirm('🚨 FINAL WARNING:\n\nDeleting your account will:\n• Permanently remove all your appointments\n• Delete all your messages\n• Remove all your treatment records\n• Delete your profile and settings\n• This cannot be undone!\n\nAre you absolutely sure?')) {
                     return;
                 }
                 
@@ -2246,222 +2239,227 @@
                 }
                 
                 const user = JSON.parse(userData);
-                if (!user || !user.id) {
+                if (!user || !user.id || !user.email) {
                     showNotification('Invalid user data.', 'error');
                     return;
                 }
                 
-                showNotification('Deleting account...', 'info');
+                showNotification('Deleting your account and all data...', 'info');
                 
                 const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
                 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
                 
-                // Step 1: Delete user data from all related tables
-                console.log('🗑️ Deleting user data from Supabase...');
-                
-                // Delete appointments
+                // Step 1: Delete user data from public.users and related tables via RPC
+                // This RPC function (delete_user_account) handles appointments, messages, notifications, treatments, and public.users
+                let publicDataDeleted = false;
                 try {
-                    await fetch(`${SUPABASE_URL}/rest/v1/appointments?dentist_id=eq.${user.id}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'apikey': SUPABASE_KEY,
-                            'Authorization': `Bearer ${SUPABASE_KEY}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    console.log('✅ Deleted appointments');
-                } catch (error) {
-                    console.error('⚠️ Error deleting appointments:', error);
-                }
-                
-                // Delete messages (delete as sender)
-                try {
-                    await fetch(`${SUPABASE_URL}/rest/v1/messages?sender_id=eq.${user.id}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'apikey': SUPABASE_KEY,
-                            'Authorization': `Bearer ${SUPABASE_KEY}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    console.log('✅ Deleted messages (as sender)');
-                } catch (error) {
-                    console.error('⚠️ Error deleting messages (as sender):', error);
-                }
-                
-                // Delete messages (delete as receiver)
-                try {
-                    await fetch(`${SUPABASE_URL}/rest/v1/messages?receiver_id=eq.${user.id}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'apikey': SUPABASE_KEY,
-                            'Authorization': `Bearer ${SUPABASE_KEY}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    console.log('✅ Deleted messages (as receiver)');
-                } catch (error) {
-                    console.error('⚠️ Error deleting messages (as receiver):', error);
-                }
-                
-                // Delete notifications
-                try {
-                    await fetch(`${SUPABASE_URL}/rest/v1/notifications?user_id=eq.${user.id}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'apikey': SUPABASE_KEY,
-                            'Authorization': `Bearer ${SUPABASE_KEY}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    console.log('✅ Deleted notifications');
-                } catch (error) {
-                    console.error('⚠️ Error deleting notifications:', error);
-                }
-                
-                // Delete presence
-                try {
-                    await fetch(`${SUPABASE_URL}/rest/v1/presence?user_id=eq.${user.id}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'apikey': SUPABASE_KEY,
-                            'Authorization': `Bearer ${SUPABASE_KEY}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    console.log('✅ Deleted presence');
-                } catch (error) {
-                    console.error('⚠️ Error deleting presence:', error);
-                }
-                
-                // Step 2: Delete user profile from users table
-                try {
-                    const deleteUserResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'apikey': SUPABASE_KEY,
-                            'Authorization': `Bearer ${SUPABASE_KEY}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    console.log('✅ Deleted user profile:', deleteUserResponse.status);
-                } catch (error) {
-                    console.error('⚠️ Error deleting user profile:', error);
-                }
-                
-                // Step 3: Delete user from auth.users to allow email reuse
-                // This is IMPORTANT so the user can create a new account with the same email
-                console.log('🔐 Attempting to delete user from auth.users...');
-                let authUserDeleted = false;
-                
-                // Method 1: Try RPC function to delete from auth.users
-                try {
-                    // Get current session token
-                    const currentSession = await supabase?.auth?.getSession();
-                    const authToken = currentSession?.data?.session?.access_token;
+                    console.log('🗑️ Attempting to delete public user data via RPC function:', user.id);
                     
-                    if (authToken) {
-                        const deleteAuthRpcResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/delete_auth_user`, {
+                    // Try multiple ways to get supabase client
+                    let supabaseClient = null;
+                    if (window.supabase && window.supabase.auth) {
+                        supabaseClient = window.supabase;
+                    } else if (window.parent && window.parent.supabase && window.parent.supabase.auth) {
+                        supabaseClient = window.parent.supabase;
+                    } else if (typeof supabase !== 'undefined') {
+                        supabaseClient = supabase;
+                    }
+                    
+                    let authToken = null;
+                    if (supabaseClient) {
+                        try {
+                            const currentSession = await supabaseClient.auth.getSession();
+                            authToken = currentSession?.data?.session?.access_token;
+                        } catch (sessionError) {
+                            console.warn('⚠️ Could not get session from supabase client:', sessionError);
+                        }
+                    }
+                    
+                    // If no auth token, try to get from localStorage
+                    if (!authToken) {
+                        try {
+                            const authData = localStorage.getItem('sb-xlubjwiumytdkxrzojdg-auth-token');
+                            if (authData) {
+                                const auth = JSON.parse(authData);
+                                authToken = auth?.access_token;
+                            }
+                        } catch (e) {
+                            console.warn('⚠️ Could not get auth token from localStorage');
+                        }
+                    }
+                    
+                    const rpcPublicDeleteResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/delete_user_account`, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': authToken ? `Bearer ${authToken}` : `Bearer ${SUPABASE_KEY}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=representation'
+                        },
+                        body: JSON.stringify({ user_id_to_delete: user.id })
+                    });
+                    
+                    if (rpcPublicDeleteResponse.ok) {
+                        const rpcData = await rpcPublicDeleteResponse.json();
+                        if (rpcData && rpcData.success) {
+                            console.log('✅ Public user data deleted successfully via RPC function:', rpcData);
+                            publicDataDeleted = true;
+                        } else {
+                            console.error('❌ RPC delete_user_account returned success=false:', rpcData);
+                        }
+                    } else {
+                        console.error('❌ RPC delete_user_account failed. Status:', rpcPublicDeleteResponse.status, 'Error:', await rpcPublicDeleteResponse.text());
+                    }
+                } catch (rpcError) {
+                    console.error('❌ Error calling delete_user_account RPC:', rpcError);
+                }
+                
+                // Step 2: Delete user from auth.users table via RPC (for email reuse)
+                // This RPC function (delete_auth_user) handles deletion from auth.users
+                let authUserDeleted = false;
+                if (publicDataDeleted) { // Only attempt auth deletion if public data was deleted
+                    try {
+                        console.log('🗑️ Attempting to delete user from auth.users via RPC function:', user.id);
+                        
+                        // Try multiple ways to get supabase client
+                        let supabaseClient = null;
+                        if (window.supabase && window.supabase.auth) {
+                            supabaseClient = window.supabase;
+                        } else if (window.parent && window.parent.supabase && window.parent.supabase.auth) {
+                            supabaseClient = window.parent.supabase;
+                        } else if (typeof supabase !== 'undefined') {
+                            supabaseClient = supabase;
+                        }
+                        
+                        let authToken = null;
+                        if (supabaseClient) {
+                            try {
+                                const currentSession = await supabaseClient.auth.getSession();
+                                authToken = currentSession?.data?.session?.access_token;
+                            } catch (sessionError) {
+                                console.warn('⚠️ Could not get session:', sessionError);
+                            }
+                        }
+                        
+                        // If no auth token, try to get from localStorage
+                        if (!authToken) {
+                            try {
+                                const authData = localStorage.getItem('sb-xlubjwiumytdkxrzojdg-auth-token');
+                                if (authData) {
+                                    const auth = JSON.parse(authData);
+                                    authToken = auth?.access_token;
+                                }
+                            } catch (e) {
+                                console.warn('⚠️ Could not get auth token from localStorage');
+                            }
+                        }
+                        
+                        const rpcAuthDeleteResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/delete_auth_user`, {
                             method: 'POST',
                             headers: {
                                 'apikey': SUPABASE_KEY,
-                                'Authorization': `Bearer ${authToken}`,
+                                'Authorization': authToken ? `Bearer ${authToken}` : `Bearer ${SUPABASE_KEY}`,
                                 'Content-Type': 'application/json',
                                 'Prefer': 'return=representation'
                             },
                             body: JSON.stringify({ user_id_to_delete: user.id })
                         });
                         
-                        if (deleteAuthRpcResponse.ok) {
-                            const rpcData = await deleteAuthRpcResponse.json();
-                            if (rpcData && rpcData.success) {
-                                console.log('✅ Deleted user from auth.users via RPC function');
+                        if (rpcAuthDeleteResponse.ok) {
+                            const rpcAuthData = await rpcAuthDeleteResponse.json();
+                            if (rpcAuthData && rpcAuthData.success) {
+                                console.log('✅ User deleted from auth.users successfully via RPC function:', rpcAuthData);
                                 authUserDeleted = true;
                             } else {
-                                console.warn('⚠️ RPC function returned success=false:', rpcData);
+                                console.error('❌ RPC delete_auth_user returned success=false:', rpcAuthData);
                             }
                         } else {
-                            const rpcError = await deleteAuthRpcResponse.text();
-                            console.warn('⚠️ RPC delete_auth_user failed:', rpcError);
+                            console.error('❌ RPC delete_auth_user failed. Status:', rpcAuthDeleteResponse.status, 'Error:', await rpcAuthDeleteResponse.text());
                         }
+                    } catch (rpcAuthError) {
+                        console.error('❌ Error calling delete_auth_user RPC:', rpcAuthError);
                     }
-                } catch (rpcError) {
-                    console.warn('⚠️ RPC delete_auth_user error:', rpcError);
                 }
                 
-                // Method 2: Try Admin API (requires password confirmation)
-                if (!authUserDeleted) {
+                // Fallback to Admin API if RPC for auth.users fails
+                if (!authUserDeleted && publicDataDeleted) {
+                    console.warn('⚠️ RPC delete_auth_user failed, falling back to Admin API (requires service_role key or user access token).');
                     try {
-                        const password = prompt('To delete your account from authentication and allow email reuse, please enter your password:');
-                        if (!password) {
-                            console.warn('⚠️ Password not provided. Account deleted from database but email may not be reusable.');
-                            showNotification('Account deleted from database. To reuse your email, delete it manually from Authentication → Users in Supabase Dashboard.', 'warning');
-                        } else {
-                            // Sign in to get access token
-                            const signInResponse = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'apikey': SUPABASE_KEY,
-                                    'Authorization': `Bearer ${SUPABASE_KEY}`
-                                },
-                                body: JSON.stringify({
-                                    email: user.email,
-                                    password: password
-                                })
-                            });
-                            
-                            if (signInResponse.ok) {
-                                const signInData = await signInResponse.json();
-                                const accessToken = signInData.access_token;
-                                
-                                // Try Admin API
-                                const deleteAuthResponse = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${user.id}`, {
-                                    method: 'DELETE',
-                                    headers: {
-                                        'apikey': SUPABASE_KEY,
-                                        'Authorization': `Bearer ${accessToken}`,
-                                        'Content-Type': 'application/json'
-                                    }
-                                });
-                                
-                                if (deleteAuthResponse.ok) {
-                                    console.log('✅ Deleted user from auth.users via Admin API');
-                                    authUserDeleted = true;
-                                } else {
-                                    const errorText = await deleteAuthResponse.text();
-                                    console.warn('⚠️ Admin API delete failed:', errorText);
-                                    console.warn('⚠️ To reuse your email, delete it manually from Supabase Dashboard → Authentication → Users');
-                                }
-                            } else {
-                                console.warn('⚠️ Password incorrect or sign-in failed');
-                            }
+                        // Try multiple ways to get supabase client
+                        let supabaseClient = null;
+                        if (window.supabase && window.supabase.auth) {
+                            supabaseClient = window.supabase;
+                        } else if (window.parent && window.parent.supabase && window.parent.supabase.auth) {
+                            supabaseClient = window.parent.supabase;
+                        } else if (typeof supabase !== 'undefined') {
+                            supabaseClient = supabase;
                         }
-                    } catch (authError) {
-                        console.warn('⚠️ Could not delete from auth.users:', authError);
+                        
+                        const currentSession = await supabaseClient?.auth?.getSession();
+                        const accessToken = currentSession?.data?.session?.access_token;
+                        
+                        const deleteAuthResponse = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${user.id}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${accessToken || SUPABASE_KEY}`, // Try with user's token, then service key
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        if (deleteAuthResponse.ok) {
+                            console.log('✅ Deleted user from auth.users via Admin API');
+                            authUserDeleted = true;
+                        } else {
+                            console.error('❌ Failed to delete user from auth.users via Admin API. Status:', deleteAuthResponse.status, 'Error:', await deleteAuthResponse.text());
+                        }
+                    } catch (adminApiError) {
+                        console.error('❌ Error deleting from auth.users via Admin API:', adminApiError);
                     }
                 }
                 
-                if (!authUserDeleted) {
-                    console.warn('⚠️ IMPORTANT: Account deleted from database but may still exist in auth.users.');
-                    console.warn('⚠️ To reuse your email, delete it manually from Supabase Dashboard → Authentication → Users');
-                    showNotification('Account deleted. If you want to reuse your email, delete it from Authentication → Users in Supabase Dashboard.', 'info');
+                // Final status check and redirect
+                if (publicDataDeleted && authUserDeleted) {
+                    showNotification('✅ Account fully deleted - email can now be reused.', 'success');
+                } else if (publicDataDeleted && !authUserDeleted) {
+                    showNotification('⚠️ Public data deleted, but failed to delete user from auth.users. Email may not be reusable.', 'warning');
                 } else {
-                    console.log('✅ Account fully deleted - email can now be reused');
+                    showNotification('❌ Failed to delete account. Please try again or contact support.', 'error');
+                    return; // Stop here if public data wasn't deleted
                 }
                 
-                // Step 4: Clear all local storage
+                // Step 3: Sign out and redirect
+                try {
+                    // Notify parent window to logout if in iframe (skip confirmation)
+                    if (window !== window.top && window.parent) {
+                        try {
+                            window.parent.postMessage({ action: 'logout', skipConfirmation: true }, '*');
+                            console.log('✅ Sent logout message to parent window (skip confirmation)');
+                        } catch (postError) {
+                            console.warn('⚠️ Could not send logout message to parent:', postError);
+                        }
+                    }
+                    
+                    // Try to sign out using Supabase client if available
+                    if (window.supabase && window.supabase.auth) {
+                        await window.supabase.auth.signOut();
+                        console.log('✅ Signed out from Supabase Auth');
+                    } else if (window.parent && window.parent.supabase && window.parent.supabase.auth) {
+                        await window.parent.supabase.auth.signOut();
+                        console.log('✅ Signed out from Supabase Auth (parent window)');
+                    } else {
+                        console.warn('⚠️ Supabase client not available for signOut');
+                    }
+                } catch (signOutError) {
+                    console.warn('⚠️ Error signing out:', signOutError);
+                }
+                
                 localStorage.clear();
+                sessionStorage.clear();
                 
-                // Step 5: Show success message and redirect
-                showNotification('✅ Your account and all data have been deleted successfully.', 'success');
-                
-                // Use absolute path or calculate relative path correctly
-                const redirectUrl = window.location.origin + '/index.html';
-                
+                const redirectUrl = window.location.origin + '/index.html?deleted=true#login';
                 setTimeout(() => {
-                    alert('Account deleted successfully. You will now be redirected to the login page.');
-                    // Force redirect - use replace to prevent back button
+                    alert('Account deleted successfully. You have been logged out and will be redirected to the login page.');
                     window.location.replace(redirectUrl);
                 }, 2000);
                 
