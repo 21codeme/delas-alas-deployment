@@ -2209,6 +2209,12 @@
                 if (!userDeleted) {
                     console.error('❌ CRITICAL: All deletion methods failed. User account NOT deleted from Supabase.');
                     console.error('❌ Please run database/CREATE_DELETE_USER_FUNCTION.sql to create the RPC function.');
+                    showToast('Failed to delete account from database. Please contact support or try again later.', 'error');
+                    return; // Stop here if user deletion failed
+                } else {
+                    console.log('✅ User account successfully deleted from public.users');
+                    // The trigger should automatically delete from auth.users
+                    // But we'll also try to delete manually as backup
                 }
                 
                 // Delete appointments
