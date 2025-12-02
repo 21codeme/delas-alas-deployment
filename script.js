@@ -742,6 +742,71 @@ async function handleLogin(event) {
     }
 }
 
+async function handleForgotPassword(event) {
+    event.preventDefault();
+    
+    const email = document.getElementById('forgotPasswordEmail').value.trim();
+    
+    if (!email) {
+        showToast('Please enter your email address', 'error');
+        return;
+    }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showToast('Please enter a valid email address', 'error');
+        return;
+    }
+    
+    try {
+        showToast('Sending password reset link...', 'info');
+        
+        // Use Supabase to send password reset email
+        if (window.supabase && window.supabase.auth) {
+            const { data, error } = await window.supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/index.html#reset_password=true`
+            });
+            
+            if (error) {
+                console.error('Password reset error:', error);
+                showToast(error.message || 'Failed to send password reset email. Please try again.', 'error');
+                return;
+            }
+            
+            if (data) {
+                showToast('Password reset link sent to your email! Please check your inbox.', 'success');
+                closeModal('forgotPasswordModal');
+                
+                // Clear the form
+                document.getElementById('forgotPasswordForm').reset();
+            }
+        } else if (supabase && supabase.auth) {
+            // Fallback to global supabase variable
+            const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/index.html#reset_password=true`
+            });
+            
+            if (error) {
+                console.error('Password reset error:', error);
+                showToast(error.message || 'Failed to send password reset email. Please try again.', 'error');
+                return;
+            }
+            
+            if (data) {
+                showToast('Password reset link sent to your email! Please check your inbox.', 'success');
+                closeModal('forgotPasswordModal');
+                document.getElementById('forgotPasswordForm').reset();
+            }
+        } else {
+            showToast('Password reset service is not available. Please contact support.', 'error');
+        }
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        showToast('An error occurred. Please try again later.', 'error');
+    }
+}
+
 // Rate limiting protection
 let lastRegistrationAttempt = 0;
 const REGISTRATION_COOLDOWN = 5000; // 5 seconds
