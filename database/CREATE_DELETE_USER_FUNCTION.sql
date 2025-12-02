@@ -45,10 +45,24 @@ BEGIN
     
     GET DIAGNOSTICS deleted_count = ROW_COUNT;
     
-    -- Note: Deleting from auth.users requires admin/service_role access
-    -- This function can only delete from public.users
-    -- To delete from auth.users, use Supabase Dashboard → Authentication → Users
-    -- Or create a separate function with service_role permissions
+    -- IMPORTANT: Also delete from auth.users to allow email reuse
+    -- This is critical so users can register again with the same email
+    -- The trigger auto_delete_auth_user should handle this, but we try here as backup
+    BEGIN
+        DELETE FROM auth.users 
+        WHERE id = user_id_to_delete;
+        
+        -- Log success if deletion worked
+        RAISE NOTICE 'User % deleted from auth.users', user_id_to_delete;
+    EXCEPTION
+        WHEN insufficient_privilege THEN
+            -- If we don't have permission, log warning but don't fail
+            -- The trigger should handle this, or user can delete manually from Dashboard
+            RAISE WARNING 'Could not delete user % from auth.users: insufficient privileges. User should be deleted automatically by trigger, or delete manually from Authentication → Users.', user_id_to_delete;
+        WHEN OTHERS THEN
+            -- Log error but don't fail the deletion from public.users
+            RAISE WARNING 'Error deleting user % from auth.users: %. User should be deleted automatically by trigger, or delete manually from Authentication → Users.', user_id_to_delete, SQLERRM;
+    END;
     
     -- Return success
     result := json_build_object(
