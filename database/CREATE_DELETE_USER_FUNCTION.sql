@@ -4,7 +4,13 @@
 -- This function allows users to delete their own account
 -- It bypasses RLS by using SECURITY DEFINER
 
--- Step 1: Create function to delete user account
+-- Step 1: Drop existing function if it exists (with different signature)
+-- ========================================
+-- Drop all possible variations of the function
+DROP FUNCTION IF EXISTS delete_user_account(UUID) CASCADE;
+DROP FUNCTION IF EXISTS delete_user_account(uuid) CASCADE;
+
+-- Step 2: Create function to delete user account
 -- ========================================
 CREATE OR REPLACE FUNCTION delete_user_account(user_id_to_delete UUID)
 RETURNS JSON
@@ -60,18 +66,18 @@ EXCEPTION
 END;
 $$;
 
--- Step 2: Grant execute permissions
+-- Step 3: Grant execute permissions
 -- ========================================
 GRANT EXECUTE ON FUNCTION delete_user_account(UUID) TO anon;
 GRANT EXECUTE ON FUNCTION delete_user_account(UUID) TO authenticated;
 
--- Step 3: Add RLS policy for DELETE (as backup)
+-- Step 4: Add RLS policy for DELETE (as backup)
 -- ========================================
 DROP POLICY IF EXISTS "Users can delete own profile" ON users;
 CREATE POLICY "Users can delete own profile" ON users
     FOR DELETE USING (auth.uid() = id);
 
--- Step 4: Verify the function was created
+-- Step 5: Verify the function was created
 -- ========================================
 SELECT 
     routine_name, 
@@ -81,7 +87,7 @@ FROM information_schema.routines
 WHERE routine_schema = 'public'
 AND routine_name = 'delete_user_account';
 
--- Step 5: Test the function (optional - uncomment to test)
+-- Step 6: Test the function (optional - uncomment to test)
 -- ========================================
 -- SELECT delete_user_account('USER_ID_HERE'::UUID);
 
