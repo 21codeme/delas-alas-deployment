@@ -59,7 +59,7 @@ module.exports = async (req, res) => {
       const { data: publicUser, error: publicError } = await supabase
         .from('users')
         .select('id, email')
-        .eq('email', email.toLowerCase())
+        .ilike('email', email) // Use ilike for case-insensitive search
         .maybeSingle();
       
       if (!publicError && publicUser) {
@@ -74,16 +74,21 @@ module.exports = async (req, res) => {
             userFound = true;
             console.log('✅ User found via getUserById from public.users:', { id: user.id, email: user.email });
           } else {
-            console.warn('⚠️ User exists in public.users but not in auth.users:', getUserError?.message);
+            console.error('❌ User exists in public.users but NOT in auth.users!');
+            console.error('❌ getUserById error:', getUserError?.message || 'User not found');
+            console.error('❌ This means the user was deleted from auth.users but remains in public.users');
           }
         } catch (getUserError) {
-          console.warn('⚠️ getUserById failed:', getUserError.message);
+          console.error('❌ getUserById exception:', getUserError.message);
         }
       } else {
         console.log('⚠️ User not found in public.users');
+        if (publicError) {
+          console.error('❌ Error querying public.users:', publicError.message);
+        }
       }
     } catch (publicError) {
-      console.warn('⚠️ Error checking public.users:', publicError.message);
+      console.error('❌ Exception checking public.users:', publicError.message);
     }
 
     // Method 2: Use listUsers and find by email (if not found yet)
@@ -100,12 +105,21 @@ module.exports = async (req, res) => {
           if (user) {
             userFound = true;
             console.log('✅ User found via listUsers:', { id: user.id, email: user.email });
-          } else {
-            // Log all emails for debugging (first 10 only)
-            const allEmails = authUsers.users.slice(0, 10).map(u => u.email).filter(Boolean);
-            console.log('📧 Available user emails (first 10):', allEmails);
-            console.log('⚠️ User not found in listUsers');
+        } else {
+          // Log all emails for debugging (first 10 only)
+          const allEmails = authUsers.users.slice(0, 10).map(u => u.email).filter(Boolean);
+          console.log('📧 Available user emails (first 10):', allEmails);
+          console.log('⚠️ User not found in listUsers');
+          
+          // Check if email exists but with different case
+          const emailLower = email.toLowerCase();
+          const foundByCase = authUsers.users.find(u => u.email && u.email.toLowerCase() === emailLower);
+          if (foundByCase) {
+            console.log('✅ Found user with different case:', foundByCase.email);
+            user = foundByCase;
+            userFound = true;
           }
+        }
         } else if (authError) {
           console.error('❌ Error with listUsers:', authError.message);
         }
