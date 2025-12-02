@@ -1367,51 +1367,72 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
         });
 
         // Load appointments data
-        // NOTE: This loads ALL appointments (past, present, future) - no date filtering
-        // Historical data from past months (like October) must be preserved and accessible
+        // Load appointments - automatically archive past appointments and show only 30 most recent
         async function loadAppointments() {
             console.log('🔄 Loading appointments using direct API...');
             appointments = [];
 
             try {
-                // Load ALL appointments - no date filtering to preserve historical data
-                // Order by booking date/time (created_at) descending (latest first)
-                const data = await callSupabaseAPI('GET', 'appointments?order=created_at.desc');
+                // Load ALL appointments excluding archived ones
+                // Order by appointment_date and appointment_time ascending (upcoming first)
+                const data = await callSupabaseAPI('GET', 'appointments?status=neq.archived&order=appointment_date.asc,appointment_time.asc');
 
                 if (data && data.length > 0) {
+                    const now = new Date();
+                    const appointmentsToArchive = [];
+                    
                     // Convert Supabase data to the format expected by the UI
-                    appointments = data.map(apt => ({
-                        id: apt.id,
-                        patientName: apt.patient_name || 'Unknown Patient',
-                        patientId: apt.patient_id || 'N/A',
-                        service: apt.service_type || 'General Checkup',
-                        date: apt.appointment_date,
-                        time: apt.appointment_time || '10:00',
-                        status: apt.status || 'pending',
-                        phone: apt.patient_phone || 'No phone provided',
-                        email: apt.patient_email || 'No email provided',
-                        notes: apt.notes || 'No notes',
-                        dentistId: apt.dentist_id || '',
-                        dentistName: apt.dentist_name || '',
-                        createdAt: apt.created_at
-                    }));
-                    console.log('✅ Appointments loaded from Supabase:', appointments.length);
-                    // Debug: Log first appointment's created_at to verify timezone
-                    if (appointments.length > 0) {
-                        const sampleApt = appointments[0];
-                        const sampleDate = new Date(sampleApt.createdAt);
-                        console.log('📅 Sample booking time debug:', {
-                            original: sampleApt.createdAt,
-                            type: typeof sampleApt.createdAt,
-                            utc: sampleDate.toISOString(),
-                            local: sampleDate.toLocaleString(),
-                            localTime: sampleDate.toLocaleTimeString(),
-                            hours: sampleDate.getHours(),
-                            minutes: sampleDate.getMinutes(),
-                            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                            offset: sampleDate.getTimezoneOffset()
-                        });
+                    const allAppointments = data.map(apt => {
+                        const appointmentDate = new Date(apt.appointment_date);
+                        const [hours, minutes] = (apt.appointment_time || '10:00').split(':').map(Number);
+                        appointmentDate.setHours(hours || 0, minutes || 0, 0, 0);
+                        
+                        // Check if appointment time has passed
+                        const isPast = appointmentDate < now;
+                        
+                        // If past and not already archived, mark for archiving
+                        if (isPast && apt.status !== 'archived') {
+                            appointmentsToArchive.push(apt.id);
+                        }
+                        
+                        return {
+                            id: apt.id,
+                            patientName: apt.patient_name || 'Unknown Patient',
+                            patientId: apt.patient_id || 'N/A',
+                            service: apt.service_type || 'General Checkup',
+                            date: apt.appointment_date,
+                            time: apt.appointment_time || '10:00',
+                            status: apt.status || 'pending',
+                            phone: apt.patient_phone || 'No phone provided',
+                            email: apt.patient_email || 'No email provided',
+                            notes: apt.notes || 'No notes',
+                            dentistId: apt.dentist_id || '',
+                            dentistName: apt.dentist_name || '',
+                            createdAt: apt.created_at,
+                            isPast: isPast
+                        };
+                    });
+                    
+                    // Automatically archive past appointments
+                    if (appointmentsToArchive.length > 0) {
+                        console.log(`📦 Archiving ${appointmentsToArchive.length} past appointment(s)...`);
+                        await archivePastAppointments(appointmentsToArchive);
                     }
+                    
+                    // Filter out past appointments and only show upcoming/current appointments
+                    appointments = allAppointments.filter(apt => !apt.isPast);
+                    
+                    // Sort by appointment date (upcoming first), then by time
+                    appointments.sort((a, b) => {
+                        const dateA = new Date(a.date + ' ' + a.time);
+                        const dateB = new Date(b.date + ' ' + b.time);
+                        return dateA - dateB;
+                    });
+                    
+                    // Limit to 30 most recent upcoming appointments
+                    appointments = appointments.slice(0, 30);
+                    
+                    console.log(`✅ Loaded ${appointments.length} upcoming appointments (archived ${appointmentsToArchive.length} past appointments)`);
                 } else {
                     console.log('ℹ️ No appointments found in database');
                     appointments = [];
@@ -1421,8 +1442,37 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 appointments = [];
             }
             
-            console.log(`✅ Loaded ${appointments.length} appointments`);
             filterAppointments();
+        }
+        
+        // Helper function to archive past appointments
+        async function archivePastAppointments(appointmentIds) {
+            try {
+                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                
+                for (const id of appointmentIds) {
+                    try {
+                        await fetch(`${SUPABASE_URL}/rest/v1/appointments?id=eq.${id}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'return=representation'
+                            },
+                            body: JSON.stringify({
+                                status: 'archived',
+                                updated_at: new Date().toISOString()
+                            })
+                        });
+                    } catch (error) {
+                        console.error(`Error archiving appointment ${id}:`, error);
+                    }
+                }
+            } catch (error) {
+                console.error('Error archiving past appointments:', error);
+            }
         }
 
         // Helper function to check if appointment time has passed (global scope)
@@ -1514,42 +1564,45 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             console.log('Appointments section initialized - ready for real-time data');
         }
 
-        // Filter appointments
-        // NOTE: Date filter is OPTIONAL - if no date is selected, ALL appointments (including past months) are shown
-        // This ensures historical data from past months (like October) remains accessible
+        // Filter appointments - only shows upcoming/current appointments (max 30)
         function filterAppointments() {
             const statusFilter = document.getElementById('statusFilter').value;
             const dateFilter = document.getElementById('dateFilter').value;
             const searchInput = document.getElementById('searchInput').value.toLowerCase();
 
             filteredAppointments = appointments.filter(appointment => {
+                // Exclude archived appointments
+                if (appointment.status === 'archived') {
+                    return false;
+                }
+                
                 const matchesStatus = statusFilter === 'all' || appointment.status === statusFilter;
-                // Date filter is optional - if empty, show ALL appointments (including past months)
+                // Date filter is optional - if empty, show all upcoming appointments
                 const matchesDate = !dateFilter || appointment.date.startsWith(dateFilter);
                 const matchesSearch = !searchInput || appointment.patientName.toLowerCase().includes(searchInput);
                 
                 return matchesStatus && matchesDate && matchesSearch;
             });
             
-            console.log(`📊 Filtered appointments: ${filteredAppointments.length} of ${appointments.length} total (date filter: ${dateFilter || 'none - showing all'})`);
+            console.log(`📊 Filtered appointments: ${filteredAppointments.length} of ${appointments.length} total (showing max 30 upcoming appointments)`);
 
-            // Sort by booking date/time (created_at) descending - latest booking first
+            // Sort by appointment date/time (upcoming first)
             filteredAppointments.sort((a, b) => {
-                const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
-                const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
-                return dateB - dateA; // Descending order (newest first)
+                const dateA = new Date(a.date + ' ' + a.time);
+                const dateB = new Date(b.date + ' ' + b.time);
+                return dateA - dateB; // Ascending order (upcoming first)
             });
 
             displayAppointments();
         }
 
-        // Clear date filter to show all appointments (including past months)
+        // Clear date filter to show all upcoming appointments (max 30)
         function clearDateFilter() {
             const dateFilter = document.getElementById('dateFilter');
             if (dateFilter) {
                 dateFilter.value = '';
                 filterAppointments();
-                console.log('✅ Date filter cleared - showing all appointments including past months');
+                console.log('✅ Date filter cleared - showing all upcoming appointments');
             }
         }
 
