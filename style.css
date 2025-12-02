@@ -888,7 +888,7 @@ p {
 
 .about-content {
     display: grid;
-    grid-template-columns: 1.5fr 1fr;
+    grid-template-columns: 1.8fr 1fr;
     gap: 2rem;
     align-items: center;
     margin-top: 1rem;
@@ -936,10 +936,10 @@ p {
 }
 
 .about-img {
-    width: 480px;
-    height: 480px;
-    max-width: 480px;
-    max-height: 480px;
+    width: 350px;
+    height: 350px;
+    max-width: 350px;
+    max-height: 350px;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
     object-fit: cover;
