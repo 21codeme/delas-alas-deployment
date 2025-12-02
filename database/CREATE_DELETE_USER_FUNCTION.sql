@@ -45,6 +45,11 @@ BEGIN
     
     GET DIAGNOSTICS deleted_count = ROW_COUNT;
     
+    -- Note: Deleting from auth.users requires admin/service_role access
+    -- This function can only delete from public.users
+    -- To delete from auth.users, use Supabase Dashboard → Authentication → Users
+    -- Or create a separate function with service_role permissions
+    
     -- Return success
     result := json_build_object(
         'success', true,
