@@ -1367,7 +1367,7 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
         });
 
         // Load appointments data
-        // Load appointments - automatically archive past appointments and show only 30 most recent
+        // Load appointments - show only 30 upcoming appointments (past appointments are hidden, not archived)
         async function loadAppointments() {
             console.log('🔄 Loading appointments using direct API...');
             appointments = [];
@@ -1379,7 +1379,6 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
 
                 if (data && data.length > 0) {
                     const now = new Date();
-                    const appointmentsToArchive = [];
                     
                     // Convert Supabase data to the format expected by the UI
                     const allAppointments = data.map(apt => {
@@ -1389,11 +1388,6 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                         
                         // Check if appointment time has passed
                         const isPast = appointmentDate < now;
-                        
-                        // If past and not already archived, mark for archiving
-                        if (isPast && apt.status !== 'archived') {
-                            appointmentsToArchive.push(apt.id);
-                        }
                         
                         return {
                             id: apt.id,
@@ -1413,13 +1407,7 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                         };
                     });
                     
-                    // Automatically archive past appointments
-                    if (appointmentsToArchive.length > 0) {
-                        console.log(`📦 Archiving ${appointmentsToArchive.length} past appointment(s)...`);
-                        await archivePastAppointments(appointmentsToArchive);
-                    }
-                    
-                    // Filter out past appointments and only show upcoming/current appointments
+                    // Filter out past appointments (just hide them, don't archive)
                     appointments = allAppointments.filter(apt => !apt.isPast);
                     
                     // Sort by appointment date (upcoming first), then by time
@@ -1432,7 +1420,8 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                     // Limit to 30 most recent upcoming appointments
                     appointments = appointments.slice(0, 30);
                     
-                    console.log(`✅ Loaded ${appointments.length} upcoming appointments (archived ${appointmentsToArchive.length} past appointments)`);
+                    const pastCount = allAppointments.filter(apt => apt.isPast).length;
+                    console.log(`✅ Loaded ${appointments.length} upcoming appointments (${pastCount} past appointments hidden, not archived)`);
                 } else {
                     console.log('ℹ️ No appointments found in database');
                     appointments = [];
@@ -1443,36 +1432,6 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             }
             
             filterAppointments();
-        }
-        
-        // Helper function to archive past appointments
-        async function archivePastAppointments(appointmentIds) {
-            try {
-                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
-                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
-                
-                for (const id of appointmentIds) {
-                    try {
-                        await fetch(`${SUPABASE_URL}/rest/v1/appointments?id=eq.${id}`, {
-                            method: 'PATCH',
-                            headers: {
-                                'apikey': SUPABASE_KEY,
-                                'Authorization': `Bearer ${SUPABASE_KEY}`,
-                                'Content-Type': 'application/json',
-                                'Prefer': 'return=representation'
-                            },
-                            body: JSON.stringify({
-                                status: 'archived',
-                                updated_at: new Date().toISOString()
-                            })
-                        });
-                    } catch (error) {
-                        console.error(`Error archiving appointment ${id}:`, error);
-                    }
-                }
-            } catch (error) {
-                console.error('Error archiving past appointments:', error);
-            }
         }
 
         // Helper function to check if appointment time has passed (global scope)
