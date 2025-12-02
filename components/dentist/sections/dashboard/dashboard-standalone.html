@@ -489,12 +489,12 @@
 
                     <div class="stat-card">
                         <div class="stat-icon">
-                            <i class="fas fa-dollar-sign"></i>
+                            <i class="fas fa-calendar-check"></i>
                         </div>
                         <div class="stat-info">
-                            <h3>Monthly Revenue</h3>
-                            <p class="stat-value" id="monthlyRevenue">₱0</p>
-                            <span class="stat-change positive">↑ 15% from last month</span>
+                            <h3>Upcoming Appointments</h3>
+                            <p class="stat-value" id="upcomingAppointments">0</p>
+                            <span class="stat-change positive" id="upcomingAppointmentsDate">No upcoming appointments</span>
                         </div>
                     </div>
                 </div>
@@ -766,23 +766,50 @@
 
         // Update statistics
         function updateStats() {
-            const today = new Date().toDateString();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
             const todayAppointments = appointments.filter(apt => 
-                new Date(apt.date).toDateString() === today
+                new Date(apt.date).toDateString() === today.toDateString()
             ).length;
             
             const pendingAppointments = appointments.filter(apt => 
                 apt.status === 'pending'
             ).length;
             
-            const monthlyRevenue = appointments
-                .filter(apt => apt.status === 'completed')
-                .reduce((total, apt) => total + (apt.price || 0), 0);
+            // Calculate upcoming appointments (date >= today)
+            const upcomingAppointments = appointments.filter(apt => {
+                const appointmentDate = new Date(apt.date);
+                appointmentDate.setHours(0, 0, 0, 0);
+                return appointmentDate >= today && apt.status !== 'archived';
+            });
+            
+            const upcomingCount = upcomingAppointments.length;
+            
+            // Get the next upcoming appointment date
+            let nextAppointmentDate = null;
+            if (upcomingAppointments.length > 0) {
+                // Sort by date ascending to get the earliest upcoming appointment
+                const sortedUpcoming = [...upcomingAppointments].sort((a, b) => {
+                    const dateA = new Date(a.date);
+                    const dateB = new Date(b.date);
+                    return dateA - dateB;
+                });
+                
+                const nextAppt = sortedUpcoming[0];
+                const nextDate = new Date(nextAppt.date);
+                nextAppointmentDate = nextDate.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                });
+            }
 
             document.getElementById('todayAppointments').textContent = todayAppointments;
             document.getElementById('totalPatients').textContent = patients.length;
             document.getElementById('pendingAppointments').textContent = pendingAppointments;
-            document.getElementById('monthlyRevenue').textContent = `₱${monthlyRevenue.toLocaleString()}`;
+            document.getElementById('upcomingAppointments').textContent = upcomingCount;
+            document.getElementById('upcomingAppointmentsDate').textContent = nextAppointmentDate || 'No upcoming appointments';
         }
 
         // Display appointments
