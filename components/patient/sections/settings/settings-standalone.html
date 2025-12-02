@@ -2010,8 +2010,38 @@
                     console.log('🗑️ User email:', user.email);
                     
                     // Get auth token for authenticated request
-                    const currentSession = await supabase.auth.getSession();
-                    const authToken = currentSession?.data?.session?.access_token;
+                    // Try multiple ways to get supabase client
+                    let supabaseClient = null;
+                    if (window.supabase && window.supabase.auth) {
+                        supabaseClient = window.supabase;
+                    } else if (window.parent && window.parent.supabase && window.parent.supabase.auth) {
+                        supabaseClient = window.parent.supabase;
+                    } else if (typeof supabase !== 'undefined') {
+                        supabaseClient = supabase;
+                    }
+                    
+                    let authToken = null;
+                    if (supabaseClient) {
+                        try {
+                            const currentSession = await supabaseClient.auth.getSession();
+                            authToken = currentSession?.data?.session?.access_token;
+                        } catch (sessionError) {
+                            console.warn('⚠️ Could not get session from supabase client:', sessionError);
+                        }
+                    }
+                    
+                    // If no auth token, try to get from localStorage
+                    if (!authToken) {
+                        try {
+                            const authData = localStorage.getItem('sb-xlubjwiumytdkxrzojdg-auth-token');
+                            if (authData) {
+                                const auth = JSON.parse(authData);
+                                authToken = auth?.access_token;
+                            }
+                        } catch (e) {
+                            console.warn('⚠️ Could not get auth token from localStorage');
+                        }
+                    }
                     
                     const rpcResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/delete_user_account`, {
                         method: 'POST',
@@ -2050,8 +2080,38 @@
                     try {
                         console.log('🔄 RPC failed, trying direct DELETE...');
                         
-                        const currentSession = await supabase.auth.getSession();
-                        const authToken = currentSession?.data?.session?.access_token;
+                        // Try multiple ways to get supabase client
+                        let supabaseClient = null;
+                        if (window.supabase && window.supabase.auth) {
+                            supabaseClient = window.supabase;
+                        } else if (window.parent && window.parent.supabase && window.parent.supabase.auth) {
+                            supabaseClient = window.parent.supabase;
+                        } else if (typeof supabase !== 'undefined') {
+                            supabaseClient = supabase;
+                        }
+                        
+                        let authToken = null;
+                        if (supabaseClient) {
+                            try {
+                                const currentSession = await supabaseClient.auth.getSession();
+                                authToken = currentSession?.data?.session?.access_token;
+                            } catch (sessionError) {
+                                console.warn('⚠️ Could not get session:', sessionError);
+                            }
+                        }
+                        
+                        // If no auth token, try to get from localStorage
+                        if (!authToken) {
+                            try {
+                                const authData = localStorage.getItem('sb-xlubjwiumytdkxrzojdg-auth-token');
+                                if (authData) {
+                                    const auth = JSON.parse(authData);
+                                    authToken = auth?.access_token;
+                                }
+                            } catch (e) {
+                                console.warn('⚠️ Could not get auth token from localStorage');
+                            }
+                        }
                         
                         const deleteUserResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
                             method: 'DELETE',
@@ -2088,8 +2148,38 @@
                 if (!userDeleted) {
                     try {
                         console.log('⚠️ Hard delete failed, attempting soft delete...');
-                        const currentSession = await supabase.auth.getSession();
-                        const authToken = currentSession?.data?.session?.access_token;
+                        // Try multiple ways to get supabase client
+                        let supabaseClient = null;
+                        if (window.supabase && window.supabase.auth) {
+                            supabaseClient = window.supabase;
+                        } else if (window.parent && window.parent.supabase && window.parent.supabase.auth) {
+                            supabaseClient = window.parent.supabase;
+                        } else if (typeof supabase !== 'undefined') {
+                            supabaseClient = supabase;
+                        }
+                        
+                        let authToken = null;
+                        if (supabaseClient) {
+                            try {
+                                const currentSession = await supabaseClient.auth.getSession();
+                                authToken = currentSession?.data?.session?.access_token;
+                            } catch (sessionError) {
+                                console.warn('⚠️ Could not get session:', sessionError);
+                            }
+                        }
+                        
+                        // If no auth token, try to get from localStorage
+                        if (!authToken) {
+                            try {
+                                const authData = localStorage.getItem('sb-xlubjwiumytdkxrzojdg-auth-token');
+                                if (authData) {
+                                    const auth = JSON.parse(authData);
+                                    authToken = auth?.access_token;
+                                }
+                            } catch (e) {
+                                console.warn('⚠️ Could not get auth token from localStorage');
+                            }
+                        }
                         
                         const softDeleteResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
                             method: 'PATCH',
