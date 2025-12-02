@@ -2457,10 +2457,25 @@
                 localStorage.clear();
                 sessionStorage.clear();
                 
+                // Clear parent window's localStorage and sessionStorage if in iframe
+                if (window !== window.top && window.parent) {
+                    try {
+                        window.parent.localStorage.clear();
+                        window.parent.sessionStorage.clear();
+                    } catch (e) {
+                        console.warn('Could not clear parent storage:', e);
+                    }
+                }
+                
                 const redirectUrl = window.location.origin + '/index.html?deleted=true#login';
                 setTimeout(() => {
                     alert('Account deleted successfully. You have been logged out and will be redirected to the login page.');
-                    window.location.replace(redirectUrl);
+                    // Redirect parent window if in iframe, otherwise redirect current window
+                    if (window !== window.top && window.top) {
+                        window.top.location.replace(redirectUrl);
+                    } else {
+                        window.location.replace(redirectUrl);
+                    }
                 }, 2000);
                 
             } catch (error) {
@@ -2482,14 +2497,34 @@
                     
                     localStorage.clear();
                     sessionStorage.clear();
+                    
+                    // Clear parent window's localStorage and sessionStorage if in iframe
+                    if (window !== window.top && window.parent) {
+                        try {
+                            window.parent.localStorage.clear();
+                            window.parent.sessionStorage.clear();
+                        } catch (e) {
+                            console.warn('Could not clear parent storage:', e);
+                        }
+                    }
+                    
                     setTimeout(() => {
                         const redirectUrl = window.location.origin + '/index.html?deleted=true#login';
-                        window.location.replace(redirectUrl);
+                        // Redirect parent window if in iframe, otherwise redirect current window
+                        if (window !== window.top && window.top) {
+                            window.top.location.replace(redirectUrl);
+                        } else {
+                            window.location.replace(redirectUrl);
+                        }
                     }, 3000);
                 } catch (redirectError) {
                     console.error('❌ Error redirecting:', redirectError);
                     // Last resort - try relative path
-                    window.location.href = '../../index.html?deleted=true#login';
+                    if (window !== window.top && window.top) {
+                        window.top.location.href = '/index.html?deleted=true#login';
+                    } else {
+                        window.location.href = '../../index.html?deleted=true#login';
+                    }
                 }
             }
         }
