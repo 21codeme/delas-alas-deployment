@@ -440,6 +440,12 @@ function showRegisterModal() {
     document.body.style.overflow = 'hidden';
 }
 
+function showForgotPasswordModal() {
+    closeModal('loginModal'); // Close login modal first
+    document.getElementById('forgotPasswordModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
 function showAppointmentModal(serviceType = '') {
     const modal = document.getElementById('appointmentModal');
     const serviceSelect = document.getElementById('aptService');
