@@ -1367,21 +1367,21 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
         });
 
         // Load appointments data
-        // Load appointments - show only 30 upcoming appointments (past appointments are hidden, not archived)
+        // Load appointments - show 30 most recent appointments (both past and upcoming)
         async function loadAppointments() {
             console.log('🔄 Loading appointments using direct API...');
             appointments = [];
 
             try {
                 // Load ALL appointments excluding archived ones
-                // Order by appointment_date and appointment_time ascending (upcoming first)
-                const data = await callSupabaseAPI('GET', 'appointments?status=neq.archived&order=appointment_date.asc,appointment_time.asc');
+                // Order by appointment_date and appointment_time descending (most recent first)
+                const data = await callSupabaseAPI('GET', 'appointments?status=neq.archived&order=appointment_date.desc,appointment_time.desc');
 
                 if (data && data.length > 0) {
                     const now = new Date();
                     
                     // Convert Supabase data to the format expected by the UI
-                    const allAppointments = data.map(apt => {
+                    appointments = data.map(apt => {
                         const appointmentDate = new Date(apt.appointment_date);
                         const [hours, minutes] = (apt.appointment_time || '10:00').split(':').map(Number);
                         appointmentDate.setHours(hours || 0, minutes || 0, 0, 0);
@@ -1407,21 +1407,31 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                         };
                     });
                     
-                    // Filter out past appointments (just hide them, don't archive)
-                    appointments = allAppointments.filter(apt => !apt.isPast);
-                    
-                    // Sort by appointment date (upcoming first), then by time
+                    // Sort: upcoming appointments first, then past appointments (most recent first)
                     appointments.sort((a, b) => {
                         const dateA = new Date(a.date + ' ' + a.time);
                         const dateB = new Date(b.date + ' ' + b.time);
-                        return dateA - dateB;
+                        
+                        // If one is past and one is not, prioritize upcoming
+                        if (a.isPast && !b.isPast) return 1;
+                        if (!a.isPast && b.isPast) return -1;
+                        
+                        // If both are past or both are upcoming, sort by date
+                        // For upcoming: ascending (earliest first)
+                        // For past: descending (most recent first)
+                        if (a.isPast && b.isPast) {
+                            return dateB - dateA; // Most recent past first
+                        } else {
+                            return dateA - dateB; // Earliest upcoming first
+                        }
                     });
                     
-                    // Limit to 30 most recent upcoming appointments
+                    // Limit to 30 most recent appointments (upcoming first, then past)
                     appointments = appointments.slice(0, 30);
                     
-                    const pastCount = allAppointments.filter(apt => apt.isPast).length;
-                    console.log(`✅ Loaded ${appointments.length} upcoming appointments (${pastCount} past appointments hidden, not archived)`);
+                    const pastCount = appointments.filter(apt => apt.isPast).length;
+                    const upcomingCount = appointments.filter(apt => !apt.isPast).length;
+                    console.log(`✅ Loaded ${appointments.length} appointments (${upcomingCount} upcoming, ${pastCount} past)`);
                 } else {
                     console.log('ℹ️ No appointments found in database');
                     appointments = [];
