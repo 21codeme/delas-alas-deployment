@@ -899,8 +899,9 @@ p {
 }
 
 .about-text .section-title {
-    text-align: left;
+    text-align: left !important;
     margin-bottom: 1.5rem;
+    font-size: 2rem;
 }
 
 .about-description {
