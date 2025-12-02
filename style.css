@@ -888,9 +888,9 @@ p {
 
 .about-content {
     display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap: 3rem;
-    align-items: start;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 2rem;
+    align-items: center;
     margin-top: 1rem;
 }
 
@@ -937,9 +937,17 @@ p {
 
 .about-img {
     width: 100%;
+    max-width: 400px;
     height: auto;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
+    object-fit: cover;
+}
+
+.about-image {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 /* Contact Section */
@@ -1360,6 +1368,10 @@ p {
     .about-content {
         grid-template-columns: 1fr;
         gap: 2rem;
+    }
+    
+    .about-img {
+        max-width: 100%;
     }
     
     .contact-content {
