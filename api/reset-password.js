@@ -52,81 +52,91 @@ module.exports = async (req, res) => {
     // Try multiple methods to find the user
     let user = null;
     let userFound = false;
+    let publicUserExists = false;
 
-    // Method 1: Use listUsers and find by email
+    // First, check if user exists in public.users
     try {
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      const { data: publicUser, error: publicError } = await supabase
+        .from('users')
+        .select('id, email')
+        .eq('email', email.toLowerCase())
+        .maybeSingle();
       
-      if (!authError && authUsers?.users) {
-        console.log('📊 Total users found via listUsers:', authUsers.users.length);
+      if (!publicError && publicUser) {
+        publicUserExists = true;
+        console.log('✅ User found in public.users:', { id: publicUser.id, email: publicUser.email });
         
-        // Log first few user emails for debugging (without exposing full data)
-        if (authUsers.users.length > 0) {
-          const sampleEmails = authUsers.users.slice(0, 5).map(u => u.email);
-          console.log('📧 Sample user emails:', sampleEmails);
+        // Try to get auth user by ID from public.users
+        try {
+          const { data: authUser, error: getUserError } = await supabase.auth.admin.getUserById(publicUser.id);
+          if (!getUserError && authUser?.user) {
+            user = authUser.user;
+            userFound = true;
+            console.log('✅ User found via getUserById from public.users:', { id: user.id, email: user.email });
+          } else {
+            console.warn('⚠️ User exists in public.users but not in auth.users:', getUserError?.message);
+          }
+        } catch (getUserError) {
+          console.warn('⚠️ getUserById failed:', getUserError.message);
         }
-
-        user = authUsers.users.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
-        
-        if (user) {
-          userFound = true;
-          console.log('✅ User found via listUsers:', { id: user.id, email: user.email });
-        } else {
-          console.log('⚠️ User not found in listUsers, trying alternative method...');
-        }
-      } else if (authError) {
-        console.warn('⚠️ Error with listUsers (may not have admin access):', authError.message);
+      } else {
+        console.log('⚠️ User not found in public.users');
       }
-    } catch (listError) {
-      console.warn('⚠️ listUsers failed:', listError.message);
+    } catch (publicError) {
+      console.warn('⚠️ Error checking public.users:', publicError.message);
     }
 
-    // Method 2: Try to get user by email using getUserByEmail (if available)
+    // Method 2: Use listUsers and find by email (if not found yet)
     if (!userFound) {
       try {
-        // Note: Supabase doesn't have a direct getUserByEmail in admin API
-        // But we can try to sign in as the user temporarily to get their ID
-        // However, this requires the password, which we don't have
+        const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
         
-        // Alternative: Check if user exists in public.users and get their auth ID
-        const { data: publicUser, error: publicError } = await supabase
-          .from('users')
-          .select('id, email')
-          .eq('email', email)
-          .single();
-        
-        if (!publicError && publicUser) {
-          console.log('✅ User found in public.users:', publicUser);
-          // Try to get auth user by ID
-          try {
-            const { data: authUser, error: getUserError } = await supabase.auth.admin.getUserById(publicUser.id);
-            if (!getUserError && authUser?.user) {
-              user = authUser.user;
-              userFound = true;
-              console.log('✅ User found via getUserById:', { id: user.id, email: user.email });
-            }
-          } catch (getUserError) {
-            console.warn('⚠️ getUserById failed:', getUserError.message);
+        if (!authError && authUsers?.users) {
+          console.log('📊 Total users found via listUsers:', authUsers.users.length);
+          
+          // Try exact match first
+          user = authUsers.users.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
+          
+          if (user) {
+            userFound = true;
+            console.log('✅ User found via listUsers:', { id: user.id, email: user.email });
+          } else {
+            // Log all emails for debugging (first 10 only)
+            const allEmails = authUsers.users.slice(0, 10).map(u => u.email).filter(Boolean);
+            console.log('📧 Available user emails (first 10):', allEmails);
+            console.log('⚠️ User not found in listUsers');
           }
+        } else if (authError) {
+          console.error('❌ Error with listUsers:', authError.message);
         }
-      } catch (altError) {
-        console.warn('⚠️ Alternative lookup failed:', altError.message);
+      } catch (listError) {
+        console.error('❌ listUsers failed:', listError.message);
       }
     }
     
     if (!userFound || !user) {
       console.error('❌ User not found in auth.users:', email);
-      console.error('❌ This might be because:');
-      console.error('   1. User does not exist in auth.users table');
-      console.error('   2. Service role key is not configured correctly');
-      console.error('   3. User email case mismatch');
+      console.error('❌ Debug info:');
+      console.error('   - Email searched:', email);
+      console.error('   - Exists in public.users:', publicUserExists);
+      console.error('   - Service role configured:', !!supabaseServiceKey);
+      
+      // Provide helpful error message
+      let errorMessage = 'User not found in authentication system.';
+      let hint = 'Please contact support or try registering again.';
+      
+      if (publicUserExists) {
+        errorMessage = 'User account exists but authentication record is missing.';
+        hint = 'Your account may have been partially deleted. Please contact support to restore your account.';
+      }
       
       return res.status(404).json({
         success: false,
-        error: 'User not found. Please make sure you are using the correct email address.',
-        hint: 'User might not exist in auth.users table. Please contact support or try registering again.',
+        error: errorMessage,
+        hint: hint,
         debug: {
           emailSearched: email,
+          existsInPublicUsers: publicUserExists,
           serviceRoleConfigured: !!supabaseServiceKey
         }
       });
