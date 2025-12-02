@@ -584,11 +584,11 @@ p {
     background-size: 200% 200%;
     animation: gradientShift 15s ease infinite;
     color: var(--white);
-    padding: 120px 0 80px;
+    padding: 80px 0 60px;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
+    min-height: 70vh;
     text-align: center;
     position: relative;
     overflow: hidden;
@@ -741,15 +741,15 @@ p {
 }
 
 .hero-title {
-    font-size: 3.5rem;
+    font-size: 2.8rem;
     font-weight: 700;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     line-height: 1.2;
 }
 
 .hero-subtitle {
-    font-size: 1.2rem;
-    margin-bottom: 2rem;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
     opacity: 0.9;
 }
 
@@ -763,7 +763,7 @@ p {
 
 /* Services Section */
 .services {
-    padding: 80px 0;
+    padding: 50px 0;
     background: var(--white);
 }
 
@@ -790,28 +790,28 @@ p {
 
 .section-title {
     text-align: center;
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
     color: var(--text-color);
 }
 
 .section-subtitle {
     text-align: center;
-    font-size: 1.1rem;
-    margin-bottom: 3rem;
+    font-size: 1rem;
+    margin-bottom: 2rem;
     color: var(--text-color);
 }
 
 .services-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    margin-top: 3rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
 }
 
 .service-card {
     background: var(--white);
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: 10px;
     box-shadow: var(--shadow);
     text-align: center;
@@ -864,16 +864,16 @@ p {
 
 /* About Section */
 .about {
-    padding: 80px 0;
+    padding: 50px 0;
     background: var(--bg-color);
 }
 
 .about-content {
     display: grid;
     grid-template-columns: 1.2fr 1fr;
-    gap: 4rem;
+    gap: 3rem;
     align-items: start;
-    margin-top: 2rem;
+    margin-top: 1rem;
 }
 
 .about-text {
@@ -886,17 +886,17 @@ p {
 }
 
 .about-description {
-    font-size: 1.1rem;
-    margin-bottom: 2rem;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
     color: var(--text-color);
     text-align: left;
-    line-height: 1.8;
+    line-height: 1.6;
 }
 
 .about-features {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem;
 }
 
 .feature {
@@ -926,15 +926,15 @@ p {
 
 /* Contact Section */
 .contact {
-    padding: 80px 0;
+    padding: 50px 0;
     background: var(--white);
 }
 
 .contact-content {
     display: grid;
     grid-template-columns: 1fr 1.2fr;
-    gap: 4rem;
-    margin-top: 3rem;
+    gap: 3rem;
+    margin-top: 1.5rem;
     align-items: start;
 }
 
