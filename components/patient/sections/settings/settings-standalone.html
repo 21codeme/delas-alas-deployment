@@ -2183,72 +2183,104 @@
                 
                 // User deletion already handled above in Step 1
                 
-                // Step 2: Sign in to get access token for auth deletion
-                console.log('🔐 Getting access token for auth deletion...');
-                const signInResponse = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'apikey': SUPABASE_KEY,
-                        'Authorization': `Bearer ${SUPABASE_KEY}`
-                    },
-                    body: JSON.stringify({
-                        email: user.email,
-                        password: prompt('Please enter your password to confirm account deletion:')
-                    })
-                });
+                // Step 2: Delete user from auth.users to allow email reuse
+                // This is IMPORTANT so the user can create a new account with the same email
+                console.log('🔐 Attempting to delete user from auth.users...');
+                let authUserDeleted = false;
                 
-                if (!signInResponse.ok) {
-                    showToast('Password incorrect. Account deletion cancelled.', 'error');
-                    return;
-                }
-                
-                const signInData = await signInResponse.json();
-                const accessToken = signInData.access_token;
-                
-                // Step 3: Delete user from auth.users using Admin API
-                // Note: This requires service_role key, but we'll try with user's access token first
-                // If it fails, we'll need to use a database function or Edge Function
+                // Method 1: Try RPC function to delete from auth.users
                 try {
-                    const deleteAuthResponse = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${user.id}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'apikey': SUPABASE_KEY,
-                            'Authorization': `Bearer ${accessToken}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
+                    const currentSession = await supabase.auth.getSession();
+                    const authToken = currentSession?.data?.session?.access_token;
                     
-                    if (deleteAuthResponse.ok) {
-                        console.log('✅ Deleted user from auth.users');
-                    } else {
-                        // Try using RPC function to delete from auth.users
-                        try {
-                            const rpcResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/delete_user_account`, {
-                                method: 'POST',
-                                headers: {
-                                    'apikey': SUPABASE_KEY,
-                                    'Authorization': `Bearer ${accessToken}`,
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({ user_id: user.id })
-                            });
-                            
-                            if (rpcResponse.ok) {
+                    if (authToken) {
+                        const deleteAuthRpcResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/delete_auth_user`, {
+                            method: 'POST',
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${authToken}`,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'return=representation'
+                            },
+                            body: JSON.stringify({ user_id_to_delete: user.id })
+                        });
+                        
+                        if (deleteAuthRpcResponse.ok) {
+                            const rpcData = await deleteAuthRpcResponse.json();
+                            if (rpcData && rpcData.success) {
                                 console.log('✅ Deleted user from auth.users via RPC function');
+                                authUserDeleted = true;
                             } else {
-                                console.warn('⚠️ Could not delete from auth.users (requires admin access). User data deleted from public tables.');
-                                // User data is deleted from public tables, but auth user remains
-                                // This is acceptable - the user won't be able to access their data
+                                console.warn('⚠️ RPC function returned success=false:', rpcData);
                             }
-                        } catch (rpcError) {
-                            console.warn('⚠️ RPC function not available. User data deleted from public tables.');
-                            // Continue - user data is already deleted from public tables
+                        } else {
+                            const rpcError = await deleteAuthRpcResponse.text();
+                            console.warn('⚠️ RPC delete_auth_user failed:', rpcError);
                         }
                     }
-                } catch (authError) {
-                    console.warn('⚠️ Could not delete from auth.users:', authError);
-                    // Continue - user data is already deleted from public tables
+                } catch (rpcError) {
+                    console.warn('⚠️ RPC delete_auth_user error:', rpcError);
+                }
+                
+                // Method 2: Try Admin API (requires password confirmation)
+                if (!authUserDeleted) {
+                    try {
+                        const password = prompt('To delete your account from authentication and allow email reuse, please enter your password:');
+                        if (!password) {
+                            console.warn('⚠️ Password not provided. Account deleted from database but email may not be reusable.');
+                            showToast('Account deleted from database. To reuse your email, delete it manually from Authentication → Users in Supabase Dashboard.', 'warning');
+                        } else {
+                            // Sign in to get access token
+                            const signInResponse = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'apikey': SUPABASE_KEY,
+                                    'Authorization': `Bearer ${SUPABASE_KEY}`
+                                },
+                                body: JSON.stringify({
+                                    email: user.email,
+                                    password: password
+                                })
+                            });
+                            
+                            if (signInResponse.ok) {
+                                const signInData = await signInResponse.json();
+                                const accessToken = signInData.access_token;
+                                
+                                // Try Admin API
+                                const deleteAuthResponse = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${user.id}`, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'apikey': SUPABASE_KEY,
+                                        'Authorization': `Bearer ${accessToken}`,
+                                        'Content-Type': 'application/json'
+                                    }
+                                });
+                                
+                                if (deleteAuthResponse.ok) {
+                                    console.log('✅ Deleted user from auth.users via Admin API');
+                                    authUserDeleted = true;
+                                } else {
+                                    const errorText = await deleteAuthResponse.text();
+                                    console.warn('⚠️ Admin API delete failed:', errorText);
+                                    console.warn('⚠️ To reuse your email, delete it manually from Supabase Dashboard → Authentication → Users');
+                                }
+                            } else {
+                                console.warn('⚠️ Password incorrect or sign-in failed');
+                            }
+                        }
+                    } catch (authError) {
+                        console.warn('⚠️ Could not delete from auth.users:', authError);
+                    }
+                }
+                
+                if (!authUserDeleted) {
+                    console.warn('⚠️ IMPORTANT: Account deleted from database but may still exist in auth.users.');
+                    console.warn('⚠️ To reuse your email, delete it manually from Supabase Dashboard → Authentication → Users');
+                    showToast('Account deleted. If you want to reuse your email, delete it from Authentication → Users in Supabase Dashboard.', 'info');
+                } else {
+                    console.log('✅ Account fully deleted - email can now be reused');
                 }
                 
                 // Step 4: Sign out from Supabase Auth FIRST (automatic logout)
