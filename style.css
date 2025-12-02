@@ -876,6 +876,15 @@ p {
     margin-top: 2rem;
 }
 
+.about-text {
+    text-align: left;
+}
+
+.about-text .section-title {
+    text-align: left;
+    margin-bottom: 1.5rem;
+}
+
 .about-description {
     font-size: 1.1rem;
     margin-bottom: 2rem;
