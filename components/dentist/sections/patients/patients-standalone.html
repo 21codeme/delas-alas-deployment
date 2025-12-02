@@ -1063,14 +1063,34 @@
                 
                 if (data && data.length > 0) {
                     // Filter out any null, undefined, or deleted users
-                    const validUsers = data.filter(user => 
-                        user != null && 
-                        user !== undefined && 
-                        user.id &&
-                        user.user_type !== 'deleted' &&
-                        !user.email?.includes('@deleted.local') &&
-                        !user.name?.includes('[DELETED]')
-                    );
+                    // IMPORTANT: This ensures deleted accounts don't appear in patient list
+                    const validUsers = data.filter(user => {
+                        // Check if user exists and has valid data
+                        if (!user || user === undefined || !user.id) {
+                            return false;
+                        }
+                        
+                        // Check if user is marked as deleted (soft delete)
+                        if (user.user_type === 'deleted') {
+                            console.log('🚫 Filtered out deleted user (user_type=deleted):', user.email);
+                            return false;
+                        }
+                        
+                        // Check if email indicates deleted account
+                        if (user.email && user.email.includes('@deleted.local')) {
+                            console.log('🚫 Filtered out deleted user (deleted email):', user.email);
+                            return false;
+                        }
+                        
+                        // Check if name indicates deleted account
+                        if (user.name && user.name.includes('[DELETED]')) {
+                            console.log('🚫 Filtered out deleted user (deleted name):', user.email);
+                            return false;
+                        }
+                        
+                        // User is valid
+                        return true;
+                    });
                     // Convert Supabase data to the format expected by the UI
                     patients = validUsers.map(user => ({
                         id: user.id,
