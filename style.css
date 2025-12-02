@@ -936,9 +936,10 @@ p {
 }
 
 .about-img {
-    width: 100%;
-    max-width: 400px;
-    height: auto;
+    width: 500px;
+    height: 500px;
+    max-width: 500px;
+    max-height: 500px;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
     object-fit: cover;
@@ -1371,7 +1372,10 @@ p {
     }
     
     .about-img {
+        width: 100%;
         max-width: 100%;
+        height: auto;
+        max-height: none;
     }
     
     .contact-content {
