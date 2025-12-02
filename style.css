@@ -766,7 +766,7 @@ p {
 
 /* Services Section */
 .services {
-    padding: 50px 0;
+    padding: 30px 0;
     background: var(--white);
 }
 
@@ -793,29 +793,29 @@ p {
 
 .section-title {
     text-align: center;
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
+    font-size: 1.8rem;
+    margin-bottom: 0.3rem;
     color: var(--text-color);
 }
 
 .section-subtitle {
     text-align: center;
-    font-size: 1rem;
-    margin-bottom: 2rem;
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
     color: var(--text-color);
 }
 
 .services-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-    margin-top: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
 }
 
 .service-card {
     background: var(--white);
-    padding: 1.5rem;
-    border-radius: 10px;
+    padding: 1.2rem;
+    border-radius: 8px;
     box-shadow: var(--shadow);
     text-align: center;
     transition: var(--transition);
@@ -827,31 +827,33 @@ p {
 }
 
 .service-icon {
-    width: 80px;
-    height: 80px;
+    width: 60px;
+    height: 60px;
     background: var(--primary-color);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1rem;
-    font-size: 2rem;
+    margin: 0 auto 0.8rem;
+    font-size: 1.5rem;
     color: var(--white);
 }
 
 .service-card h3 {
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     color: var(--text-color);
+    font-size: 1.2rem;
 }
 
 .service-features {
     list-style: none;
-    margin: 1.5rem 0;
+    margin: 1rem 0;
     text-align: left;
+    font-size: 0.9rem;
 }
 
 .service-features li {
-    padding: 0.5rem 0;
+    padding: 0.3rem 0;
     color: var(--text-color);
     position: relative;
     padding-left: 1.5rem;
@@ -1354,6 +1356,11 @@ p {
     
     .services-grid {
         grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .service-card {
+        padding: 1rem;
     }
     
     .footer-content {
