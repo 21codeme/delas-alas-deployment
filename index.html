@@ -269,11 +269,65 @@
                     <input type="email" id="forgotPasswordEmail" autocomplete="email" placeholder="Enter your email address" required>
                 </div>
                 <p class="forgot-password-info">
-                    Enter your email address and we'll send you a link to reset your password.
+                    Enter your email address and we'll send you an OTP code to reset your password.
                 </p>
-                <button type="submit" class="btn btn-primary btn-full">Send Reset Link</button>
+                <button type="submit" class="btn btn-primary btn-full">Send OTP Code</button>
                 <p class="modal-footer">
                     Remember your password? <a href="#" onclick="closeModal('forgotPasswordModal'); showLoginModal();">Login here</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- OTP Verification Modal -->
+    <div id="otpVerificationModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('otpVerificationModal')">&times;</span>
+            <h2>Enter OTP Code</h2>
+            <form id="otpVerificationForm">
+                <div class="form-group">
+                    <label for="otpCode">OTP Code</label>
+                    <input type="text" id="otpCode" autocomplete="off" placeholder="Enter 6-digit OTP code" maxlength="6" pattern="[0-9]{6}" required>
+                </div>
+                <p class="forgot-password-info">
+                    We've sent a 6-digit OTP code to <strong id="otpEmailDisplay"></strong>. Please check your email.
+                </p>
+                <button type="submit" class="btn btn-primary btn-full">Verify OTP</button>
+                <p class="modal-footer">
+                    <a href="#" onclick="resendOTP()">Resend OTP</a> | 
+                    <a href="#" onclick="closeModal('otpVerificationModal'); showForgotPasswordModal();">Change Email</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reset Password Modal -->
+    <div id="resetPasswordModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('resetPasswordModal')">&times;</span>
+            <h2>Reset Your Password</h2>
+            <form id="resetPasswordForm">
+                <div class="form-group">
+                    <label for="newPassword">New Password</label>
+                    <div class="password-input-container">
+                        <input type="password" id="newPassword" autocomplete="new-password" placeholder="Enter new password" required>
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('newPassword')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="confirmNewPassword">Confirm New Password</label>
+                    <div class="password-input-container">
+                        <input type="password" id="confirmNewPassword" autocomplete="new-password" placeholder="Confirm new password" required>
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('confirmNewPassword')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Reset Password</button>
+                <p class="modal-footer">
+                    <a href="#" onclick="closeModal('resetPasswordModal'); showLoginModal();">Back to Login</a>
                 </p>
             </form>
         </div>
