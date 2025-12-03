@@ -36,3 +36,4 @@ FROM public.users WHERE email = 'christian21.bsit@gmail.com';
 
 -- Both should return 0 if deletion was successful
 
+

@@ -942,15 +942,23 @@
                             <button class="action-btn view" onclick="viewAppointment('${appointment.id}')">
                                 <i class="fas fa-qrcode"></i> View QR Code
                             </button>
+                            <button class="action-btn cancel" onclick="cancelAppointment('${appointment.id}')">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
                         ` : ''}
                         ${appointment.status === 'pending' ? `
-                            <button class="action-btn cancel" onclick="cancelAppointment(${appointment.id})">
+                            <button class="action-btn cancel" onclick="cancelAppointment('${appointment.id}')">
                                 <i class="fas fa-times"></i> Cancel
                             </button>
                         ` : ''}
                         ${appointment.status === 'completed' ? `
                             <button class="action-btn completed" disabled>
                                 <i class="fas fa-check"></i> Completed
+                            </button>
+                        ` : ''}
+                        ${appointment.status === 'cancelled' ? `
+                            <button class="action-btn completed" disabled style="background: #f44336;">
+                                <i class="fas fa-times"></i> Cancelled
                             </button>
                         ` : ''}
                     </div>

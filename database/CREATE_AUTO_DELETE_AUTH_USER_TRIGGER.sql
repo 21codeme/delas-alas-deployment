@@ -62,3 +62,4 @@ WHERE trigger_name = 'auto_delete_auth_user';
 -- users will need to manually delete from Authentication → Users
 -- Or use the RPC function delete_auth_user() which requires proper setup
 
+
