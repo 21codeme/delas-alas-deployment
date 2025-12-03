@@ -171,6 +171,12 @@ function initializeApp() {
     // Load clinic settings from Supabase
     loadClinicSettings();
     
+    // Also load clinic settings after a delay to ensure DOM is fully ready
+    setTimeout(() => {
+        console.log('⏰ Delayed clinic settings loading attempt...');
+        loadClinicSettings();
+    }, 1000);
+    
     // Listen for messages from iframe (dentist dashboard)
     window.addEventListener('message', function(event) {
         if (event.data && event.data.action === 'refreshServices') {
@@ -190,6 +196,22 @@ function initializeApp() {
         console.log('⏰ Delayed service loading attempt...');
         loadServicesFromDatabase();
     }, 2000);
+    
+    // Load clinic settings when contact section becomes visible (for lazy loading)
+    const contactSection = document.getElementById('contact');
+    if (contactSection) {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    console.log('👁️ Contact section is now visible, loading clinic settings...');
+                    loadClinicSettings();
+                    observer.unobserve(entry.target); // Only load once
+                }
+            });
+        }, { threshold: 0.1 });
+        
+        observer.observe(contactSection);
+    }
 }
 
 // Load clinic settings from Supabase and update index.html
@@ -197,12 +219,18 @@ async function loadClinicSettings() {
     try {
         console.log('🔍 Loading clinic settings from Supabase...');
         
+        // Wait a bit to ensure DOM is fully ready
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         const response = await fetch(`${supabaseUrl}/rest/v1/clinic_settings?id=eq.clinic&select=*`, {
             headers: {
                 'apikey': supabaseKey,
-                'Authorization': `Bearer ${supabaseKey}`
+                'Authorization': `Bearer ${supabaseKey}`,
+                'Content-Type': 'application/json'
             }
         });
+        
+        console.log('📡 Clinic settings response status:', response.status);
         
         if (response.ok) {
             const data = await response.json();
@@ -219,28 +247,51 @@ async function loadClinicSettings() {
                 
                 console.log('📋 Settings object:', settings);
                 console.log('📋 Available fields:', Object.keys(settings));
+                console.log('🔍 DOM elements found:', {
+                    address: !!addressEl,
+                    phone: !!phoneEl,
+                    email: !!emailEl,
+                    hours: !!hoursEl
+                });
                 
                 if (addressEl && settings.clinic_address) {
                     addressEl.textContent = settings.clinic_address;
                     console.log('✅ Updated address:', settings.clinic_address);
+                } else if (!addressEl) {
+                    console.warn('⚠️ Address element not found');
+                } else if (!settings.clinic_address) {
+                    console.warn('⚠️ No clinic_address in settings');
                 }
                 
                 if (phoneEl && settings.clinic_phone) {
                     phoneEl.textContent = settings.clinic_phone;
                     console.log('✅ Updated phone:', settings.clinic_phone);
+                } else if (!phoneEl) {
+                    console.warn('⚠️ Phone element not found');
+                } else if (!settings.clinic_phone) {
+                    console.warn('⚠️ No clinic_phone in settings');
                 }
                 
                 if (emailEl && settings.clinic_email) {
                     emailEl.textContent = settings.clinic_email;
                     console.log('✅ Updated email:', settings.clinic_email);
+                } else if (!emailEl) {
+                    console.warn('⚠️ Email element not found');
+                } else if (!settings.clinic_email) {
+                    console.warn('⚠️ No clinic_email in settings');
                 }
                 
                 if (hoursEl && settings.operating_hours) {
+                    // Replace newlines with <br> tags for proper display
                     hoursEl.innerHTML = settings.operating_hours.replace(/\n/g, '<br>');
                     console.log('✅ Updated hours:', settings.operating_hours);
+                } else if (!hoursEl) {
+                    console.warn('⚠️ Hours element not found');
+                } else if (!settings.operating_hours) {
+                    console.warn('⚠️ No operating_hours in settings');
                 }
                 
-                console.log('✅ Clinic settings loaded successfully');
+                console.log('✅ Clinic settings loaded and updated successfully');
             } else {
                 console.log('⚠️ No clinic settings found in Supabase, using default values');
             }
@@ -248,9 +299,22 @@ async function loadClinicSettings() {
             console.error('❌ Failed to load clinic settings:', response.status);
             const errorText = await response.text();
             console.error('❌ Error details:', errorText);
+            
+            // Retry after 2 seconds if it fails
+            console.log('🔄 Retrying clinic settings load in 2 seconds...');
+            setTimeout(() => {
+                loadClinicSettings();
+            }, 2000);
         }
     } catch (error) {
         console.error('❌ Error loading clinic settings:', error);
+        console.error('❌ Error stack:', error.stack);
+        
+        // Retry after 2 seconds on error
+        console.log('🔄 Retrying clinic settings load in 2 seconds due to error...');
+        setTimeout(() => {
+            loadClinicSettings();
+        }, 2000);
     }
 }
 
