@@ -1690,25 +1690,72 @@
 
         async function updateClinic() {
             try {
+                // Get form values
+                const clinicNameEl = document.getElementById('clinicName');
+                const clinicAddressEl = document.getElementById('clinicAddress');
+                const operatingHoursEl = document.getElementById('operatingHours');
+                const clinicPhoneEl = document.getElementById('clinicPhone');
+                const clinicEmailEl = document.getElementById('clinicEmail');
+                
+                if (!clinicNameEl || !clinicAddressEl || !operatingHoursEl || !clinicPhoneEl || !clinicEmailEl) {
+                    console.error('❌ Form elements not found!');
+                    showNotification('Error: Form elements not found. Please refresh the page.', 'error');
+                    return;
+                }
+                
                 const clinicData = {
-                    clinic_name: document.getElementById('clinicName').value,
-                    clinic_address: document.getElementById('clinicAddress').value,
-                    operating_hours: document.getElementById('operatingHours').value,
-                    clinic_phone: document.getElementById('clinicPhone').value,
-                    clinic_email: document.getElementById('clinicEmail').value
+                    clinic_name: clinicNameEl.value.trim(),
+                    clinic_address: clinicAddressEl.value.trim(),
+                    operating_hours: operatingHoursEl.value.trim(),
+                    clinic_phone: clinicPhoneEl.value.trim(),
+                    clinic_email: clinicEmailEl.value.trim(),
+                    updated_at: new Date().toISOString()
                 };
                 
                 console.log('📝 Saving clinic data:', clinicData);
+                console.log('📝 Raw form values:', {
+                    name: clinicNameEl.value,
+                    address: clinicAddressEl.value,
+                    hours: operatingHoursEl.value,
+                    phone: clinicPhoneEl.value,
+                    email: clinicEmailEl.value
+                });
                 
                 // Save to Supabase in a clinic_settings table
                 const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
                 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
                 
+                // Try to get user's auth token for authenticated requests
+                let authToken = SUPABASE_KEY; // Default to anon key
+                try {
+                    // Try to get Supabase client and session
+                    let supabaseClient = null;
+                    if (window.supabase && window.supabase.auth) {
+                        supabaseClient = window.supabase;
+                    } else if (window.parent && window.parent.supabase && window.parent.supabase.auth) {
+                        supabaseClient = window.parent.supabase;
+                    }
+                    
+                    if (supabaseClient) {
+                        try {
+                            const session = await supabaseClient.auth.getSession();
+                            if (session?.data?.session?.access_token) {
+                                authToken = session.data.session.access_token;
+                                console.log('✅ Using authenticated token for update');
+                            }
+                        } catch (e) {
+                            console.warn('⚠️ Could not get auth session, using anon key:', e);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('⚠️ Could not get auth token, using anon key:', e);
+                }
+                
                 // First, check if record exists
                 const checkResponse = await fetch(`${SUPABASE_URL}/rest/v1/clinic_settings?id=eq.clinic&select=id`, {
                     headers: {
                         'apikey': SUPABASE_KEY,
-                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Authorization': `Bearer ${authToken}`,
                         'Content-Type': 'application/json'
                     }
                 });
@@ -1723,11 +1770,13 @@
                 if (recordExists) {
                     // Update existing record
                     console.log('🔄 Updating existing clinic settings...');
+                    console.log('📤 Sending update request with data:', clinicData);
+                    
                     const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/clinic_settings?id=eq.clinic`, {
                         method: 'PATCH',
                         headers: {
                             'apikey': SUPABASE_KEY,
-                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Authorization': `Bearer ${authToken}`,
                             'Content-Type': 'application/json',
                             'Prefer': 'return=representation'
                         },
@@ -1735,14 +1784,41 @@
                     });
                     
                     console.log('📡 Update response status:', updateResponse.status);
+                    console.log('📡 Update response headers:', Object.fromEntries(updateResponse.headers.entries()));
                     
                     if (!updateResponse.ok) {
                         const errorText = await updateResponse.text();
                         console.error('❌ Update failed:', errorText);
+                        console.error('❌ Status:', updateResponse.status);
+                        console.error('❌ Status text:', updateResponse.statusText);
                         throw new Error('Failed to update clinic settings: ' + errorText);
                     }
                     
-                    console.log('✅ Clinic settings updated successfully');
+                    // Verify the update was successful by reading back the data
+                    const verifyResponse = await fetch(`${SUPABASE_URL}/rest/v1/clinic_settings?id=eq.clinic&select=*`, {
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`
+                        }
+                    });
+                    
+                    if (verifyResponse.ok) {
+                        const verifyData = await verifyResponse.json();
+                        console.log('✅ Verification - Data in Supabase after update:', verifyData);
+                        if (Array.isArray(verifyData) && verifyData.length > 0) {
+                            const savedData = verifyData[0];
+                            console.log('✅ Verified saved data:', {
+                                name: savedData.clinic_name,
+                                address: savedData.clinic_address,
+                                phone: savedData.clinic_phone,
+                                email: savedData.clinic_email,
+                                hours: savedData.operating_hours
+                            });
+                        }
+                    }
+                    
+                    const updateResult = await updateResponse.json();
+                    console.log('✅ Clinic settings updated successfully:', updateResult);
                 } else {
                     // Insert new record
                     console.log('🔄 Inserting new clinic settings record...');
@@ -1750,7 +1826,7 @@
                         method: 'POST',
                         headers: {
                             'apikey': SUPABASE_KEY,
-                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Authorization': `Bearer ${authToken}`,
                             'Content-Type': 'application/json',
                             'Prefer': 'return=representation'
                         },
@@ -1798,7 +1874,15 @@
                 
             } catch (error) {
                 console.error('❌ Error updating clinic settings:', error);
-                showNotification('Failed to update clinic settings', 'error');
+                console.error('❌ Error message:', error.message);
+                console.error('❌ Error stack:', error.stack);
+                showNotification('Failed to update clinic settings: ' + (error.message || 'Unknown error'), 'error');
+                
+                // Try to get more details about the error
+                if (error.message && error.message.includes('permission') || error.message.includes('policy')) {
+                    console.error('⚠️ This might be an RLS (Row Level Security) issue. Check Supabase RLS policies.');
+                    showNotification('Permission denied. Please check RLS policies in Supabase.', 'error');
+                }
             }
         }
 
