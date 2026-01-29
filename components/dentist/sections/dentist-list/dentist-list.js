@@ -5,7 +5,7 @@ let supabase = null;
 
 // Initialize Supabase
 const supabaseUrl = 'https://xlubjwiumytdkxrzojdg.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+const supabaseKey = 'sb_publishable_tJhxDaNVJNXg66Z1sxzqKQ_e9XLGbCX';
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {

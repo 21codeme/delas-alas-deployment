@@ -56,7 +56,8 @@ window.toggleMobileMenu = toggleMobileMenu;
 
 // Initialize Supabase
 const supabaseUrl = 'https://xlubjwiumytdkxrzojdg.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+// Use the new Supabase publishable key (safe for frontend usage)
+const supabaseKey = 'sb_publishable_tJhxDaNVJNXg66Z1sxzqKQ_e9XLGbCX';
 let supabase = null;
 
 // Initialize the application
@@ -866,7 +867,7 @@ async function handleForgotPassword(event) {
         
         // Store OTP in Supabase database
         const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+        const SUPABASE_KEY = 'sb_publishable_tJhxDaNVJNXg66Z1sxzqKQ_e9XLGbCX';
         
         // Store OTP in database
         console.log('💾 Storing OTP:', { email, otp });
@@ -964,7 +965,7 @@ async function handleOTPVerification(event) {
         showToast('Verifying OTP code...', 'info');
         
         const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+        const SUPABASE_KEY = 'sb_publishable_tJhxDaNVJNXg66Z1sxzqKQ_e9XLGbCX';
         
         // Verify OTP
         console.log('🔐 Verifying OTP:', { email, otpCode: otpCode });
@@ -1104,7 +1105,7 @@ async function resendOTP() {
         showToast('Resending OTP code...', 'info');
         
         const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+        const SUPABASE_KEY = 'sb_publishable_tJhxDaNVJNXg66Z1sxzqKQ_e9XLGbCX';
         
         // Store new OTP
         await fetch(`${SUPABASE_URL}/rest/v1/rpc/store_otp_code`, {
