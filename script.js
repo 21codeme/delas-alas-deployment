@@ -403,6 +403,12 @@ function setupEventListeners() {
         aptDate.addEventListener('change', checkAvailability);
     }
 
+    // Initialize service selection cards
+    initializeServiceSelection();
+    
+    // Initialize appointment time grid
+    initializeAppointmentTimeGrid();
+
     // Close modals when clicking outside
     window.addEventListener('click', function(event) {
         if (event.target.classList.contains('modal')) {
@@ -1438,13 +1444,27 @@ async function handleAppointment(event) {
     const name = document.getElementById('aptName').value.trim();
     const email = document.getElementById('aptEmail').value.trim();
     const phone = document.getElementById('aptPhone').value.trim();
-    const service = document.getElementById('aptService').value;
+    const serviceInput = document.getElementById('aptService') || 
+                        document.getElementById('newAptService') || 
+                        document.getElementById('serviceType');
+    const service = serviceInput ? serviceInput.value : '';
     const date = document.getElementById('aptDate').value;
-    const message = document.getElementById('aptMessage').value;
+    const message = document.getElementById('aptMessage') ? document.getElementById('aptMessage').value : '';
+    
+    // Get selected time
+    const timeInput = document.getElementById('aptTime') || 
+                     document.getElementById('newAptTime') || 
+                     document.getElementById('appointmentTime');
+    const selectedTime = timeInput ? timeInput.value : '10:00:00';
     
     // Validate form
     if (!name || !email || !phone || !service || !date) {
         showToast('Please fill in all required fields', 'error');
+        return;
+    }
+    
+    if (!selectedTime || selectedTime === '') {
+        showToast('Please select an appointment time', 'error');
         return;
     }
     
@@ -1474,7 +1494,7 @@ async function handleAppointment(event) {
                 patient_id: currentUserData?.id || null,
                 service_type: service,
                 appointment_date: date,
-                appointment_time: '10:00:00', // Default time
+                appointment_time: selectedTime,
                 duration: 60, // Default duration in minutes
                 notes: message,
                 patient_name: name,
@@ -1491,13 +1511,16 @@ async function handleAppointment(event) {
     showToast('Appointment booked and confirmed successfully! Confirmation email sent.', 'success');
     closeModal('appointmentModal');
     
+    // Format time for display
+    const timeDisplay = formatTimeForDisplay(selectedTime);
+    
     // Send confirmation email
     await sendAppointmentConfirmation({
         name,
         email,
         service,
         date,
-        time: '10:00 AM', // Default time display
+        time: timeDisplay,
         dentistName: 'Dr. Delas Alas' // Default dentist name
     });
         
@@ -1678,6 +1701,118 @@ function formatTime(timeString) {
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const displayHour = hour % 12 || 12;
     return `${displayHour}:${minutes} ${ampm}`;
+}
+
+// Format time from HH:MM:SS to display format
+function formatTimeForDisplay(timeString) {
+    if (!timeString) return '10:00 AM';
+    const [hours, minutes] = timeString.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+}
+
+// Service Selection Functions
+function initializeServiceSelection() {
+    const serviceCards = document.querySelectorAll('.service-card');
+    
+    serviceCards.forEach(card => {
+        card.addEventListener('click', function() {
+            // Remove selected class from all cards
+            serviceCards.forEach(c => c.classList.remove('selected'));
+            
+            // Add selected class to clicked card
+            this.classList.add('selected');
+            
+            // Set hidden input value
+            const serviceValue = this.getAttribute('data-service');
+            const serviceInput = document.getElementById('aptService') || 
+                                document.getElementById('newAptService') || 
+                                document.getElementById('serviceType');
+            
+            if (serviceInput) {
+                // Map service values to proper format
+                const serviceMap = {
+                    'cleaning': 'Teeth Cleaning',
+                    'extraction': 'Tooth Extraction',
+                    'filling': 'Dental Filling',
+                    'denture': 'Denture (Pustiso)'
+                };
+                serviceInput.value = serviceMap[serviceValue] || serviceValue;
+            }
+            
+            // Show appointment time section and generate time slots
+            const timeSection = document.getElementById('appointmentTimeSection');
+            if (timeSection) {
+                timeSection.style.display = 'block';
+                
+                // Update selected service info
+                const serviceInfo = document.getElementById('selectedServiceInfo');
+                if (serviceInfo) {
+                    const serviceName = this.querySelector('h4').textContent;
+                    const duration = this.getAttribute('data-duration');
+                    serviceInfo.textContent = `Available times for ${serviceName} (${duration} min)`;
+                }
+                
+                // Generate time slots
+                generateTimeSlots(serviceValue);
+            }
+        });
+    });
+}
+
+// Generate time slots based on selected service
+function generateTimeSlots(serviceType) {
+    const timeGrid = document.getElementById('appointmentTimeGrid');
+    if (!timeGrid) return;
+    
+    // Clear existing slots
+    timeGrid.innerHTML = '';
+    
+    // Define time slots (8:00 AM to 6:00 PM, 30-minute intervals)
+    const timeSlots = [
+        '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+        '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
+        '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
+        '17:00', '17:30', '18:00'
+    ];
+    
+    // Create time slot buttons
+    timeSlots.forEach(time => {
+        const slot = document.createElement('button');
+        slot.type = 'button';
+        slot.className = 'time-slot';
+        slot.textContent = formatTime(time);
+        slot.setAttribute('data-time', time);
+        
+        slot.addEventListener('click', function() {
+            // Remove selected class from all slots
+            document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+            
+            // Add selected class to clicked slot
+            this.classList.add('selected');
+            
+            // Set hidden input value
+            const timeInput = document.getElementById('aptTime') || 
+                             document.getElementById('newAptTime') || 
+                             document.getElementById('appointmentTime');
+            
+            if (timeInput) {
+                // Format time as HH:MM:SS for database
+                const [hours, minutes] = time.split(':');
+                timeInput.value = `${hours}:${minutes}:00`;
+            }
+        });
+        
+        timeGrid.appendChild(slot);
+    });
+}
+
+// Initialize appointment time grid (call after service selection)
+function initializeAppointmentTimeGrid() {
+    // This will be called when a service is selected
+    // The time grid is generated dynamically in generateTimeSlots()
 }
 
 // Email Verification Functions

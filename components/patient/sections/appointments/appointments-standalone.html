@@ -685,15 +685,52 @@
                     <input type="tel" id="aptPhone" autocomplete="tel" required>
                 </div>
                 
+                <!-- Service Selection -->
                 <div class="form-group">
-                    <label for="aptService">Service Needed *</label>
-                    <select id="aptService" autocomplete="off" required>
-                        <option value="">Select Service</option>
-                        <option value="general">General Dentistry</option>
-                        <option value="cosmetic">Cosmetic Dentistry</option>
-                        <option value="restorative">Restorative Dentistry</option>
-                        <option value="pediatric">Pediatric Dentistry</option>
-                    </select>
+                    <label>Select Service *</label>
+                    <div class="service-selection-grid">
+                        <div class="service-card" data-service="cleaning" data-duration="30-60">
+                            <div class="service-icon">
+                                <i class="fas fa-sparkles"></i>
+                            </div>
+                            <div class="service-info">
+                                <h4>Teeth Cleaning</h4>
+                                <p class="service-duration">30 min-1 hr</p>
+                            </div>
+                            <i class="fas fa-chevron-down service-arrow"></i>
+                        </div>
+                        <div class="service-card" data-service="extraction" data-duration="30-120">
+                            <div class="service-icon">
+                                <i class="fas fa-tooth"></i>
+                            </div>
+                            <div class="service-info">
+                                <h4>Tooth Extraction</h4>
+                                <p class="service-duration">30 min-2 hrs</p>
+                            </div>
+                            <i class="fas fa-chevron-down service-arrow"></i>
+                        </div>
+                        <div class="service-card" data-service="filling" data-duration="30-60">
+                            <div class="service-icon">
+                                <i class="fas fa-fill-drip"></i>
+                            </div>
+                            <div class="service-info">
+                                <h4>Dental Filling</h4>
+                                <p class="service-duration">30-60 min</p>
+                            </div>
+                            <i class="fas fa-chevron-down service-arrow"></i>
+                        </div>
+                        <div class="service-card" data-service="denture" data-duration="60-120">
+                            <div class="service-icon">
+                                <i class="fas fa-teeth"></i>
+                            </div>
+                            <div class="service-info">
+                                <h4>Denture (Pustiso)</h4>
+                                <p class="service-duration">1-2 hrs per visit</p>
+                            </div>
+                            <i class="fas fa-chevron-down service-arrow"></i>
+                        </div>
+                    </div>
+                    <input type="hidden" id="aptService" required>
                 </div>
                 
                 <div class="form-group">
@@ -708,22 +745,14 @@
                     <input type="date" id="aptDate" required min="">
                 </div>
                 
-                <div class="form-group">
-                    <label for="aptTime">Preferred Time *</label>
-                    <select id="aptTime" autocomplete="off" required>
-                        <option value="">Select Time</option>
-                        <option value="08:00:00">8:00 AM</option>
-                        <option value="09:00:00">9:00 AM</option>
-                        <option value="10:00:00">10:00 AM</option>
-                        <option value="11:00:00">11:00 AM</option>
-                        <option value="12:00:00">12:00 PM</option>
-                        <option value="13:00:00">1:00 PM</option>
-                        <option value="14:00:00">2:00 PM</option>
-                        <option value="15:00:00">3:00 PM</option>
-                        <option value="16:00:00">4:00 PM</option>
-                        <option value="17:00:00">5:00 PM</option>
-                        <option value="18:00:00">6:00 PM</option>
-                    </select>
+                <!-- Appointment Time Selection -->
+                <div class="form-group" id="appointmentTimeSection">
+                    <label>Select Appointment Time: *</label>
+                    <p class="selected-service-info" id="selectedServiceInfo"></p>
+                    <div class="appointment-time-grid" id="appointmentTimeGrid">
+                        <!-- Time slots will be generated dynamically -->
+                    </div>
+                    <input type="hidden" id="aptTime" required>
                 </div>
                 
                 <div class="form-group">
