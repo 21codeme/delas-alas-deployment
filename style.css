@@ -1480,36 +1480,67 @@ p {
    SERVICE SELECTION CARDS & TIME GRID
    ======================================== */
 
-/* Service Selection Grid */
-.service-selection-grid {
-    display: grid;
-    grid-template-columns: 1fr;
+/* Service Selection List (Expandable) */
+.service-selection-list {
+    display: flex;
+    flex-direction: column;
     gap: 12px;
     margin-top: 8px;
 }
 
-.service-card {
-    display: flex;
-    align-items: center;
-    padding: 16px;
+.service-card-expandable {
     border: 2px solid #e0e0e0;
     border-radius: 12px;
     background: white;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.service-card-expandable:hover {
+    border-color: #667eea;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.service-card-expandable.expanded {
+    border-color: #667eea;
+    background: white;
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+}
+
+.service-card-header {
+    display: flex;
+    align-items: center;
+    padding: 16px;
     cursor: pointer;
     transition: all 0.3s ease;
     position: relative;
 }
 
-.service-card:hover {
-    border-color: #667eea;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
-    transform: translateY(-2px);
+.service-card-expandable.expanded .service-card-header {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    border-bottom: 1px solid #e0e0e0;
 }
 
-.service-card.selected {
-    border-color: #667eea;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+.service-card-header:hover {
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.service-time-content {
+    padding: 20px;
+    background: #f8f9fa;
+    border-top: 1px solid #e0e0e0;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 1000px;
+    }
 }
 
 .service-icon {
@@ -1526,7 +1557,7 @@ p {
     flex-shrink: 0;
 }
 
-.service-card.selected .service-icon {
+.service-card-expandable.expanded .service-icon {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
@@ -1554,7 +1585,7 @@ p {
     transition: transform 0.3s ease;
 }
 
-.service-card.selected .service-arrow {
+.service-card-expandable.expanded .service-arrow {
     color: #667eea;
     transform: rotate(180deg);
 }
@@ -1632,10 +1663,6 @@ p {
 
 /* Responsive Design */
 @media (min-width: 768px) {
-    .service-selection-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
     .appointment-time-grid {
         grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
         gap: 12px;

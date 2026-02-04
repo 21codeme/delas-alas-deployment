@@ -1713,58 +1713,71 @@ function formatTimeForDisplay(timeString) {
     return `${hour12}:${minutes} ${ampm}`;
 }
 
-// Service Selection Functions
+// Service Selection Functions (Expandable Cards)
 function initializeServiceSelection() {
-    const serviceCards = document.querySelectorAll('.service-card');
+    const serviceCards = document.querySelectorAll('.service-card-expandable');
     
     serviceCards.forEach(card => {
-        card.addEventListener('click', function() {
-            // Remove selected class from all cards
-            serviceCards.forEach(c => c.classList.remove('selected'));
-            
-            // Add selected class to clicked card
-            this.classList.add('selected');
-            
-            // Set hidden input value
-            const serviceValue = this.getAttribute('data-service');
-            const serviceInput = document.getElementById('aptService') || 
-                                document.getElementById('newAptService') || 
-                                document.getElementById('serviceType');
-            
-            if (serviceInput) {
-                // Map service values to proper format
-                const serviceMap = {
-                    'cleaning': 'Teeth Cleaning',
-                    'extraction': 'Tooth Extraction',
-                    'filling': 'Dental Filling',
-                    'denture': 'Denture (Pustiso)'
-                };
-                serviceInput.value = serviceMap[serviceValue] || serviceValue;
-            }
-            
-            // Show appointment time section and generate time slots
-            const timeSection = document.getElementById('appointmentTimeSection');
-            if (timeSection) {
-                timeSection.style.display = 'block';
+        const header = card.querySelector('.service-card-header');
+        const timeContent = card.querySelector('.service-time-content');
+        const timeGrid = card.querySelector('.appointment-time-grid');
+        
+        if (header && timeContent) {
+            header.addEventListener('click', function(e) {
+                e.stopPropagation();
                 
-                // Update selected service info
-                const serviceInfo = document.getElementById('selectedServiceInfo');
-                if (serviceInfo) {
-                    const serviceName = this.querySelector('h4').textContent;
-                    const duration = this.getAttribute('data-duration');
-                    serviceInfo.textContent = `Available times for ${serviceName} (${duration} min)`;
+                const isExpanded = card.classList.contains('expanded');
+                const serviceValue = card.getAttribute('data-service');
+                
+                // Close all other service cards
+                serviceCards.forEach(c => {
+                    if (c !== card) {
+                        c.classList.remove('expanded');
+                        const otherTimeContent = c.querySelector('.service-time-content');
+                        if (otherTimeContent) {
+                            otherTimeContent.style.display = 'none';
+                        }
+                    }
+                });
+                
+                // Toggle current card
+                if (isExpanded) {
+                    // Collapse
+                    card.classList.remove('expanded');
+                    timeContent.style.display = 'none';
+                } else {
+                    // Expand
+                    card.classList.add('expanded');
+                    timeContent.style.display = 'block';
+                    
+                    // Set hidden input value
+                    const serviceInput = document.getElementById('aptService') || 
+                                        document.getElementById('newAptService') || 
+                                        document.getElementById('serviceType');
+                    
+                    if (serviceInput) {
+                        // Map service values to proper format
+                        const serviceMap = {
+                            'cleaning': 'Teeth Cleaning',
+                            'extraction': 'Tooth Extraction',
+                            'filling': 'Dental Filling',
+                            'denture': 'Denture (Pustiso)'
+                        };
+                        serviceInput.value = serviceMap[serviceValue] || serviceValue;
+                    }
+                    
+                    // Generate time slots if not already generated
+                    if (timeGrid && timeGrid.children.length === 0) {
+                        generateTimeSlotsForService(serviceValue, timeGrid);
+                    }
                 }
-                
-                // Generate time slots
-                generateTimeSlots(serviceValue);
-            }
-        });
+            });
+        }
     });
 }
 
-// Generate time slots based on selected service
-function generateTimeSlots(serviceType) {
-    const timeGrid = document.getElementById('appointmentTimeGrid');
+// Generate time slots for a specific service card
+function generateTimeSlotsForService(serviceType, timeGrid) {
     if (!timeGrid) return;
     
     // Clear existing slots
@@ -1786,8 +1799,10 @@ function generateTimeSlots(serviceType) {
         slot.textContent = formatTime(time);
         slot.setAttribute('data-time', time);
         
-        slot.addEventListener('click', function() {
-            // Remove selected class from all slots
+        slot.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            // Remove selected class from all slots in all service cards
             document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
             
             // Add selected class to clicked slot
@@ -1807,6 +1822,14 @@ function generateTimeSlots(serviceType) {
         
         timeGrid.appendChild(slot);
     });
+}
+
+// Legacy function for backward compatibility
+function generateTimeSlots(serviceType) {
+    const timeGrid = document.getElementById('appointmentTimeGrid');
+    if (timeGrid) {
+        generateTimeSlotsForService(serviceType, timeGrid);
+    }
 }
 
 // Initialize appointment time grid (call after service selection)
