@@ -2481,14 +2481,20 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                     // Remove seconds if present (HH:MM:SS -> HH:MM)
                     if (normalizedBooked.includes(':')) {
                         const parts = normalizedBooked.split(':');
-                        normalizedBooked = parts[0] + ':' + parts[1];
+                        if (parts.length >= 2) {
+                            normalizedBooked = parts[0].padStart(2, '0') + ':' + parts[1].padStart(2, '0');
+                        }
                     }
                     
                     let normalizedTime = time.substring(0, 5);
+                    // Ensure time format is consistent (HH:MM)
+                    if (normalizedTime.length === 4) {
+                        normalizedTime = '0' + normalizedTime; // Add leading zero if needed
+                    }
                     
                     const matches = normalizedBooked === normalizedTime;
                     if (matches) {
-                        console.log('🎯 Found booked slot match:', normalizedBooked, '===', normalizedTime);
+                        console.log('🎯 Found booked slot match:', normalizedBooked, '===', normalizedTime, 'for time slot:', time);
                     }
                     return matches;
                 });
