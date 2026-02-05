@@ -2354,9 +2354,9 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             }
         }
 
-        // Get booked time slots for a specific date and dentist
+        // Get booked time slots for a specific date (all dentists)
         async function getBookedTimeSlotsForEdit(appointmentDate, dentistId, excludeAppointmentId = null) {
-            if (!appointmentDate || !dentistId) {
+            if (!appointmentDate) {
                 return [];
             }
             
@@ -2364,8 +2364,9 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
                 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
                 
-                // Build query - exclude current appointment if rescheduling
-                let url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${appointmentDate}&dentist_id=eq.${dentistId}&status=in.(pending,confirmed)&select=id,appointment_time,status`;
+                // Build query - get ALL appointments for the date (not just for specific dentist)
+                // Exclude current appointment if rescheduling
+                let url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${appointmentDate}&status=in.(pending,confirmed)&select=id,appointment_time,status,dentist_id`;
                 if (excludeAppointmentId) {
                     url += `&id=neq.${excludeAppointmentId}`;
                 }
@@ -2380,7 +2381,8 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 if (response.ok) {
                     const appointments = await response.json();
                     const bookedTimes = appointments.map(apt => apt.appointment_time || '').filter(time => time);
-                    console.log('📅 Booked time slots for edit:', bookedTimes);
+                    console.log('📅 All booked time slots for date', appointmentDate, ':', bookedTimes);
+                    console.log('📅 Total appointments:', appointments.length);
                     return bookedTimes;
                 } else {
                     console.error('❌ Failed to check booked time slots:', response.status);
