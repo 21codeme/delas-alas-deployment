@@ -925,6 +925,182 @@
                 box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             }
         }
+
+        /* Service Selection List (Expandable) */
+        .service-selection-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .service-card-expandable {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background: white;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .service-card-expandable:hover {
+            border-color: #b0b0b0;
+        }
+
+        .service-card-expandable.expanded {
+            border-color: #4a90e2;
+            background: white;
+        }
+
+        .service-card-header {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            background: white;
+        }
+
+        .service-card-expandable.expanded .service-card-header {
+            background: #e8f4fd;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .service-card-header:hover {
+            background: #f5f5f5;
+        }
+
+        .service-card-expandable.expanded .service-card-header:hover {
+            background: #e8f4fd;
+        }
+
+        .service-time-content {
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+            }
+            to {
+                opacity: 1;
+                max-height: 1000px;
+            }
+        }
+
+        .service-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e0e0e0;
+            border-radius: 50%;
+            margin-right: 12px;
+            color: #666;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .service-card-expandable.expanded .service-icon {
+            background: #4a90e2;
+            color: white;
+        }
+
+        .service-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .service-info h4 {
+            margin: 0 0 2px 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .service-duration-inline {
+            margin: 0;
+            font-size: 13px;
+            color: #999;
+            display: none;
+        }
+
+        .service-duration-right {
+            font-size: 13px;
+            color: #999;
+            margin-right: 12px;
+            white-space: nowrap;
+        }
+
+        .service-card-expandable.expanded .service-duration-right {
+            color: #666;
+        }
+
+        .service-arrow {
+            color: #666;
+            font-size: 14px;
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .service-card-expandable.expanded .service-arrow {
+            color: #4a90e2;
+            transform: rotate(180deg);
+        }
+
+        .selected-service-info {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #e3f2fd;
+            border-radius: 6px;
+            color: #1976d2;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .appointment-time-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .time-slot {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .time-slot:hover:not(.disabled):not(.fully-booked) {
+            border-color: #4a90e2;
+            background: #f0f7ff;
+        }
+
+        .time-slot.selected {
+            background: #4a90e2;
+            color: white;
+            border-color: #4a90e2;
+        }
+
+        .time-slot.disabled,
+        .time-slot.fully-booked {
+            background: #f5f5f5;
+            color: #999;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
     </style>
 </head>
 <body>
