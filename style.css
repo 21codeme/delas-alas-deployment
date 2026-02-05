@@ -1715,6 +1715,8 @@ p {
     color: #2c3e50;
     transition: all 0.3s ease;
     position: relative;
+    pointer-events: auto;
+    user-select: none;
 }
 
 .time-slot:hover:not(.disabled):not(.fully-booked) {

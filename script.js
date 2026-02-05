@@ -1738,7 +1738,11 @@ function toggleServiceList() {
         }
         
         // Re-initialize service selection when list is shown
+        // First, remove initialization flags to allow re-initialization
         setTimeout(() => {
+            document.querySelectorAll('.service-card-expandable').forEach(card => {
+                card.removeAttribute('data-initialized');
+            });
             initializeServiceSelection();
         }, 100);
     }
@@ -1751,13 +1755,24 @@ function initializeServiceSelection() {
     const serviceCards = document.querySelectorAll('.service-card-expandable');
     
     serviceCards.forEach(card => {
+        // Remove any existing click handlers by using a data attribute
+        if (card.dataset.initialized === 'true') {
+            return; // Skip if already initialized
+        }
+        
         const header = card.querySelector('.service-card-header');
         const timeContent = card.querySelector('.service-time-content');
         const timeGrid = card.querySelector('.appointment-time-grid');
         
         if (header && timeContent) {
+            // Mark as initialized
+            card.dataset.initialized = 'true';
+            
             header.addEventListener('click', function(e) {
+                e.preventDefault();
                 e.stopPropagation();
+                
+                console.log('Service card clicked:', card.getAttribute('data-service'));
                 
                 const isExpanded = card.classList.contains('expanded');
                 const serviceValue = card.getAttribute('data-service');
@@ -1797,6 +1812,7 @@ function initializeServiceSelection() {
                             'denture': 'Denture (Pustiso)'
                         };
                         serviceInput.value = serviceMap[serviceValue] || serviceValue;
+                        console.log('Service selected:', serviceInput.value);
                     }
                     
                     // Update button text with selected service
@@ -1841,7 +1857,10 @@ function generateTimeSlotsForService(serviceType, timeGrid) {
         slot.setAttribute('data-time', time);
         
         slot.addEventListener('click', function(e) {
+            e.preventDefault();
             e.stopPropagation();
+            
+            console.log('Time slot clicked:', time);
             
             // Remove selected class from all slots in all service cards
             document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
@@ -1858,6 +1877,7 @@ function generateTimeSlotsForService(serviceType, timeGrid) {
                 // Format time as HH:MM:SS for database
                 const [hours, minutes] = time.split(':');
                 timeInput.value = `${hours}:${minutes}:00`;
+                console.log('Time selected:', timeInput.value);
             }
         });
         
