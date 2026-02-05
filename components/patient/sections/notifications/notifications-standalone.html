@@ -617,10 +617,40 @@
 
                 // Add notifications from database (includes reschedule notifications)
                 if (Array.isArray(dbNotifications)) {
+                    // First, get all appointments to check reschedule status
+                    const appointmentsMap = {};
+                    if (Array.isArray(appointments)) {
+                        appointments.forEach(apt => {
+                            appointmentsMap[apt.id] = apt;
+                        });
+                    }
+                    
                     dbNotifications.forEach(notif => {
                         // Check if it's a rescheduled notification
                         const isRescheduled = (notif.type === 'appointment' && notif.title && notif.title.includes('Rescheduled')) ||
                                              (notif.data && notif.data.status === 'rescheduled');
+                        
+                        // Check if reschedule has been handled (approved or rejected)
+                        let rescheduleHandled = false;
+                        if (isRescheduled && notif.data && notif.data.appointment_id) {
+                            const appointmentId = notif.data.appointment_id;
+                            const currentAppointment = appointmentsMap[appointmentId];
+                            
+                            if (currentAppointment) {
+                                const currentDate = currentAppointment.appointment_date;
+                                const currentTime = currentAppointment.appointment_time ? currentAppointment.appointment_time.substring(0, 5) : ''; // HH:MM format
+                                const oldDate = notif.data.old_date || '';
+                                const oldTime = notif.data.old_time ? notif.data.old_time.substring(0, 5) : '';
+                                const newDate = notif.data.appointment_date || '';
+                                const newTime = notif.data.appointment_time ? notif.data.appointment_time.substring(0, 5) : '';
+                                
+                                // Check if appointment matches old schedule (rejected) or new schedule (approved)
+                                if ((currentDate === oldDate && currentTime === oldTime) || 
+                                    (currentDate === newDate && currentTime === newTime)) {
+                                    rescheduleHandled = true;
+                                }
+                            }
+                        }
                         
                         // Check read status - prioritize database value, but also check localStorage as backup
                         const dbReadStatus = notif.is_read === true || notif.is_read === 'true';
@@ -636,7 +666,8 @@
                             read: finalReadStatus,
                             status: isRescheduled ? 'rescheduled' : (notif.type === 'message' ? 'message' : 'appointment'),
                             data: notif.data || {}, // Include data field for reschedule details
-                            source: 'database'
+                            source: 'database',
+                            rescheduleHandled: rescheduleHandled // Flag to indicate if reschedule was handled
                         });
                     });
                 }
@@ -758,6 +789,9 @@
                 const iconClass = isRescheduled ? 'fa-calendar-alt' : notif.status === 'confirmed' ? 'fa-check-circle' : notif.status === 'message' ? 'fa-comment' : 'fa-clock';
                 const readClass = notif.read ? 'read' : '';
                 
+                // Hide View button if reschedule has been handled (approved or rejected)
+                const showViewButton = isRescheduled && !notif.rescheduleHandled;
+                
                 return `
                     <div class="notification-item ${statusClass} ${readClass}" onclick="viewNotification('${notif.id}')">
                         <div class="notification-icon ${statusClass}">
@@ -772,10 +806,11 @@
                                     <span>${new Date(notif.date).toLocaleDateString()} ${new Date(notif.date).toLocaleTimeString()}</span>
                                 </div>
                                 ${!notif.read ? '<span style="color: #f39c12; font-weight: bold;">New</span>' : ''}
+                                ${isRescheduled && notif.rescheduleHandled ? '<span style="color: #28a745; font-weight: bold; margin-left: 10px;">✓ Handled</span>' : ''}
                             </div>
                         </div>
                         <div class="notification-actions">
-                            ${isRescheduled ? `
+                            ${showViewButton ? `
                                 <button class="action-btn view-btn" onclick="event.stopPropagation(); event.preventDefault(); viewRescheduleDetails('${notif.id}'); return false;" title="View Reschedule Details">
                                     <i class="fas fa-eye"></i> View
                                 </button>
