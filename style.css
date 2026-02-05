@@ -1480,12 +1480,80 @@ p {
    SERVICE SELECTION CARDS & TIME GRID
    ======================================== */
 
+/* Service Selection Box with Toggle Button */
+.service-selection-box {
+    position: relative;
+    margin-top: 8px;
+}
+
+.service-toggle-btn {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 15px;
+    color: #2c3e50;
+    text-align: left;
+}
+
+.service-toggle-btn:hover {
+    border-color: #4a90e2;
+    background: #f8f9fa;
+}
+
+.service-toggle-btn.active {
+    border-color: #4a90e2;
+    background: #e8f4fd;
+}
+
+.service-toggle-btn #selectedServiceText {
+    flex: 1;
+    color: #2c3e50;
+}
+
+.service-toggle-btn #selectedServiceText.placeholder {
+    color: #999;
+}
+
+.service-toggle-btn #serviceToggleIcon {
+    color: #666;
+    transition: transform 0.3s ease;
+    margin-left: 12px;
+}
+
+.service-toggle-btn.active #serviceToggleIcon {
+    transform: rotate(180deg);
+    color: #4a90e2;
+}
+
 /* Service Selection List (Expandable) */
 .service-selection-list {
-    display: flex;
+    display: none;
     flex-direction: column;
     gap: 10px;
-    margin-top: 8px;
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    background: white;
+    max-height: 400px;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+.service-selection-box {
+    position: relative;
 }
 
 .service-card-expandable {

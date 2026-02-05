@@ -1714,6 +1714,34 @@ function formatTimeForDisplay(timeString) {
 }
 
 // Service Selection Functions (Expandable Cards)
+// Toggle service list visibility
+function toggleServiceList() {
+    const serviceList = document.getElementById('serviceSelectionList');
+    const toggleBtn = document.getElementById('serviceToggleBtn');
+    const toggleIcon = document.getElementById('serviceToggleIcon');
+    
+    if (!serviceList || !toggleBtn) return;
+    
+    const isVisible = serviceList.style.display !== 'none';
+    
+    if (isVisible) {
+        serviceList.style.display = 'none';
+        toggleBtn.classList.remove('active');
+        if (toggleIcon) {
+            toggleIcon.style.transform = 'rotate(0deg)';
+        }
+    } else {
+        serviceList.style.display = 'flex';
+        toggleBtn.classList.add('active');
+        if (toggleIcon) {
+            toggleIcon.style.transform = 'rotate(180deg)';
+        }
+    }
+}
+
+// Make toggleServiceList available globally
+window.toggleServiceList = toggleServiceList;
+
 function initializeServiceSelection() {
     const serviceCards = document.querySelectorAll('.service-card-expandable');
     
@@ -1764,6 +1792,14 @@ function initializeServiceSelection() {
                             'denture': 'Denture (Pustiso)'
                         };
                         serviceInput.value = serviceMap[serviceValue] || serviceValue;
+                    }
+                    
+                    // Update button text with selected service
+                    const selectedServiceText = document.getElementById('selectedServiceText');
+                    const serviceName = card.querySelector('.service-info h4')?.textContent || 'Service selected';
+                    if (selectedServiceText) {
+                        selectedServiceText.textContent = serviceName;
+                        selectedServiceText.classList.remove('placeholder');
                     }
                     
                     // Generate time slots if not already generated

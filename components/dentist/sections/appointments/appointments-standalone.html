@@ -1912,7 +1912,12 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                             <!-- Service Selection with Expandable Time Slots -->
                             <div class="form-group">
                                 <label>Select Service *</label>
-                                <div class="service-selection-list">
+                                <div class="service-selection-box">
+                                    <button type="button" class="service-toggle-btn" id="serviceToggleBtn" onclick="toggleServiceList()">
+                                        <span id="selectedServiceText">Select a service</span>
+                                        <i class="fas fa-chevron-down" id="serviceToggleIcon"></i>
+                                    </button>
+                                    <div class="service-selection-list" id="serviceSelectionList" style="display: none;">
                                     <div class="service-card-expandable" data-service="cleaning" data-duration="30 min-1 hr">
                                         <div class="service-card-header">
                                             <div class="service-icon">
@@ -1988,6 +1993,7 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                                                 <!-- Time slots will be generated dynamically -->
                                             </div>
                                         </div>
+                                    </div>
                                     </div>
                                 </div>
                                 <input type="hidden" id="newAptService" required>

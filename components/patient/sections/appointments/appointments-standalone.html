@@ -615,12 +615,76 @@
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
+        /* Service Selection Box with Toggle Button */
+        .service-selection-box {
+            position: relative;
+            margin-top: 8px;
+        }
+
+        .service-toggle-btn {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 15px;
+            color: #2c3e50;
+            text-align: left;
+        }
+
+        .service-toggle-btn:hover {
+            border-color: #4a90e2;
+            background: #f8f9fa;
+        }
+
+        .service-toggle-btn.active {
+            border-color: #4a90e2;
+            background: #e8f4fd;
+        }
+
+        .service-toggle-btn #selectedServiceText {
+            flex: 1;
+            color: #2c3e50;
+        }
+
+        .service-toggle-btn #selectedServiceText.placeholder {
+            color: #999;
+        }
+
+        .service-toggle-btn #serviceToggleIcon {
+            color: #666;
+            transition: transform 0.3s ease;
+            margin-left: 12px;
+        }
+
+        .service-toggle-btn.active #serviceToggleIcon {
+            transform: rotate(180deg);
+            color: #4a90e2;
+        }
+
         /* Service Selection List (Expandable) */
         .service-selection-list {
-            display: flex;
+            display: none;
             flex-direction: column;
             gap: 10px;
-            margin-top: 8px;
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background: white;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 1000;
         }
 
         .service-card-expandable {
@@ -863,7 +927,12 @@
                 <!-- Service Selection with Expandable Time Slots -->
                 <div class="form-group">
                     <label>Select Service *</label>
-                    <div class="service-selection-list">
+                    <div class="service-selection-box">
+                        <button type="button" class="service-toggle-btn" id="serviceToggleBtn" onclick="toggleServiceList()">
+                            <span id="selectedServiceText">Select a service</span>
+                            <i class="fas fa-chevron-down" id="serviceToggleIcon"></i>
+                        </button>
+                        <div class="service-selection-list" id="serviceSelectionList" style="display: none;">
                         <div class="service-card-expandable" data-service="cleaning" data-duration="30 min-1 hr">
                             <div class="service-card-header">
                                 <div class="service-icon">
@@ -940,6 +1009,7 @@
                                 </div>
                             </div>
                         </div>
+                        </div>
                     </div>
                     <input type="hidden" id="aptService" required>
                     <input type="hidden" id="aptTime" required>
@@ -975,6 +1045,33 @@
     </div>
 
     <script>
+        // Toggle service list visibility
+        function toggleServiceList() {
+            const serviceList = document.getElementById('serviceSelectionList');
+            const toggleBtn = document.getElementById('serviceToggleBtn');
+            const toggleIcon = document.getElementById('serviceToggleIcon');
+            
+            if (!serviceList || !toggleBtn) return;
+            
+            const isVisible = serviceList.style.display !== 'none';
+            
+            if (isVisible) {
+                serviceList.style.display = 'none';
+                toggleBtn.classList.remove('active');
+                if (toggleIcon) {
+                    toggleIcon.style.transform = 'rotate(0deg)';
+                }
+            } else {
+                serviceList.style.display = 'flex';
+                toggleBtn.classList.add('active');
+                if (toggleIcon) {
+                    toggleIcon.style.transform = 'rotate(180deg)';
+                }
+            }
+        }
+
+        // Make toggleServiceList available globally
+        window.toggleServiceList = toggleServiceList;
         // Global variables
         let currentUser = null;
         let appointments = [];
