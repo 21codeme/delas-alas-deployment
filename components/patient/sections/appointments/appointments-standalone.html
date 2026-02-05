@@ -1252,7 +1252,7 @@
                 if (header && timeContent) {
                     card.dataset.initialized = 'true';
                     
-                    header.addEventListener('click', function(e) {
+                    header.addEventListener('click', async function(e) {
                         e.preventDefault();
                         e.stopPropagation();
                         
@@ -1290,8 +1290,10 @@
                                 serviceInput.value = serviceMap[serviceValue] || serviceValue;
                             }
                             
-                            if (timeGrid && timeGrid.children.length === 0) {
-                                generateTimeSlotsForService(serviceValue, timeGrid);
+                            // Always regenerate to check for booked slots
+                            if (timeGrid) {
+                                timeGrid.innerHTML = '';
+                                await generateTimeSlotsForService(serviceValue, timeGrid);
                             }
                         }
                     });
@@ -1300,10 +1302,20 @@
         }
 
         // Generate time slots
-        function generateTimeSlotsForService(serviceType, timeGrid) {
+        async function generateTimeSlotsForService(serviceType, timeGrid) {
             if (!timeGrid) return;
             
             timeGrid.innerHTML = '';
+            
+            // Get selected date and dentist
+            const appointmentDate = document.getElementById('aptDate')?.value || '';
+            const dentistId = document.getElementById('aptDentist')?.value || '';
+            
+            // Get booked time slots if date and dentist are selected
+            let bookedTimes = [];
+            if (appointmentDate && dentistId) {
+                bookedTimes = await getBookedTimeSlots(appointmentDate, dentistId);
+            }
             
             const timeSlots = [
                 '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
@@ -1319,33 +1331,56 @@
                 slot.textContent = formatTime(time);
                 slot.setAttribute('data-time', time);
                 
-                slot.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
-                    this.classList.add('selected');
-                    
-                    const timeInput = document.getElementById('aptTime') || 
-                                   document.getElementById('newAptTime') || 
-                                   document.getElementById('appointmentTime');
-                    
-                    if (timeInput) {
-                        const [hours, minutes] = time.split(':');
-                        timeInput.value = `${hours}:${minutes}:00`;
-                        console.log('Time selected:', timeInput.value);
+                // Check if this time slot is booked
+                const isBooked = bookedTimes.some(bookedTime => {
+                    // Normalize comparison (handle HH:MM:SS and HH:MM formats)
+                    let normalizedBooked = (bookedTime || '').trim();
+                    if (normalizedBooked.length >= 5) {
+                        normalizedBooked = normalizedBooked.substring(0, 5);
                     }
-                    
-                    const selectedServiceText = document.getElementById('selectedServiceText');
-                    if (selectedServiceText) {
-                        const serviceInput = document.getElementById('aptService') || 
-                                          document.getElementById('newAptService') || 
-                                          document.getElementById('serviceType');
-                        if (serviceInput && serviceInput.value) {
-                            selectedServiceText.textContent = `${serviceInput.value} - ${formatTime(time)}`;
-                        }
-                    }
+                    let normalizedTime = time.substring(0, 5);
+                    return normalizedBooked === normalizedTime;
                 });
+                
+                if (isBooked) {
+                    slot.classList.add('fully-booked');
+                    slot.disabled = true;
+                    slot.textContent = 'BOOKED';
+                    slot.style.cursor = 'not-allowed';
+                } else {
+                    slot.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Don't allow clicking if already booked
+                        if (this.classList.contains('fully-booked') || this.disabled) {
+                            return;
+                        }
+                        
+                        document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+                        this.classList.add('selected');
+                        
+                        const timeInput = document.getElementById('aptTime') || 
+                                       document.getElementById('newAptTime') || 
+                                       document.getElementById('appointmentTime');
+                        
+                        if (timeInput) {
+                            const [hours, minutes] = time.split(':');
+                            timeInput.value = `${hours}:${minutes}:00`;
+                            console.log('Time selected:', timeInput.value);
+                        }
+                        
+                        const selectedServiceText = document.getElementById('selectedServiceText');
+                        if (selectedServiceText) {
+                            const serviceInput = document.getElementById('aptService') || 
+                                              document.getElementById('newAptService') || 
+                                              document.getElementById('serviceType');
+                            if (serviceInput && serviceInput.value) {
+                                selectedServiceText.textContent = `${serviceInput.value} - ${formatTime(time)}`;
+                            }
+                        }
+                    });
+                }
                 
                 timeGrid.appendChild(slot);
             });

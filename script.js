@@ -398,9 +398,47 @@ function setupEventListeners() {
 
     // Appointment form real-time validation
     const aptDate = document.getElementById('aptDate');
+    const aptDentist = document.getElementById('aptDentist');
     
     if (aptDate) {
-        aptDate.addEventListener('change', checkAvailability);
+        aptDate.addEventListener('change', async function() {
+            checkAvailability();
+            // Refresh time slots if service is already selected
+            const appointmentTimeGrid = document.getElementById('appointmentTimeGrid');
+            const serviceInput = document.getElementById('aptService');
+            if (appointmentTimeGrid && serviceInput && serviceInput.value) {
+                // Get service value from service input
+                const serviceMap = {
+                    'Teeth Cleaning': 'cleaning',
+                    'Tooth Extraction': 'extraction',
+                    'Dental Filling': 'filling',
+                    'Denture (Pustiso)': 'denture'
+                };
+                const serviceValue = serviceMap[serviceInput.value] || serviceInput.value.toLowerCase();
+                appointmentTimeGrid.innerHTML = '';
+                await generateTimeSlotsForService(serviceValue, appointmentTimeGrid);
+            }
+        });
+    }
+    
+    if (aptDentist) {
+        aptDentist.addEventListener('change', async function() {
+            // Refresh time slots if service is already selected
+            const appointmentTimeGrid = document.getElementById('appointmentTimeGrid');
+            const serviceInput = document.getElementById('aptService');
+            if (appointmentTimeGrid && serviceInput && serviceInput.value) {
+                // Get service value from service input
+                const serviceMap = {
+                    'Teeth Cleaning': 'cleaning',
+                    'Tooth Extraction': 'extraction',
+                    'Dental Filling': 'filling',
+                    'Denture (Pustiso)': 'denture'
+                };
+                const serviceValue = serviceMap[serviceInput.value] || serviceInput.value.toLowerCase();
+                appointmentTimeGrid.innerHTML = '';
+                await generateTimeSlotsForService(serviceValue, appointmentTimeGrid);
+            }
+        });
     }
 
     // Initialize service selection cards
@@ -1809,7 +1847,7 @@ function initializeServiceSelection() {
             // Generate time slots
             if (appointmentTimeGrid) {
                 appointmentTimeGrid.innerHTML = ''; // Clear existing
-                generateTimeSlotsForService(serviceValue, appointmentTimeGrid);
+                await generateTimeSlotsForService(serviceValue, appointmentTimeGrid);
             }
         });
     });
@@ -1829,7 +1867,7 @@ function initializeServiceSelection() {
         if (header && timeContent) {
             card.dataset.initialized = 'true';
             
-            header.addEventListener('click', function(e) {
+            header.addEventListener('click', async function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 
@@ -1867,8 +1905,10 @@ function initializeServiceSelection() {
                         serviceInput.value = serviceMap[serviceValue] || serviceValue;
                     }
                     
-                    if (timeGrid && timeGrid.children.length === 0) {
-                        generateTimeSlotsForService(serviceValue, timeGrid);
+                    // Always regenerate to check for booked slots
+                    if (timeGrid) {
+                        timeGrid.innerHTML = ''; // Clear existing
+                        await generateTimeSlotsForService(serviceValue, timeGrid);
                     }
                 }
             });
@@ -1876,12 +1916,58 @@ function initializeServiceSelection() {
     });
 }
 
+// Get booked time slots for a specific date and dentist
+async function getBookedTimeSlots(appointmentDate, dentistId) {
+    if (!appointmentDate || !dentistId) {
+        return [];
+    }
+    
+    try {
+        const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+        
+        const url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${appointmentDate}&dentist_id=eq.${dentistId}&status=in.(pending,confirmed)&select=appointment_time,status`;
+        
+        const response = await fetch(url, {
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+        });
+        
+        if (response.ok) {
+            const appointments = await response.json();
+            const bookedTimes = appointments.map(apt => apt.appointment_time || '').filter(time => time);
+            console.log('📅 Booked time slots:', bookedTimes);
+            return bookedTimes;
+        } else {
+            console.error('❌ Failed to check booked time slots:', response.status);
+            return [];
+        }
+    } catch (error) {
+        console.error('❌ Error checking booked time slots:', error);
+        return [];
+    }
+}
+
 // Generate time slots for a specific service card
-function generateTimeSlotsForService(serviceType, timeGrid) {
+async function generateTimeSlotsForService(serviceType, timeGrid) {
     if (!timeGrid) return;
     
     // Clear existing slots
     timeGrid.innerHTML = '';
+    
+    // Get selected date and dentist
+    const appointmentDate = document.getElementById('aptDate')?.value || 
+                           document.getElementById('newAptDate')?.value || '';
+    const dentistId = document.getElementById('aptDentist')?.value || 
+                     document.getElementById('newAptDentist')?.value || '';
+    
+    // Get booked time slots if date and dentist are selected
+    let bookedTimes = [];
+    if (appointmentDate && dentistId) {
+        bookedTimes = await getBookedTimeSlots(appointmentDate, dentistId);
+    }
     
     // Define time slots (8:00 AM to 6:00 PM, 30-minute intervals)
     const timeSlots = [
@@ -1899,41 +1985,64 @@ function generateTimeSlotsForService(serviceType, timeGrid) {
         slot.textContent = formatTime(time);
         slot.setAttribute('data-time', time);
         
-        slot.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            console.log('Time slot clicked:', time);
-            
-            // Remove selected class from all slots in all service cards
-            document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
-            
-            // Add selected class to clicked slot
-            this.classList.add('selected');
-            
-            // Set hidden input value
-            const timeInput = document.getElementById('aptTime') || 
-                             document.getElementById('newAptTime') || 
-                             document.getElementById('appointmentTime');
-            
-            if (timeInput) {
-                // Format time as HH:MM:SS for database
-                const [hours, minutes] = time.split(':');
-                timeInput.value = `${hours}:${minutes}:00`;
-                console.log('Time selected:', timeInput.value);
+        // Check if this time slot is booked
+        const timeFormatted = `${time.split(':')[0]}:${time.split(':')[1]}:00`;
+        const isBooked = bookedTimes.some(bookedTime => {
+            // Normalize comparison (handle HH:MM:SS and HH:MM formats)
+            let normalizedBooked = (bookedTime || '').trim();
+            if (normalizedBooked.length >= 5) {
+                normalizedBooked = normalizedBooked.substring(0, 5);
             }
-            
-            // Update button text to show service and time
-            const selectedServiceText = document.getElementById('selectedServiceText');
-            if (selectedServiceText) {
-                const serviceInput = document.getElementById('aptService') || 
-                                    document.getElementById('newAptService') || 
-                                    document.getElementById('serviceType');
-                if (serviceInput && serviceInput.value) {
-                    selectedServiceText.textContent = `${serviceInput.value} - ${formatTime(time)}`;
-                }
-            }
+            let normalizedTime = time.substring(0, 5);
+            return normalizedBooked === normalizedTime;
         });
+        
+        if (isBooked) {
+            slot.classList.add('fully-booked');
+            slot.disabled = true;
+            slot.textContent = 'BOOKED';
+            slot.style.cursor = 'not-allowed';
+        } else {
+            slot.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Don't allow clicking if already booked
+                if (this.classList.contains('fully-booked') || this.disabled) {
+                    return;
+                }
+                
+                console.log('Time slot clicked:', time);
+                
+                // Remove selected class from all slots
+                document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+                
+                // Add selected class to clicked slot
+                this.classList.add('selected');
+                
+                // Set hidden input value
+                const timeInput = document.getElementById('aptTime') || 
+                                 document.getElementById('newAptTime') || 
+                                 document.getElementById('appointmentTime');
+                
+                if (timeInput) {
+                    const [hours, minutes] = time.split(':');
+                    timeInput.value = `${hours}:${minutes}:00`;
+                    console.log('Time selected:', timeInput.value);
+                }
+                
+                // Update button text to show service and time
+                const selectedServiceText = document.getElementById('selectedServiceText');
+                if (selectedServiceText) {
+                    const serviceInput = document.getElementById('aptService') || 
+                                        document.getElementById('newAptService') || 
+                                        document.getElementById('serviceType');
+                    if (serviceInput && serviceInput.value) {
+                        selectedServiceText.textContent = `${serviceInput.value} - ${formatTime(time)}`;
+                    }
+                }
+            });
+        }
         
         timeGrid.appendChild(slot);
     });

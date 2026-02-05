@@ -1608,33 +1608,14 @@ p {
     cursor: not-allowed;
     border-color: #e0e0e0;
     position: relative;
+    opacity: 0.6;
 }
 
-.time-slot.fully-booked::before {
-    content: 'FULLY BOOKED';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 10px;
+.time-slot.fully-booked {
+    background: #ffe6e6;
+    border-color: #ff9999;
+    color: #cc0000;
     font-weight: 600;
-    color: #999;
-    white-space: nowrap;
-}
-
-.time-slot.fully-booked::after {
-    content: 'FULLY BOOKED';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 10px;
-    font-weight: 600;
-    color: #999;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 2px 6px;
-    border-radius: 4px;
-    white-space: nowrap;
 }
 
 /* Responsive Design */
