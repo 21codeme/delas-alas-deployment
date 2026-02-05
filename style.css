@@ -1633,6 +1633,13 @@ p {
     visibility: hidden !important;
 }
 
+/* Ensure child divs don't duplicate */
+.time-slot.fully-booked > div {
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+
 /* Responsive Design */
 @media (min-width: 768px) {
     .appointment-time-grid {
