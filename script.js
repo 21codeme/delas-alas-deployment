@@ -2439,64 +2439,67 @@ function showFallbackServices() {
     
     if (!servicesGrid) return;
 
-    servicesGrid.innerHTML = `
+    // Use the same 4 specific services
+    const specificServices = [
+        {
+            name: 'Teeth Cleaning',
+            icon: 'fa-sparkles',
+            description: 'Professional teeth cleaning and oral hygiene services',
+            notes: [
+                'Removes plaque and tartar buildup',
+                'Prevents gum disease',
+                'Fresh breath and brighter smile',
+                'Regular checkup included'
+            ]
+        },
+        {
+            name: 'Tooth Extraction',
+            icon: 'fa-tooth',
+            description: 'Safe and professional tooth removal services',
+            notes: [
+                'Painless extraction procedure',
+                'Post-extraction care instructions',
+                'Follow-up appointments available',
+                'Emergency extractions available'
+            ]
+        },
+        {
+            name: 'Dental Filling',
+            icon: 'fa-fill-drip',
+            description: 'Quality dental fillings for cavities and tooth restoration',
+            notes: [
+                'Composite and amalgam fillings',
+                'Tooth-colored materials',
+                'Long-lasting results',
+                'Comfortable procedure'
+            ]
+        },
+        {
+            name: 'Denture (Pustiso)',
+            icon: 'fa-teeth',
+            description: 'Custom-made dentures for missing teeth replacement',
+            notes: [
+                'Full and partial dentures',
+                'Custom fit and comfortable',
+                'Natural-looking appearance',
+                'Multiple visits for fitting'
+            ]
+        }
+    ];
+
+    servicesGrid.innerHTML = specificServices.map(service => `
         <div class="service-card">
             <div class="service-icon">
-                <i class="fas fa-tooth"></i>
+                <i class="fas ${service.icon}"></i>
             </div>
-            <h3>General Dentistry</h3>
-            <p>Regular checkups, cleanings, and preventive care to keep your smile healthy.</p>
+            <h3>${service.name}</h3>
+            <p>${service.description}</p>
             <ul class="service-features">
-                <li>Dental Cleanings</li>
-                <li>Oral Examinations</li>
-                <li>X-rays</li>
-                <li>Fluoride Treatments</li>
+                ${service.notes.map(note => `<li><i class="fas fa-check"></i> ${note}</li>`).join('')}
             </ul>
-            <button class="btn btn-outline" onclick="showAppointmentModal('general')">Book Now</button>
+            <button class="btn btn-outline" onclick="showAppointmentModal()">Book Now</button>
         </div>
-        <div class="service-card">
-            <div class="service-icon">
-                <i class="fas fa-gem"></i>
-            </div>
-            <h3>Cosmetic Dentistry</h3>
-            <p>Transform your smile with our cosmetic dental procedures.</p>
-            <ul class="service-features">
-                <li>Teeth Whitening</li>
-                <li>Veneers</li>
-                <li>Dental Implants</li>
-                <li>Smile Makeovers</li>
-            </ul>
-            <button class="btn btn-outline" onclick="showAppointmentModal('cosmetic')">Book Now</button>
-        </div>
-        <div class="service-card">
-            <div class="service-icon">
-                <i class="fas fa-tools"></i>
-            </div>
-            <h3>Restorative Dentistry</h3>
-            <p>Restore function and appearance with our restorative treatments.</p>
-            <ul class="service-features">
-                <li>Dental Fillings</li>
-                <li>Crowns & Bridges</li>
-                <li>Root Canal Therapy</li>
-                <li>Dentures</li>
-            </ul>
-            <button class="btn btn-outline" onclick="showAppointmentModal('restorative')">Book Now</button>
-        </div>
-        <div class="service-card">
-            <div class="service-icon">
-                <i class="fas fa-child"></i>
-            </div>
-            <h3>Pediatric Dentistry</h3>
-            <p>Specialized dental care for children in a comfortable environment.</p>
-            <ul class="service-features">
-                <li>Child Checkups</li>
-                <li>Sealants</li>
-                <li>Orthodontic Consultations</li>
-                <li>Emergency Care</li>
-            </ul>
-            <button class="btn btn-outline" onclick="showAppointmentModal('pediatric')">Book Now</button>
-        </div>
-    `;
+    `).join('');
 }
 
 // Export functions for global access - make sure toggleMobileMenu is available immediately
