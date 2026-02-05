@@ -785,8 +785,14 @@
 
         // View reschedule details
         function viewRescheduleDetails(notificationId) {
+            console.log('🔍 View reschedule details called for notification:', notificationId);
             const notification = allNotifications.find(n => n.id === notificationId);
-            if (!notification) return;
+            if (!notification) {
+                console.error('❌ Notification not found:', notificationId);
+                alert('Notification not found. Please refresh the page.');
+                return;
+            }
+            console.log('📋 Notification found:', notification);
 
             const data = notification.data || {};
             const appointmentId = data.appointment_id;
