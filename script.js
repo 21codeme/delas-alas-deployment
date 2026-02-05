@@ -3,12 +3,28 @@
    COMPLETE FUNCTIONALITY RESTORATION
    ======================================== */
 
+// Define toggleMobileMenu IMMEDIATELY at the top level so it's available for inline handlers
+(function() {
+    'use strict';
+    window.toggleMobileMenu = function toggleMobileMenu(event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        const mobileMenu = document.querySelector('.mobile-menu');
+        if (mobileMenu) {
+            mobileMenu.classList.toggle('show');
+        }
+        return false;
+    };
+})();
+
 // Global variables
 let currentUser = null;
 let appointments = [];
 let users = [];
 
-// Define toggleMobileMenu early so it's available for onclick handlers
+// Define toggleMobileMenu function (will override the window version if needed)
 function toggleMobileMenu(event) {
     if (event) {
         event.preventDefault();
@@ -51,7 +67,7 @@ function toggleMobileMenu(event) {
     return false;
 }
 
-// Make it globally available immediately
+// Make it globally available immediately (override the IIFE version with full functionality)
 window.toggleMobileMenu = toggleMobileMenu;
 
 // Initialize Supabase
@@ -849,9 +865,9 @@ async function handleLogin(event) {
         if (profile.user_type !== userType) {
             showToast(`Please login as ${profile.user_type}`, 'error');
             await supabase.auth.signOut();
-        return;
-    }
-    
+            return;
+        }
+        
         currentUser = {
             id: data.user.id,
             email: data.user.email,
@@ -1800,7 +1816,7 @@ function initializeServiceSelection() {
         
         item.dataset.initialized = 'true';
         
-        item.addEventListener('click', function(e) {
+        item.addEventListener('click', async function(e) {
             e.preventDefault();
             e.stopPropagation();
             

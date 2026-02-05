@@ -402,6 +402,7 @@
                             date: notif.created_at,
                             read: finalReadStatus,
                             status: isRescheduled ? 'rescheduled' : (notif.type === 'message' ? 'message' : 'appointment'),
+                            data: notif.data || {}, // Include data field for reschedule details
                             source: 'database'
                         });
                     });
@@ -519,7 +520,7 @@
             }
 
             notificationsList.innerHTML = filteredNotifications.map(notif => {
-                const isRescheduled = notif.status === 'rescheduled' || (notif.title && notif.title.includes('Rescheduled'));
+                const isRescheduled = notif.status === 'rescheduled' || (notif.title && notif.title.includes('Rescheduled')) || (notif.data && notif.data.old_date);
                 const statusClass = isRescheduled ? 'rescheduled' : notif.status;
                 const iconClass = isRescheduled ? 'fa-calendar-alt' : notif.status === 'confirmed' ? 'fa-check-circle' : notif.status === 'message' ? 'fa-comment' : 'fa-clock';
                 const readClass = notif.read ? 'read' : '';
@@ -541,6 +542,11 @@
                             </div>
                         </div>
                         <div class="notification-actions">
+                            ${isRescheduled ? `
+                                <button class="action-btn view-btn" onclick="event.stopPropagation(); viewRescheduleDetails('${notif.id}')" title="View Reschedule Details">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                            ` : ''}
                             ${!notif.read ? `
                                 <button class="action-btn" onclick="event.stopPropagation(); markAsRead('${notif.id}')" title="Mark as read">
                                     <i class="fas fa-check"></i>
@@ -732,6 +738,16 @@
                 markAsRead(notificationId);
             }
 
+            // Check if it's a reschedule notification
+            const isRescheduled = notification.status === 'rescheduled' || 
+                                 (notification.title && notification.title.includes('Rescheduled')) ||
+                                 (notification.data && notification.data.old_date);
+            
+            if (isRescheduled) {
+                viewRescheduleDetails(notificationId);
+                return;
+            }
+
             // If it's an appointment notification, navigate to appointments
             if (notification.type === 'appointment' || notification.status === 'confirmed' || notification.status === 'pending' || notification.status === 'rescheduled') {
                 if (window !== window.top) {
@@ -743,6 +759,213 @@
                 if (window !== window.top) {
                     window.parent.postMessage({ action: 'loadSection', section: 'messages' }, '*');
                 }
+            }
+        }
+
+        // View reschedule details
+        function viewRescheduleDetails(notificationId) {
+            const notification = allNotifications.find(n => n.id === notificationId);
+            if (!notification) return;
+
+            const data = notification.data || {};
+            const appointmentId = data.appointment_id;
+            const serviceType = data.service_type || 'N/A';
+            const oldDate = data.old_date || '';
+            const oldTime = data.old_time || '';
+            const newDate = data.appointment_date || '';
+            const newTime = data.appointment_time || '';
+
+            // Format dates
+            const formatDate = (dateStr) => {
+                if (!dateStr) return 'N/A';
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+            };
+
+            // Format time
+            const formatTime = (timeStr) => {
+                if (!timeStr) return 'N/A';
+                const [hours, minutes] = timeStr.split(':');
+                const hour = parseInt(hours);
+                const ampm = hour >= 12 ? 'PM' : 'AM';
+                const displayHour = (hour % 12) || 12;
+                return `${displayHour}:${minutes} ${ampm}`;
+            };
+
+            // Populate modal
+            const detailsHtml = `
+                <div class="old-schedule">
+                    <h5 style="margin: 0 0 10px 0; color: #856404;">
+                        <i class="fas fa-calendar-times"></i> Previous Schedule
+                    </h5>
+                    <div class="reschedule-info-row">
+                        <span class="reschedule-info-label">Date:</span>
+                        <span class="reschedule-info-value">${formatDate(oldDate)}</span>
+                    </div>
+                    <div class="reschedule-info-row">
+                        <span class="reschedule-info-label">Time:</span>
+                        <span class="reschedule-info-value">${formatTime(oldTime)}</span>
+                    </div>
+                </div>
+                <div class="new-schedule">
+                    <h5 style="margin: 0 0 10px 0; color: #0c5460;">
+                        <i class="fas fa-calendar-check"></i> New Proposed Schedule
+                    </h5>
+                    <div class="reschedule-info-row">
+                        <span class="reschedule-info-label">Date:</span>
+                        <span class="reschedule-info-value"><strong>${formatDate(newDate)}</strong></span>
+                    </div>
+                    <div class="reschedule-info-row">
+                        <span class="reschedule-info-label">Time:</span>
+                        <span class="reschedule-info-value"><strong>${formatTime(newTime)}</strong></span>
+                    </div>
+                </div>
+                <div class="reschedule-info-row">
+                    <span class="reschedule-info-label">Service:</span>
+                    <span class="reschedule-info-value">${serviceType}</span>
+                </div>
+            `;
+
+            document.getElementById('rescheduleDetails').innerHTML = detailsHtml;
+            document.getElementById('rescheduleModal').setAttribute('data-notification-id', notificationId);
+            document.getElementById('rescheduleModal').setAttribute('data-appointment-id', appointmentId);
+            document.getElementById('rescheduleModal').setAttribute('data-new-date', newDate);
+            document.getElementById('rescheduleModal').setAttribute('data-new-time', newTime);
+            document.getElementById('rescheduleModal').style.display = 'block';
+        }
+
+        // Close reschedule modal
+        function closeRescheduleModal() {
+            document.getElementById('rescheduleModal').style.display = 'none';
+        }
+
+        // Approve reschedule
+        async function approveReschedule() {
+            const modal = document.getElementById('rescheduleModal');
+            const appointmentId = modal.getAttribute('data-appointment-id');
+            const notificationId = modal.getAttribute('data-notification-id');
+            const newDate = modal.getAttribute('data-new-date');
+            const newTime = modal.getAttribute('data-new-time');
+
+            if (!appointmentId) {
+                alert('Error: Appointment ID not found');
+                return;
+            }
+
+            try {
+                // Update appointment status to confirmed with new date/time
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/appointments?id=eq.${appointmentId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify({
+                        appointment_date: newDate,
+                        appointment_time: newTime,
+                        status: 'confirmed',
+                        updated_at: new Date().toISOString()
+                    })
+                });
+
+                if (response.ok) {
+                    // Mark notification as read
+                    if (notificationId) {
+                        await markAsRead(notificationId);
+                    }
+
+                    // Show success message
+                    alert('✅ Appointment reschedule approved! The new schedule has been confirmed.');
+                    
+                    // Close modal
+                    closeRescheduleModal();
+                    
+                    // Reload notifications
+                    await loadNotifications();
+                } else {
+                    const errorText = await response.text();
+                    console.error('Error approving reschedule:', errorText);
+                    alert('Error approving reschedule. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error approving reschedule:', error);
+                alert('Error approving reschedule. Please try again.');
+            }
+        }
+
+        // Reject reschedule
+        async function rejectReschedule() {
+            const modal = document.getElementById('rescheduleModal');
+            const appointmentId = modal.getAttribute('data-appointment-id');
+            const notificationId = modal.getAttribute('data-notification-id');
+            const data = allNotifications.find(n => n.id === notificationId)?.data || {};
+            const oldDate = data.old_date;
+            const oldTime = data.old_time;
+
+            if (!appointmentId) {
+                alert('Error: Appointment ID not found');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to reject this reschedule request? The appointment will remain at the original schedule.')) {
+                return;
+            }
+
+            try {
+                // Revert to old date/time and set status
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/appointments?id=eq.${appointmentId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify({
+                        appointment_date: oldDate,
+                        appointment_time: oldTime,
+                        status: 'confirmed',
+                        updated_at: new Date().toISOString()
+                    })
+                });
+
+                if (response.ok) {
+                    // Mark notification as read
+                    if (notificationId) {
+                        await markAsRead(notificationId);
+                    }
+
+                    // Show success message
+                    alert('❌ Reschedule request rejected. The appointment remains at the original schedule.');
+                    
+                    // Close modal
+                    closeRescheduleModal();
+                    
+                    // Reload notifications
+                    await loadNotifications();
+                } else {
+                    const errorText = await response.text();
+                    console.error('Error rejecting reschedule:', errorText);
+                    alert('Error rejecting reschedule. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error rejecting reschedule:', error);
+                alert('Error rejecting reschedule. Please try again.');
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('rescheduleModal');
+            if (event.target === modal) {
+                closeRescheduleModal();
             }
         }
 
