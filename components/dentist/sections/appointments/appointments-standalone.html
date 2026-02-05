@@ -2363,11 +2363,14 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
                 
                 // Build query - get ALL appointments for the date (not just for specific dentist)
+                // Include all statuses except cancelled and archived
                 // Exclude current appointment if rescheduling
-                let url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${appointmentDate}&status=in.(pending,confirmed)&select=id,appointment_time,status,dentist_id`;
+                let url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${appointmentDate}&status=not.in.(cancelled,archived)&select=id,appointment_time,status,dentist_id,patient_name`;
                 if (excludeAppointmentId) {
                     url += `&id=neq.${excludeAppointmentId}`;
                 }
+                
+                console.log('🔍 Fetching booked slots from URL:', url);
                 
                 const response = await fetch(url, {
                     headers: {
