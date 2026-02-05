@@ -3354,8 +3354,8 @@
                 if (isBooked) {
                     slot.classList.add('fully-booked');
                     slot.disabled = true;
-                    slot.innerHTML = 'FULLY BOOKED'; // Remove time text completely
                     slot.style.cursor = 'not-allowed';
+                    // Keep the time text but make it visually disabled
                 } else {
                     slot.addEventListener('click', function(e) {
                         e.preventDefault();
