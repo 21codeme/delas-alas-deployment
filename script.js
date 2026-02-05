@@ -1982,7 +1982,6 @@ async function generateTimeSlotsForService(serviceType, timeGrid) {
         const slot = document.createElement('button');
         slot.type = 'button';
         slot.className = 'time-slot';
-        slot.textContent = formatTime(time);
         slot.setAttribute('data-time', time);
         
         // Check if this time slot is booked
@@ -1997,11 +1996,17 @@ async function generateTimeSlotsForService(serviceType, timeGrid) {
             return normalizedBooked === normalizedTime;
         });
         
+        // Set text content - only the time, no overlapping text
+        slot.textContent = formatTime(time);
+        slot.innerHTML = formatTime(time); // Ensure clean HTML, no overlapping
+        
         if (isBooked) {
             slot.classList.add('fully-booked');
             slot.disabled = true;
             slot.style.cursor = 'not-allowed';
-            // Keep the time text, just make it disabled
+            // Ensure only time text is shown, no overlapping
+            slot.textContent = formatTime(time);
+            slot.innerHTML = formatTime(time);
         } else {
             slot.addEventListener('click', function(e) {
                 e.preventDefault();
