@@ -616,6 +616,87 @@
             to { transform: translateX(0); opacity: 1; }
         }
         /* Service Selection Box with Toggle Button */
+        /* Service Selection - Direct List Design */
+        .service-list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .service-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .service-item:hover {
+            border-color: #4a90e2;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.1);
+        }
+
+        .service-item.selected {
+            background: #e8f4fd;
+            border-color: #4a90e2;
+        }
+
+        .service-item .service-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0f0f0;
+            border-radius: 50%;
+            margin-right: 16px;
+            color: #666;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .service-item.selected .service-icon {
+            background: #4a90e2;
+            color: white;
+        }
+
+        .service-item .service-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .service-item .service-details h4 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .service-item .service-duration {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .selected-service-info-text {
+            margin: 12px 0 16px 0;
+            font-size: 14px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .appointment-time-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+
         .service-selection-box {
             position: relative;
             margin-top: 8px;
@@ -953,101 +1034,55 @@
                     <input type="tel" id="aptPhone" autocomplete="tel" required>
                 </div>
                 
-                <!-- Service Selection with Expandable Time Slots -->
+                <!-- Service Selection -->
                 <div class="form-group">
-                    <label>Select Service *</label>
-                    <div class="service-selection-box">
-                        <button type="button" class="service-toggle-btn" id="serviceToggleBtn" onclick="toggleServiceList()">
-                            <span id="selectedServiceText">Select a service</span>
-                            <i class="fas fa-chevron-down" id="serviceToggleIcon"></i>
-                        </button>
-                        <div class="service-selection-list" id="serviceSelectionList" style="display: none;">
-                        <div class="service-card-expandable" data-service="cleaning" data-duration="30 min-1 hr">
-                            <div class="service-card-header">
-                                <div class="service-icon">
-                                    <i class="fas fa-sparkles"></i>
-                                </div>
-                                <div class="service-info">
-                                    <h4>Teeth Cleaning</h4>
-                                    <p class="service-duration-inline">30 min-1 hr</p>
-                                </div>
-                                <span class="service-duration-right">30 min-1 hr</span>
-                                <i class="fas fa-chevron-down service-arrow"></i>
+                    <label>Select Service:</label>
+                    <div class="service-list-container">
+                        <div class="service-item" data-service="cleaning" data-duration="30 min-1 hr">
+                            <div class="service-icon">
+                                <i class="fas fa-sparkles"></i>
                             </div>
-                            <div class="service-time-content" style="display: none;">
-                                <div class="selected-service-info">Available times for Teeth Cleaning (30 min-1 hr)</div>
-                                <div class="appointment-time-grid" data-service="cleaning">
-                                    <!-- Time slots will be generated dynamically -->
-                                </div>
+                            <div class="service-details">
+                                <h4>Teeth Cleaning</h4>
+                                <span class="service-duration">30 min-1 hr</span>
                             </div>
                         </div>
-                        <div class="service-card-expandable" data-service="extraction" data-duration="30 min-2 hrs">
-                            <div class="service-card-header">
-                                <div class="service-icon">
-                                    <i class="fas fa-tooth"></i>
-                                </div>
-                                <div class="service-info">
-                                    <h4>Tooth Extraction</h4>
-                                    <p class="service-duration-inline">30 min-2 hrs</p>
-                                </div>
-                                <span class="service-duration-right">30 min-2 hrs</span>
-                                <i class="fas fa-chevron-down service-arrow"></i>
+                        <div class="service-item" data-service="extraction" data-duration="30 min-2 hrs">
+                            <div class="service-icon">
+                                <i class="fas fa-tooth"></i>
                             </div>
-                            <div class="service-time-content" style="display: none;">
-                                <div class="selected-service-info">Available times for Tooth Extraction (30 min-2 hrs)</div>
-                                <div class="appointment-time-grid" data-service="extraction">
-                                    <!-- Time slots will be generated dynamically -->
-                                </div>
+                            <div class="service-details">
+                                <h4>Tooth Extraction</h4>
+                                <span class="service-duration">30 min-2 hrs</span>
                             </div>
                         </div>
-                        <div class="service-card-expandable" data-service="filling" data-duration="30-60 min">
-                            <div class="service-card-header">
-                                <div class="service-icon">
-                                    <i class="fas fa-fill-drip"></i>
-                                </div>
-                                <div class="service-info">
-                                    <h4>Dental Filling</h4>
-                                    <p class="service-duration-inline">30-60 min</p>
-                                </div>
-                                <span class="service-duration-right">30-60 min</span>
-                                <i class="fas fa-chevron-down service-arrow"></i>
+                        <div class="service-item" data-service="filling" data-duration="30-60 min">
+                            <div class="service-icon">
+                                <i class="fas fa-fill-drip"></i>
                             </div>
-                            <div class="service-time-content" style="display: none;">
-                                <div class="selected-service-info">Available times for Dental Filling (30-60 min)</div>
-                                <div class="appointment-time-grid" data-service="filling">
-                                    <!-- Time slots will be generated dynamically -->
-                                </div>
+                            <div class="service-details">
+                                <h4>Dental Filling</h4>
+                                <span class="service-duration">30-60 min</span>
                             </div>
                         </div>
-                        <div class="service-card-expandable" data-service="denture" data-duration="1-2 hrs per visit">
-                            <div class="service-card-header">
-                                <div class="service-icon">
-                                    <i class="fas fa-teeth"></i>
-                                </div>
-                                <div class="service-info">
-                                    <h4>Denture (Pustiso)</h4>
-                                    <p class="service-duration-inline">1-2 hrs per visit</p>
-                                </div>
-                                <span class="service-duration-right">1-2 hrs per visit</span>
-                                <i class="fas fa-chevron-down service-arrow"></i>
+                        <div class="service-item" data-service="denture" data-duration="1-2 hrs per visit">
+                            <div class="service-icon">
+                                <i class="fas fa-teeth"></i>
                             </div>
-                            <div class="service-time-content" style="display: none;">
-                                <div class="selected-service-info">Available times for Denture (Pustiso) (1-2 hrs per visit)</div>
-                                <div class="appointment-time-grid" data-service="denture">
-                                    <!-- Time slots will be generated dynamically -->
-                                </div>
+                            <div class="service-details">
+                                <h4>Denture (Pustiso)</h4>
+                                <span class="service-duration">1-2 hrs per visit</span>
                             </div>
-                        </div>
                         </div>
                     </div>
                     <input type="hidden" id="aptService" required>
                     <input type="hidden" id="aptTime" required>
                 </div>
                 
-                <!-- Preferred Time Section (shown after service selection) -->
+                <!-- Select Appointment Time Section -->
                 <div class="form-group" id="preferredTimeSection" style="display: none;">
-                    <label>Preferred Time *</label>
-                    <div class="selected-service-display" id="selectedServiceDisplay"></div>
+                    <label>Select Appointment Time:</label>
+                    <div class="selected-service-info-text" id="selectedServiceInfoText"></div>
                     <div class="appointment-time-grid" id="appointmentTimeGrid">
                         <!-- Time slots will be generated dynamically -->
                     </div>
@@ -1124,10 +1159,72 @@
 
         // Initialize service selection with click handlers
         function initializeServiceSelection() {
+            // Handle new service-item design
+            const serviceItems = document.querySelectorAll('.service-item');
+            
+            serviceItems.forEach(item => {
+                if (item.dataset.initialized === 'true') {
+                    return;
+                }
+                
+                item.dataset.initialized = 'true';
+                
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const serviceValue = item.getAttribute('data-service');
+                    const serviceName = item.querySelector('.service-details h4')?.textContent || 'Service';
+                    const duration = item.getAttribute('data-duration') || '';
+                    
+                    console.log('Service selected:', serviceName);
+                    
+                    // Remove selected class from all items
+                    serviceItems.forEach(i => i.classList.remove('selected'));
+                    
+                    // Add selected class to clicked item
+                    item.classList.add('selected');
+                    
+                    // Set hidden input value
+                    const serviceInput = document.getElementById('aptService') || 
+                                        document.getElementById('newAptService') || 
+                                        document.getElementById('serviceType');
+                    
+                    if (serviceInput) {
+                        const serviceMap = {
+                            'cleaning': 'Teeth Cleaning',
+                            'extraction': 'Tooth Extraction',
+                            'filling': 'Dental Filling',
+                            'denture': 'Denture (Pustiso)'
+                        };
+                        serviceInput.value = serviceMap[serviceValue] || serviceValue;
+                    }
+                    
+                    // Show Preferred Time section
+                    const preferredTimeSection = document.getElementById('preferredTimeSection');
+                    const appointmentTimeGrid = document.getElementById('appointmentTimeGrid');
+                    const selectedServiceInfoText = document.getElementById('selectedServiceInfoText');
+                    
+                    if (preferredTimeSection) {
+                        preferredTimeSection.style.display = 'block';
+                    }
+                    
+                    if (selectedServiceInfoText) {
+                        selectedServiceInfoText.textContent = `Available times for ${serviceName} (${duration})`;
+                    }
+                    
+                    // Generate time slots
+                    if (appointmentTimeGrid) {
+                        appointmentTimeGrid.innerHTML = '';
+                        generateTimeSlotsForService(serviceValue, appointmentTimeGrid);
+                    }
+                });
+            });
+            
+            // Also handle old service-card-expandable design for backward compatibility
             const serviceCards = document.querySelectorAll('.service-card-expandable');
             
             serviceCards.forEach(card => {
-                // Skip if already initialized
                 if (card.dataset.initialized === 'true') {
                     return;
                 }
@@ -1137,19 +1234,15 @@
                 const timeGrid = card.querySelector('.appointment-time-grid');
                 
                 if (header && timeContent) {
-                    // Mark as initialized
                     card.dataset.initialized = 'true';
                     
                     header.addEventListener('click', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
                         
-                        console.log('Service card clicked:', card.getAttribute('data-service'));
-                        
                         const isExpanded = card.classList.contains('expanded');
                         const serviceValue = card.getAttribute('data-service');
                         
-                        // Close all other service cards
                         serviceCards.forEach(c => {
                             if (c !== card) {
                                 c.classList.remove('expanded');
@@ -1160,7 +1253,6 @@
                             }
                         });
                         
-                        // Toggle current card
                         if (isExpanded) {
                             card.classList.remove('expanded');
                             timeContent.style.display = 'none';
@@ -1168,10 +1260,9 @@
                             card.classList.add('expanded');
                             timeContent.style.display = 'block';
                             
-                            // Set hidden input value
                             const serviceInput = document.getElementById('aptService') || 
-                                              document.getElementById('newAptService') || 
-                                              document.getElementById('serviceType');
+                                                document.getElementById('newAptService') || 
+                                                document.getElementById('serviceType');
                             
                             if (serviceInput) {
                                 const serviceMap = {
@@ -1181,52 +1272,6 @@
                                     'denture': 'Denture (Pustiso)'
                                 };
                                 serviceInput.value = serviceMap[serviceValue] || serviceValue;
-                                console.log('Service selected:', serviceInput.value);
-                            }
-                            
-                            // Update button text
-                            const selectedServiceText = document.getElementById('selectedServiceText');
-                            const serviceName = card.querySelector('.service-info h4')?.textContent || 'Service selected';
-                            if (selectedServiceText) {
-                                selectedServiceText.textContent = serviceName;
-                                selectedServiceText.classList.remove('placeholder');
-                            }
-                            
-                            // Close dropdown
-                            const serviceList = document.getElementById('serviceSelectionList');
-                            const toggleBtn = document.getElementById('serviceToggleBtn');
-                            if (serviceList && toggleBtn) {
-                                serviceList.style.display = 'none';
-                                toggleBtn.classList.remove('active');
-                                const toggleIcon = document.getElementById('serviceToggleIcon');
-                                if (toggleIcon) {
-                                    toggleIcon.style.transform = 'rotate(0deg)';
-                                }
-                            }
-                            
-                            // Show Preferred Time section
-                            const preferredTimeSection = document.getElementById('preferredTimeSection');
-                            const appointmentTimeGrid = document.getElementById('appointmentTimeGrid');
-                            const selectedServiceDisplay = document.getElementById('selectedServiceDisplay');
-                            
-                            if (preferredTimeSection) {
-                                preferredTimeSection.style.display = 'block';
-                                console.log('Preferred Time section shown');
-                            }
-                            
-                            if (selectedServiceDisplay) {
-                                const duration = card.getAttribute('data-duration') || '';
-                                selectedServiceDisplay.innerHTML = `
-                                    <div class="selected-service-badge">
-                                        <i class="fas fa-check-circle"></i>
-                                        <span><strong>${serviceName}</strong> ${duration ? `(${duration})` : ''}</span>
-                                    </div>
-                                `;
-                            }
-                            
-                            // Generate time slots
-                            if (appointmentTimeGrid && appointmentTimeGrid.children.length === 0) {
-                                generateTimeSlotsForService(serviceValue, appointmentTimeGrid);
                             }
                             
                             if (timeGrid && timeGrid.children.length === 0) {
