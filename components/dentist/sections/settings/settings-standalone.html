@@ -2458,29 +2458,56 @@
                             try {
                                 const currentSession = await supabaseClient.auth.getSession();
                                 authToken = currentSession?.data?.session?.access_token;
+                                console.log('🔑 Got auth token from Supabase client session:', authToken ? 'Yes' : 'No');
                             } catch (sessionError) {
                                 console.warn('⚠️ Could not get session:', sessionError);
                             }
                         }
                         
-                        // If no auth token, try to get from localStorage
+                        // If no auth token, try to get from localStorage (multiple possible formats)
                         if (!authToken) {
                             try {
+                                // Try standard Supabase localStorage key
                                 const authData = localStorage.getItem('sb-xlubjwiumytdkxrzojdg-auth-token');
                                 if (authData) {
                                     const auth = JSON.parse(authData);
-                                    authToken = auth?.access_token;
+                                    authToken = auth?.access_token || auth?.session?.access_token;
+                                }
+                                
+                                // If still no token, try checking all localStorage keys for Supabase
+                                if (!authToken) {
+                                    for (let i = 0; i < localStorage.length; i++) {
+                                        const key = localStorage.key(i);
+                                        if (key && key.includes('supabase') && key.includes('auth')) {
+                                            try {
+                                                const data = JSON.parse(localStorage.getItem(key));
+                                                authToken = data?.access_token || data?.session?.access_token || data?.currentSession?.access_token;
+                                                if (authToken) {
+                                                    console.log('🔑 Found auth token in localStorage key:', key);
+                                                    break;
+                                                }
+                                            } catch (e) {
+                                                // Continue searching
+                                            }
+                                        }
+                                    }
                                 }
                             } catch (e) {
-                                console.warn('⚠️ Could not get auth token from localStorage');
+                                console.warn('⚠️ Could not get auth token from localStorage:', e);
                             }
+                        }
+                        
+                        // Ensure we have an auth token - required for RPC to identify the user
+                        if (!authToken) {
+                            console.error('❌ No auth token available for delete_auth_user RPC call');
+                            throw new Error('Authentication token required to delete account');
                         }
                         
                         const rpcAuthDeleteResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/delete_auth_user`, {
                             method: 'POST',
                             headers: {
                                 'apikey': SUPABASE_KEY,
-                                'Authorization': authToken ? `Bearer ${authToken}` : `Bearer ${SUPABASE_KEY}`,
+                                'Authorization': `Bearer ${authToken}`, // Always use user's auth token
                                 'Content-Type': 'application/json',
                                 'Prefer': 'return=representation'
                             },

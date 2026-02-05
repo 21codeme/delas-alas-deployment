@@ -75,15 +75,37 @@ DECLARE
     deleted_count INTEGER;
     current_user_id UUID;
 BEGIN
-    -- Get current authenticated user ID
-    current_user_id := auth.uid();
+    -- Get current authenticated user ID from JWT claim
+    -- For SECURITY DEFINER functions, we need to extract from JWT directly
+    -- Try multiple methods to get the user ID
+    BEGIN
+        -- Method 1: Try JWT claim sub (most reliable for SECURITY DEFINER)
+        current_user_id := current_setting('request.jwt.claim.sub', true)::uuid;
+    EXCEPTION
+        WHEN OTHERS THEN
+            BEGIN
+                -- Method 2: Try auth.uid() (works if JWT context is preserved)
+                current_user_id := auth.uid();
+            EXCEPTION
+                WHEN OTHERS THEN
+                    -- Method 3: Try extracting from auth.jwt() if available
+                    BEGIN
+                        current_user_id := (auth.jwt() ->> 'sub')::uuid;
+                    EXCEPTION
+                        WHEN OTHERS THEN
+                            current_user_id := NULL;
+                    END;
+            END;
+    END;
     
     -- Security check: Only allow users to delete their own account
     IF current_user_id IS NULL OR current_user_id != user_id_to_delete THEN
         result := json_build_object(
             'success', false,
             'error', 'Unauthorized: You can only delete your own account',
-            'code', 'UNAUTHORIZED'
+            'code', 'UNAUTHORIZED',
+            'current_user_id', current_user_id,
+            'user_id_to_delete', user_id_to_delete
         );
         RETURN result;
     END IF;
