@@ -3359,9 +3359,8 @@
                     slot.disabled = true;
                     slot.style.cursor = 'not-allowed';
                     
-                    // Set FULLY BOOKED on top, time below - only once
-                    const timeText = formatTime(time);
-                    slot.innerHTML = `<div style="font-size: 10px; font-weight: 600; margin-bottom: 2px; line-height: 1.2;">FULLY BOOKED</div><div style="font-size: 12px; line-height: 1.2;">${timeText}</div>`;
+                    // Set only the time text, no FULLY BOOKED
+                    slot.textContent = formatTime(time);
                 } else {
                     // Set text content for available slots
                     slot.textContent = formatTime(time);
