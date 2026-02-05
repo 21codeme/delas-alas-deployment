@@ -2386,18 +2386,29 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                     // Handle both array and object responses
                     const appointmentsArray = Array.isArray(appointments) ? appointments : (appointments.data || []);
                     
-                    const bookedTimes = appointmentsArray.map(apt => {
+                    console.log('📅 Raw appointments array:', appointmentsArray);
+                    console.log('📅 Total appointments found:', appointmentsArray.length);
+                    
+                    // Get all booked times (keep all, even duplicates - multiple appointments can have same time)
+                    const bookedTimes = [];
+                    appointmentsArray.forEach(apt => {
                         const time = apt.appointment_time || apt.time || '';
-                        return time;
-                    }).filter(time => time && time.trim() !== '');
+                        if (time && time.trim() !== '') {
+                            bookedTimes.push(time);
+                            console.log('📅 Found booked time:', time, 'from appointment:', apt.id, 'status:', apt.status);
+                        } else {
+                            console.warn('⚠️ Appointment with no time:', apt.id, apt);
+                        }
+                    });
                     
                     console.log('📅 All booked time slots for date', appointmentDate, ':', bookedTimes);
-                    console.log('📅 Total appointments found:', appointmentsArray.length);
+                    console.log('📅 Unique booked times:', [...new Set(bookedTimes)]);
                     console.log('📅 Appointment details:', appointmentsArray.map(apt => ({
                         id: apt.id,
                         time: apt.appointment_time || apt.time,
                         status: apt.status,
-                        dentist_id: apt.dentist_id
+                        dentist_id: apt.dentist_id,
+                        patient_name: apt.patient_name
                     })));
                     
                     return bookedTimes;
