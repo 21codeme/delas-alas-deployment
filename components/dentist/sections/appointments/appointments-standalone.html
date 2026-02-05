@@ -2258,14 +2258,15 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
 
                 // Populate form with current values
                 // Map service to match dropdown options
-                const serviceValue = appointment.service || 'General Checkup';
+                const serviceValue = appointment.service || 'Teeth Cleaning';
                 const serviceSelect = document.getElementById('editService');
-                // Try to find matching option, otherwise use the service value as-is
+                // Try to find matching option, otherwise use the first available option
                 const matchingOption = Array.from(serviceSelect.options).find(opt => opt.value === serviceValue || opt.text === serviceValue);
                 if (matchingOption) {
                     serviceSelect.value = matchingOption.value;
                 } else {
-                    serviceSelect.value = serviceValue;
+                    // If service doesn't match, use first available option
+                    serviceSelect.value = serviceSelect.options[0]?.value || 'Teeth Cleaning';
                 }
                 
                 // Set date
