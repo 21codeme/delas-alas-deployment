@@ -2005,8 +2005,8 @@ async function generateTimeSlotsForService(serviceType, timeGrid) {
             slot.disabled = true;
             slot.style.cursor = 'not-allowed';
             
-            // Set only the time text, no FULLY BOOKED
-            slot.textContent = formatTime(time);
+            // No text content for booked slots
+            slot.textContent = '';
         } else {
             // Set text content for available slots
             slot.textContent = formatTime(time);
