@@ -2904,8 +2904,32 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                                 expires_at: new Date(new Date(appointment.date).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString()
                             };
                             
-                            await callSupabaseAPI('POST', 'notifications', notificationData);
-                            console.log('✅ Reschedule notification created for patient:', appointment.patientId);
+                            // Use RPC function to create notification (bypasses RLS)
+                            try {
+                                const rpcResult = await callSupabaseAPI('POST', 'rpc/create_notification_for_user', {
+                                    p_user_id: appointment.patientId,
+                                    p_type: 'appointment',
+                                    p_title: 'Appointment Rescheduled',
+                                    p_message: `Your appointment for ${appointment.service} has been rescheduled to ${formattedDate} at ${formattedTime}.`,
+                                    p_data: {
+                                        appointment_id: appointment.id,
+                                        service_type: appointment.service,
+                                        appointment_date: appointment.date,
+                                        appointment_time: appointment.time,
+                                        old_date: oldDate,
+                                        old_time: oldTime,
+                                        status: appointment.status
+                                    },
+                                    p_priority: 'high',
+                                    p_expires_at: new Date(new Date(appointment.date).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString()
+                                });
+                                console.log('✅ Reschedule notification created for patient:', appointment.patientId, rpcResult);
+                            } catch (rpcError) {
+                                // Fallback to direct insert if RPC function doesn't exist
+                                console.log('⚠️ RPC function not available, trying direct insert...');
+                                await callSupabaseAPI('POST', 'notifications', notificationData);
+                                console.log('✅ Reschedule notification created for patient:', appointment.patientId);
+                            }
                         } catch (notifError) {
                             console.warn('⚠️ Could not create notification (RLS policy may need update). Run FIX_NOTIFICATIONS_RLS_FOR_RESCHEDULE.sql in Supabase SQL Editor:', notifError);
                             // Don't throw - reschedule should still succeed even if notification fails
