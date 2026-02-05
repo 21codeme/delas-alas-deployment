@@ -1341,18 +1341,17 @@
                     return normalizedBooked === normalizedTime;
                 });
                 
-                // Set text content - only the time, no overlapping text
-                slot.textContent = formatTime(time);
-                slot.innerHTML = formatTime(time); // Ensure clean HTML, no overlapping
-                
                 if (isBooked) {
                     slot.classList.add('fully-booked');
                     slot.disabled = true;
                     slot.style.cursor = 'not-allowed';
-                    // Ensure only time text is shown, no overlapping
+                    // Clear any existing content first, then set only the time text
+                    slot.textContent = '';
+                    slot.innerHTML = '';
                     slot.textContent = formatTime(time);
-                    slot.innerHTML = formatTime(time);
                 } else {
+                    // Set text content for available slots
+                    slot.textContent = formatTime(time);
                     slot.addEventListener('click', function(e) {
                         e.preventDefault();
                         e.stopPropagation();

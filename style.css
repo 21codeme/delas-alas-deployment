@@ -1619,13 +1619,20 @@ p {
     text-align: center;
     overflow: hidden;
     white-space: nowrap;
+    line-height: 1.2;
 }
 
 /* Ensure no pseudo-elements add overlapping text */
 .time-slot.fully-booked::before,
 .time-slot.fully-booked::after {
-    display: none;
-    content: none;
+    display: none !important;
+    content: none !important;
+    visibility: hidden !important;
+}
+
+/* Prevent any child elements from causing overlap */
+.time-slot.fully-booked * {
+    display: none !important;
 }
 
 /* Responsive Design */
