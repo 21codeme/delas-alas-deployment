@@ -1736,6 +1736,11 @@ function toggleServiceList() {
         if (toggleIcon) {
             toggleIcon.style.transform = 'rotate(180deg)';
         }
+        
+        // Re-initialize service selection when list is shown
+        setTimeout(() => {
+            initializeServiceSelection();
+        }, 100);
     }
 }
 

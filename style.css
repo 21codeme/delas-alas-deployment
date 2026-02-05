@@ -1550,6 +1550,11 @@ p {
     left: 0;
     right: 0;
     z-index: 1000;
+    pointer-events: auto;
+}
+
+.service-selection-list[style*="flex"] {
+    display: flex !important;
 }
 
 .service-selection-box {
@@ -1562,6 +1567,8 @@ p {
     background: white;
     overflow: hidden;
     transition: all 0.3s ease;
+    cursor: pointer;
+    pointer-events: auto;
 }
 
 .service-card-expandable:hover {
@@ -1581,6 +1588,8 @@ p {
     transition: all 0.3s ease;
     position: relative;
     background: white;
+    pointer-events: auto;
+    user-select: none;
 }
 
 .service-card-expandable.expanded .service-card-header {

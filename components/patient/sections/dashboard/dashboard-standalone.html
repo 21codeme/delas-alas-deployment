@@ -996,6 +996,11 @@
             left: 0;
             right: 0;
             z-index: 1000;
+            pointer-events: auto;
+        }
+
+        .service-selection-list[style*="flex"] {
+            display: flex !important;
         }
 
         .service-card-expandable {
@@ -1004,6 +1009,8 @@
             background: white;
             overflow: hidden;
             transition: all 0.3s ease;
+            cursor: pointer;
+            pointer-events: auto;
         }
 
         .service-card-expandable:hover {
@@ -1023,6 +1030,8 @@
             transition: all 0.3s ease;
             position: relative;
             background: white;
+            pointer-events: auto;
+            user-select: none;
         }
 
         .service-card-expandable.expanded .service-card-header {
@@ -3096,6 +3105,13 @@
                 if (toggleIcon) {
                     toggleIcon.style.transform = 'rotate(180deg)';
                 }
+                
+                // Re-initialize service selection when list is shown
+                setTimeout(() => {
+                    if (typeof initializeServiceSelection === 'function') {
+                        initializeServiceSelection();
+                    }
+                }, 100);
             }
         }
 
