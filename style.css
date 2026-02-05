@@ -1611,6 +1611,14 @@ p {
     opacity: 0.6;
 }
 
+.time-slot.fully-booked {
+    background: #f5f5f5;
+    color: #999;
+    border-color: #e0e0e0;
+    font-weight: 600;
+    text-align: center;
+}
+
 /* Responsive Design */
 @media (min-width: 768px) {
     .appointment-time-grid {
