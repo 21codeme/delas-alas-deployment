@@ -2461,12 +2461,22 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 
                 // Check if this time slot is booked
                 const isBooked = bookedTimes.some(bookedTime => {
-                    let normalizedBooked = (bookedTime || '').trim();
-                    if (normalizedBooked.length >= 5) {
-                        normalizedBooked = normalizedBooked.substring(0, 5);
+                    if (!bookedTime) return false;
+                    
+                    let normalizedBooked = String(bookedTime).trim();
+                    // Remove seconds if present (HH:MM:SS -> HH:MM)
+                    if (normalizedBooked.includes(':')) {
+                        const parts = normalizedBooked.split(':');
+                        normalizedBooked = parts[0] + ':' + parts[1];
                     }
+                    
                     let normalizedTime = time.substring(0, 5);
-                    return normalizedBooked === normalizedTime;
+                    
+                    const matches = normalizedBooked === normalizedTime;
+                    if (matches) {
+                        console.log('🎯 Found booked slot match:', normalizedBooked, '===', normalizedTime);
+                    }
+                    return matches;
                 });
                 
                 // Check if this is the selected time
