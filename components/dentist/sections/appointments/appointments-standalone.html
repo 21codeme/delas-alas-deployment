@@ -2408,15 +2408,15 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             // Clear existing slots
             timeGrid.innerHTML = '';
             
-            // Get booked time slots
+            // Get booked time slots (all dentists for this date)
             const bookedTimes = await getBookedTimeSlotsForEdit(appointmentDate, dentistId, excludeAppointmentId);
             
             // Update info text
             if (bookedTimes.length > 0) {
-                timeInfo.textContent = `⚠️ ${bookedTimes.length} time slot(s) already booked for this date`;
+                timeInfo.textContent = `⚠️ ${bookedTimes.length} time slot(s) already booked for this date (all dentists)`;
                 timeInfo.style.color = '#ff6b6b';
             } else {
-                timeInfo.textContent = '✅ All time slots available';
+                timeInfo.textContent = '✅ All time slots available for this date';
                 timeInfo.style.color = '#51cf66';
             }
             
@@ -2514,11 +2514,12 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 const currentAppointment = appointments.find(apt => apt.id === currentAppointmentId);
                 const excludeId = currentAppointmentId;
                 
-                if (date && dentistId) {
+                if (date) {
+                    // Show all booked slots for the date (dentist selection not required)
                     await generateEditTimeSlots(date, dentistId, '', excludeId);
                 } else {
-                    // Show message if date or dentist not selected
-                    document.getElementById('editTimeSlotsInfo').textContent = 'Please select a date and dentist first';
+                    // Show message if date not selected
+                    document.getElementById('editTimeSlotsInfo').textContent = 'Please select a date first';
                     document.getElementById('editTimeSlotsInfo').style.color = '#ff6b6b';
                     editTimeSlotsGrid.innerHTML = '';
                 }
@@ -2530,11 +2531,12 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 const currentAppointment = appointments.find(apt => apt.id === currentAppointmentId);
                 const excludeId = currentAppointmentId;
                 
-                if (date && dentistId) {
+                if (date) {
+                    // Show all booked slots for the date (dentist selection not required)
                     await generateEditTimeSlots(date, dentistId, '', excludeId);
                 } else {
-                    // Show message if date or dentist not selected
-                    document.getElementById('editTimeSlotsInfo').textContent = 'Please select a date and dentist first';
+                    // Show message if date not selected
+                    document.getElementById('editTimeSlotsInfo').textContent = 'Please select a date first';
                     document.getElementById('editTimeSlotsInfo').style.color = '#ff6b6b';
                     editTimeSlotsGrid.innerHTML = '';
                 }
