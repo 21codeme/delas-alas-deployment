@@ -527,6 +527,15 @@
                     <input type="hidden" id="aptTime" required>
                 </div>
                 
+                <!-- Preferred Time Section (shown after service selection) -->
+                <div class="form-group" id="preferredTimeSection" style="display: none;">
+                    <label>Preferred Time *</label>
+                    <div class="selected-service-display" id="selectedServiceDisplay"></div>
+                    <div class="appointment-time-grid" id="appointmentTimeGrid">
+                        <!-- Time slots will be generated dynamically -->
+                    </div>
+                </div>
+                
                 <!-- Calendar Integration -->
                 <div class="form-group">
                     <label for="aptDate">Preferred Date</label>

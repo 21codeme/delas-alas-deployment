@@ -1823,7 +1823,43 @@ function initializeServiceSelection() {
                         selectedServiceText.classList.remove('placeholder');
                     }
                     
-                    // Generate time slots if not already generated
+                    // Close the service list dropdown
+                    const serviceList = document.getElementById('serviceSelectionList');
+                    const toggleBtn = document.getElementById('serviceToggleBtn');
+                    if (serviceList && toggleBtn) {
+                        serviceList.style.display = 'none';
+                        toggleBtn.classList.remove('active');
+                        const toggleIcon = document.getElementById('serviceToggleIcon');
+                        if (toggleIcon) {
+                            toggleIcon.style.transform = 'rotate(0deg)';
+                        }
+                    }
+                    
+                    // Show Preferred Time section and generate time slots
+                    const preferredTimeSection = document.getElementById('preferredTimeSection');
+                    const appointmentTimeGrid = document.getElementById('appointmentTimeGrid');
+                    const selectedServiceDisplay = document.getElementById('selectedServiceDisplay');
+                    
+                    if (preferredTimeSection) {
+                        preferredTimeSection.style.display = 'block';
+                    }
+                    
+                    if (selectedServiceDisplay) {
+                        const duration = card.getAttribute('data-duration') || '';
+                        selectedServiceDisplay.innerHTML = `
+                            <div class="selected-service-badge">
+                                <i class="fas fa-check-circle"></i>
+                                <span><strong>${serviceName}</strong> ${duration ? `(${duration})` : ''}</span>
+                            </div>
+                        `;
+                    }
+                    
+                    // Generate time slots in the main time grid
+                    if (appointmentTimeGrid && appointmentTimeGrid.children.length === 0) {
+                        generateTimeSlotsForService(serviceValue, appointmentTimeGrid);
+                    }
+                    
+                    // Also generate in the card's time grid if it exists
                     if (timeGrid && timeGrid.children.length === 0) {
                         generateTimeSlotsForService(serviceValue, timeGrid);
                     }
@@ -1878,6 +1914,17 @@ function generateTimeSlotsForService(serviceType, timeGrid) {
                 const [hours, minutes] = time.split(':');
                 timeInput.value = `${hours}:${minutes}:00`;
                 console.log('Time selected:', timeInput.value);
+            }
+            
+            // Update button text to show service and time
+            const selectedServiceText = document.getElementById('selectedServiceText');
+            if (selectedServiceText) {
+                const serviceInput = document.getElementById('aptService') || 
+                                    document.getElementById('newAptService') || 
+                                    document.getElementById('serviceType');
+                if (serviceInput && serviceInput.value) {
+                    selectedServiceText.textContent = `${serviceInput.value} - ${formatTime(time)}`;
+                }
             }
         });
         

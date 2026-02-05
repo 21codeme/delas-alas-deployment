@@ -1695,6 +1695,27 @@ p {
     border-left: 4px solid #667eea;
 }
 
+/* Selected Service Display */
+.selected-service-display {
+    margin-bottom: 15px;
+}
+
+.selected-service-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: #e8f4fd;
+    border: 1px solid #4a90e2;
+    border-radius: 8px;
+    color: #1976d2;
+    font-size: 14px;
+}
+
+.selected-service-badge i {
+    color: #4a90e2;
+}
+
 /* Appointment Time Grid */
 .appointment-time-grid {
     display: grid;
