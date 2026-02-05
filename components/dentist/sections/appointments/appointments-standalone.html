@@ -2261,9 +2261,28 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 populateDentistsDropdown(appointment.dentistId, appointment.dentistName);
 
                 // Populate form with current values
-                document.getElementById('editService').value = appointment.service;
+                // Map service to match dropdown options
+                const serviceValue = appointment.service || 'General Checkup';
+                const serviceSelect = document.getElementById('editService');
+                // Try to find matching option, otherwise use the service value as-is
+                const matchingOption = Array.from(serviceSelect.options).find(opt => opt.value === serviceValue || opt.text === serviceValue);
+                if (matchingOption) {
+                    serviceSelect.value = matchingOption.value;
+                } else {
+                    serviceSelect.value = serviceValue;
+                }
+                
+                // Set date
                 document.getElementById('editDate').value = appointment.date;
-                document.getElementById('editTime').value = appointment.time;
+                
+                // Format time for time input (HH:MM format)
+                let timeValue = appointment.time || '10:00';
+                // Remove seconds if present (HH:MM:SS -> HH:MM)
+                if (timeValue.includes(':') && timeValue.split(':').length > 2) {
+                    timeValue = timeValue.substring(0, 5);
+                }
+                document.getElementById('editTime').value = timeValue;
+                
                 document.getElementById('editStatus').value = appointment.status;
                 document.getElementById('editNotes').value = appointment.notes || '';
                 
