@@ -1177,7 +1177,12 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                     </div>
                     <div class="form-group">
                         <label for="editTime">Appointment Time</label>
-                        <input type="time" id="editTime" required>
+                        <div id="editTimeSlotsInfo" style="margin-bottom: 8px; font-size: 12px; color: #666; display: none;"></div>
+                        <div class="appointment-time-grid" id="editTimeSlotsGrid" style="display: none;">
+                            <!-- Time slots will be generated here -->
+                        </div>
+                        <input type="time" id="editTime" required style="display: none;">
+                        <input type="hidden" id="editTimeSelected" value="">
                     </div>
                     <div class="form-group">
                         <label for="editStatus">Status</label>
@@ -2279,9 +2284,16 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                     timeValue = timeValue.substring(0, 5);
                 }
                 document.getElementById('editTime').value = timeValue;
+                document.getElementById('editTimeSelected').value = timeValue;
                 
                 document.getElementById('editStatus').value = appointment.status;
                 document.getElementById('editNotes').value = appointment.notes || '';
+                
+                // Generate time slots grid and show booked slots
+                await generateEditTimeSlots(appointment.date, appointment.dentistId, timeValue, appointment.id);
+                
+                // Add event listeners for date and dentist changes
+                setupEditTimeSlotListeners();
                 
                 // Check if status is confirmed to show QR code
                 checkAndGenerateQRCode(appointment);
@@ -2297,6 +2309,187 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 
                 document.getElementById('editAppointmentModal').style.display = 'block';
             }
+        }
+
+        // Get booked time slots for a specific date and dentist
+        async function getBookedTimeSlotsForEdit(appointmentDate, dentistId, excludeAppointmentId = null) {
+            if (!appointmentDate || !dentistId) {
+                return [];
+            }
+            
+            try {
+                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                
+                // Build query - exclude current appointment if rescheduling
+                let url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${appointmentDate}&dentist_id=eq.${dentistId}&status=in.(pending,confirmed)&select=id,appointment_time,status`;
+                if (excludeAppointmentId) {
+                    url += `&id=neq.${excludeAppointmentId}`;
+                }
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const appointments = await response.json();
+                    const bookedTimes = appointments.map(apt => apt.appointment_time || '').filter(time => time);
+                    console.log('📅 Booked time slots for edit:', bookedTimes);
+                    return bookedTimes;
+                } else {
+                    console.error('❌ Failed to check booked time slots:', response.status);
+                    return [];
+                }
+            } catch (error) {
+                console.error('❌ Error checking booked time slots:', error);
+                return [];
+            }
+        }
+
+        // Generate time slots grid for edit appointment
+        async function generateEditTimeSlots(appointmentDate, dentistId, selectedTime = '', excludeAppointmentId = null) {
+            const timeGrid = document.getElementById('editTimeSlotsGrid');
+            const timeInfo = document.getElementById('editTimeSlotsInfo');
+            
+            if (!timeGrid) return;
+            
+            // Show the grid
+            timeGrid.style.display = 'grid';
+            timeInfo.style.display = 'block';
+            
+            // Clear existing slots
+            timeGrid.innerHTML = '';
+            
+            // Get booked time slots
+            const bookedTimes = await getBookedTimeSlotsForEdit(appointmentDate, dentistId, excludeAppointmentId);
+            
+            // Update info text
+            if (bookedTimes.length > 0) {
+                timeInfo.textContent = `⚠️ ${bookedTimes.length} time slot(s) already booked for this date`;
+                timeInfo.style.color = '#ff6b6b';
+            } else {
+                timeInfo.textContent = '✅ All time slots available';
+                timeInfo.style.color = '#51cf66';
+            }
+            
+            // Define time slots (8:00 AM to 6:00 PM, 30-minute intervals)
+            const timeSlots = [
+                '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+                '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
+                '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
+                '17:00', '17:30', '18:00'
+            ];
+            
+            // Format time helper
+            function formatTime(timeString) {
+                const [hours, minutes] = timeString.split(':');
+                const hour = parseInt(hours, 10);
+                const ampm = hour >= 12 ? 'PM' : 'AM';
+                const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
+                return `${formattedHour}:${minutes} ${ampm}`;
+            }
+            
+            // Create time slot buttons
+            timeSlots.forEach(time => {
+                const slot = document.createElement('button');
+                slot.type = 'button';
+                slot.className = 'time-slot';
+                slot.setAttribute('data-time', time);
+                
+                // Check if this time slot is booked
+                const isBooked = bookedTimes.some(bookedTime => {
+                    let normalizedBooked = (bookedTime || '').trim();
+                    if (normalizedBooked.length >= 5) {
+                        normalizedBooked = normalizedBooked.substring(0, 5);
+                    }
+                    let normalizedTime = time.substring(0, 5);
+                    return normalizedBooked === normalizedTime;
+                });
+                
+                // Check if this is the selected time
+                let normalizedSelected = '';
+                if (selectedTime) {
+                    normalizedSelected = selectedTime.substring(0, 5);
+                }
+                const isSelected = normalizedSelected === time.substring(0, 5);
+                
+                if (isBooked) {
+                    slot.classList.add('fully-booked');
+                    slot.disabled = true;
+                    slot.style.cursor = 'not-allowed';
+                    slot.textContent = '';
+                } else {
+                    slot.textContent = formatTime(time);
+                    if (isSelected) {
+                        slot.classList.add('selected');
+                    }
+                    
+                    slot.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Remove selected class from all slots
+                        document.querySelectorAll('#editTimeSlotsGrid .time-slot').forEach(s => s.classList.remove('selected'));
+                        
+                        // Add selected class to clicked slot
+                        this.classList.add('selected');
+                        
+                        // Set hidden input value
+                        const [hours, minutes] = time.split(':');
+                        const timeValue = `${hours}:${minutes}:00`;
+                        document.getElementById('editTime').value = time.substring(0, 5);
+                        document.getElementById('editTimeSelected').value = timeValue;
+                        console.log('Time selected:', timeValue);
+                    });
+                }
+                
+                timeGrid.appendChild(slot);
+            });
+        }
+
+        // Setup event listeners for date and dentist changes
+        function setupEditTimeSlotListeners() {
+            const editDate = document.getElementById('editDate');
+            const editDentist = document.getElementById('editDentist');
+            const editTimeSlotsGrid = document.getElementById('editTimeSlotsGrid');
+            
+            // Remove existing listeners to prevent duplicates
+            const newEditDate = editDate.cloneNode(true);
+            editDate.parentNode.replaceChild(newEditDate, editDate);
+            const newEditDentist = editDentist.cloneNode(true);
+            editDentist.parentNode.replaceChild(newEditDentist, editDentist);
+            
+            // Add new listeners
+            newEditDate.addEventListener('change', async function() {
+                const date = this.value;
+                const dentistId = newEditDentist.value;
+                const currentAppointment = appointments.find(apt => apt.id === currentAppointmentId);
+                const excludeId = currentAppointmentId;
+                
+                if (date && dentistId) {
+                    await generateEditTimeSlots(date, dentistId, '', excludeId);
+                } else {
+                    editTimeSlotsGrid.style.display = 'none';
+                    document.getElementById('editTimeSlotsInfo').style.display = 'none';
+                }
+            });
+            
+            newEditDentist.addEventListener('change', async function() {
+                const dentistId = this.value;
+                const date = newEditDate.value;
+                const currentAppointment = appointments.find(apt => apt.id === currentAppointmentId);
+                const excludeId = currentAppointmentId;
+                
+                if (date && dentistId) {
+                    await generateEditTimeSlots(date, dentistId, '', excludeId);
+                } else {
+                    editTimeSlotsGrid.style.display = 'none';
+                    document.getElementById('editTimeSlotsInfo').style.display = 'none';
+                }
+            });
         }
 
         async function populateDentistsDropdown(selectedId = '', selectedName = '') {
@@ -2541,7 +2734,9 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 // Update appointment data
                 appointment.service = document.getElementById('editService').value;
                 appointment.date = document.getElementById('editDate').value;
-                appointment.time = document.getElementById('editTime').value;
+                // Use selected time from grid if available, otherwise use time input
+                const selectedTime = document.getElementById('editTimeSelected').value || document.getElementById('editTime').value;
+                appointment.time = selectedTime;
                 appointment.status = document.getElementById('editStatus').value;
                 appointment.notes = document.getElementById('editNotes').value;
                 const selDentist = document.getElementById('editDentist').value;
