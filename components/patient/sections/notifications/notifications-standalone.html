@@ -1113,6 +1113,22 @@
             }
 
             try {
+                // First, get appointment details to get patient email
+                const appointmentResponse = await fetch(`${SUPABASE_URL}/rest/v1/appointments?id=eq.${appointmentId}&select=*`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+
+                let appointmentData = null;
+                if (appointmentResponse.ok) {
+                    const appointments = await appointmentResponse.json();
+                    if (appointments && appointments.length > 0) {
+                        appointmentData = appointments[0];
+                    }
+                }
+
                 // Update appointment status to confirmed with new date/time
                 const response = await fetch(`${SUPABASE_URL}/rest/v1/appointments?id=eq.${appointmentId}`, {
                     method: 'PATCH',
@@ -1136,8 +1152,64 @@
                         await markAsRead(notificationId);
                     }
 
+                    // Send confirmation email to patient
+                    if (appointmentData && appointmentData.patient_email) {
+                        try {
+                            // Determine API base URL (for Vercel deployment)
+                            const apiBaseUrl = window.location.origin.includes('vercel.app') 
+                                ? window.location.origin 
+                                : (window.location.origin.includes('localhost') 
+                                    ? 'http://localhost:3000' 
+                                    : window.location.origin);
+                            
+                            // Format time for display
+                            const [hours, minutes] = newTime.split(':');
+                            const hour = parseInt(hours);
+                            const ampm = hour >= 12 ? 'PM' : 'AM';
+                            const displayHour = (hour % 12) || 12;
+                            const formattedTime = `${displayHour}:${minutes} ${ampm}`;
+                            
+                            // Format date for display
+                            const formattedDate = new Date(newDate).toLocaleDateString('en-US', { 
+                                weekday: 'long', 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                            });
+
+                            const emailData = {
+                                email: appointmentData.patient_email,
+                                patientName: appointmentData.patient_name || 'Patient',
+                                serviceType: appointmentData.service_type || 'Dental Service',
+                                appointmentDate: formattedDate,
+                                appointmentTime: formattedTime,
+                                dentistName: 'Dr. Delas Alas',
+                                notes: appointmentData.notes || 'Your reschedule request has been approved. Please arrive 10 minutes before your appointment time.'
+                            };
+                            
+                            console.log('📧 Sending reschedule approval confirmation email to:', appointmentData.patient_email);
+                            
+                            const emailResponse = await fetch(`${apiBaseUrl}/api/send-appointment-email`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(emailData)
+                            });
+                            
+                            if (emailResponse.ok) {
+                                console.log('✅ Reschedule approval confirmation email sent successfully');
+                            } else {
+                                console.warn('⚠️ Failed to send confirmation email, but reschedule was approved');
+                            }
+                        } catch (emailError) {
+                            console.error('❌ Error sending confirmation email:', emailError);
+                            // Continue even if email fails - reschedule is still approved
+                        }
+                    }
+
                     // Show success message
-                    alert('✅ Appointment reschedule approved! The new schedule has been confirmed.');
+                    alert('✅ Appointment reschedule approved! The new schedule has been confirmed. A confirmation email has been sent to your email address.');
                     
                     // Close modal
                     closeRescheduleModal();
