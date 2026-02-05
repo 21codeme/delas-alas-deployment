@@ -858,12 +858,28 @@
                 </div>
             `;
 
-            document.getElementById('rescheduleDetails').innerHTML = detailsHtml;
-            document.getElementById('rescheduleModal').setAttribute('data-notification-id', notificationId);
-            document.getElementById('rescheduleModal').setAttribute('data-appointment-id', appointmentId);
-            document.getElementById('rescheduleModal').setAttribute('data-new-date', newDate);
-            document.getElementById('rescheduleModal').setAttribute('data-new-time', newTime);
-            document.getElementById('rescheduleModal').style.display = 'block';
+            const modal = document.getElementById('rescheduleModal');
+            const detailsElement = document.getElementById('rescheduleDetails');
+            
+            if (!modal) {
+                console.error('❌ Reschedule modal not found in DOM');
+                alert('Reschedule modal not found. Please refresh the page.');
+                return;
+            }
+            
+            if (!detailsElement) {
+                console.error('❌ Reschedule details element not found in DOM');
+                alert('Reschedule details element not found. Please refresh the page.');
+                return;
+            }
+            
+            detailsElement.innerHTML = detailsHtml;
+            modal.setAttribute('data-notification-id', notificationId);
+            modal.setAttribute('data-appointment-id', appointmentId);
+            modal.setAttribute('data-new-date', newDate);
+            modal.setAttribute('data-new-time', newTime);
+            modal.style.display = 'block';
+            console.log('✅ Reschedule modal opened successfully');
         }
 
         // Close reschedule modal
