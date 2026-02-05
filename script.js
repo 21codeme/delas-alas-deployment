@@ -2302,33 +2302,65 @@ function displayServicesOnIndex(services) {
         return;
     }
 
-    if (services.length === 0) {
-        console.log('⚠️ No services to display');
-        servicesGrid.innerHTML = `
-            <div class="no-services">
-                <i class="fas fa-tools" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5; color: var(--text-light);"></i>
-                <h3 style="margin: 0 0 10px 0; color: var(--text-light);">No services available</h3>
-                <p style="margin: 0; color: var(--text-light);">Services will be added soon</p>
-            </div>
-        `;
-        return;
-    }
-
-    // Group services by category for better display
-    const groupedServices = groupServicesByCategory(services);
-    console.log('📊 Grouped services:', groupedServices);
+    // Always show the 4 specific services as requested
+    const specificServices = [
+        {
+            name: 'Teeth Cleaning',
+            icon: 'fa-sparkles',
+            description: 'Professional teeth cleaning and oral hygiene services',
+            notes: [
+                'Removes plaque and tartar buildup',
+                'Prevents gum disease',
+                'Fresh breath and brighter smile',
+                'Regular checkup included'
+            ]
+        },
+        {
+            name: 'Tooth Extraction',
+            icon: 'fa-tooth',
+            description: 'Safe and professional tooth removal services',
+            notes: [
+                'Painless extraction procedure',
+                'Post-extraction care instructions',
+                'Follow-up appointments available',
+                'Emergency extractions available'
+            ]
+        },
+        {
+            name: 'Dental Filling',
+            icon: 'fa-fill-drip',
+            description: 'Quality dental fillings for cavities and tooth restoration',
+            notes: [
+                'Composite and amalgam fillings',
+                'Tooth-colored materials',
+                'Long-lasting results',
+                'Comfortable procedure'
+            ]
+        },
+        {
+            name: 'Denture (Pustiso)',
+            icon: 'fa-teeth',
+            description: 'Custom-made dentures for missing teeth replacement',
+            notes: [
+                'Full and partial dentures',
+                'Custom fit and comfortable',
+                'Natural-looking appearance',
+                'Multiple visits for fitting'
+            ]
+        }
+    ];
     
-    servicesGrid.innerHTML = Object.keys(groupedServices).map(category => `
+    servicesGrid.innerHTML = specificServices.map(service => `
         <div class="service-card">
             <div class="service-icon">
-                <i class="fas ${getCategoryIcon(category)}"></i>
+                <i class="fas ${service.icon}"></i>
             </div>
-            <h3>${category}</h3>
-            <p>Professional ${category.toLowerCase()} services</p>
+            <h3>${service.name}</h3>
+            <p>${service.description}</p>
             <ul class="service-features">
-                ${groupedServices[category].slice(0, 4).map(service => `<li>${service.name}</li>`).join('')}
+                ${service.notes.map(note => `<li><i class="fas fa-check"></i> ${note}</li>`).join('')}
             </ul>
-            <button class="btn btn-outline" onclick="showAppointmentModal('${category.toLowerCase()}')">Book Now</button>
+            <button class="btn btn-outline" onclick="showAppointmentModal()">Book Now</button>
         </div>
     `).join('');
     
