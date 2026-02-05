@@ -2472,8 +2472,10 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 if (date && dentistId) {
                     await generateEditTimeSlots(date, dentistId, '', excludeId);
                 } else {
-                    editTimeSlotsGrid.style.display = 'none';
-                    document.getElementById('editTimeSlotsInfo').style.display = 'none';
+                    // Show message if date or dentist not selected
+                    document.getElementById('editTimeSlotsInfo').textContent = 'Please select a date and dentist first';
+                    document.getElementById('editTimeSlotsInfo').style.color = '#ff6b6b';
+                    editTimeSlotsGrid.innerHTML = '';
                 }
             });
             
@@ -2486,8 +2488,10 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 if (date && dentistId) {
                     await generateEditTimeSlots(date, dentistId, '', excludeId);
                 } else {
-                    editTimeSlotsGrid.style.display = 'none';
-                    document.getElementById('editTimeSlotsInfo').style.display = 'none';
+                    // Show message if date or dentist not selected
+                    document.getElementById('editTimeSlotsInfo').textContent = 'Please select a date and dentist first';
+                    document.getElementById('editTimeSlotsInfo').style.color = '#ff6b6b';
+                    editTimeSlotsGrid.innerHTML = '';
                 }
             });
         }
