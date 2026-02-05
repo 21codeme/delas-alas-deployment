@@ -1024,27 +1024,45 @@
                 const user = JSON.parse(userData);
                 if (!user || !user.id) return;
                 
-                const notification = {
-                    user_id: user.id,
-                    type: notificationData.type,
-                    title: notificationData.title,
-                    message: notificationData.message,
-                    data: notificationData.data || {},
-                    priority: notificationData.priority || 'normal',
-                    expires_at: notificationData.expires_at || null
-                };
-                
-                const result = await callSupabaseAPI('POST', 'notifications', notification);
-                // '✅ Notification created:', result);
-                
-                // Reload notifications to show the new one
-                await loadNotifications();
-                
-                return result;
+                // Use RPC function to create notification (bypasses RLS)
+                try {
+                    const rpcResult = await callSupabaseAPI('POST', 'rpc/create_notification_for_user', {
+                        p_user_id: user.id,
+                        p_type: notificationData.type,
+                        p_title: notificationData.title,
+                        p_message: notificationData.message,
+                        p_data: notificationData.data || {},
+                        p_priority: notificationData.priority || 'normal',
+                        p_expires_at: notificationData.expires_at || null
+                    });
+                    
+                    // Reload notifications to show the new one
+                    await loadNotifications();
+                    
+                    return rpcResult;
+                } catch (rpcError) {
+                    // Fallback to direct insert if RPC function doesn't exist
+                    console.log('⚠️ RPC function not available, trying direct insert...');
+                    const notification = {
+                        user_id: user.id,
+                        type: notificationData.type,
+                        title: notificationData.title,
+                        message: notificationData.message,
+                        data: notificationData.data || {},
+                        priority: notificationData.priority || 'normal',
+                        expires_at: notificationData.expires_at || null
+                    };
+                    
+                    const result = await callSupabaseAPI('POST', 'notifications', notification);
+                    
+                    // Reload notifications to show the new one
+                    await loadNotifications();
+                    
+                    return result;
+                }
             } catch (error) {
-                // '❌ Error creating notification:', error);
+                console.warn('⚠️ Error creating notification (RLS policy may need update). Run CREATE_NOTIFICATION_FUNCTION.sql in Supabase SQL Editor:', error);
                 // Fallback: Store notification locally
-                // '📝 Storing notification locally as fallback');
                 storeNotificationLocally(notificationData);
             }
         }
