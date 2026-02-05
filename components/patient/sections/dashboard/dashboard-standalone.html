@@ -1757,6 +1757,12 @@
 
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', async function() {
+            // Initialize service selection on page load
+            setTimeout(() => {
+                if (typeof initializeServiceSelection === 'function') {
+                    initializeServiceSelection();
+                }
+            }, 500);
             // Check if loaded in iframe
             if (window !== window.top) {
                 document.body.classList.add('iframe-mode');

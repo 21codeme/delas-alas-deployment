@@ -1377,8 +1377,11 @@
             loadAppointments();
             setMinDate();
             
-            // Setup time slot listeners after a short delay to ensure elements exist
+            // Initialize service selection on page load
             setTimeout(() => {
+                if (typeof initializeServiceSelection === 'function') {
+                    initializeServiceSelection();
+                }
                 setupTimeSlotListeners();
             }, 500);
         });
