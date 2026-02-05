@@ -2237,7 +2237,7 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             }
         }
 
-        function editAppointment(id) {
+        async function editAppointment(id) {
             const appointment = appointments.find(apt => apt.id === id);
             if (appointment) {
                 currentAppointmentId = id;
@@ -2259,7 +2259,7 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 `;
                 
                 // Populate dentists dropdown
-                populateDentistsDropdown(appointment.dentistId, appointment.dentistName);
+                await populateDentistsDropdown(appointment.dentistId, appointment.dentistName);
 
                 // Populate form with current values
                 // Map service to match dropdown options
