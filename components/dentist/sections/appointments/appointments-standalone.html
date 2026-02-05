@@ -2378,12 +2378,29 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 
                 if (response.ok) {
                     const appointments = await response.json();
-                    const bookedTimes = appointments.map(apt => apt.appointment_time || '').filter(time => time);
+                    console.log('📅 Raw appointments response:', appointments);
+                    
+                    // Handle both array and object responses
+                    const appointmentsArray = Array.isArray(appointments) ? appointments : (appointments.data || []);
+                    
+                    const bookedTimes = appointmentsArray.map(apt => {
+                        const time = apt.appointment_time || apt.time || '';
+                        return time;
+                    }).filter(time => time && time.trim() !== '');
+                    
                     console.log('📅 All booked time slots for date', appointmentDate, ':', bookedTimes);
-                    console.log('📅 Total appointments:', appointments.length);
+                    console.log('📅 Total appointments found:', appointmentsArray.length);
+                    console.log('📅 Appointment details:', appointmentsArray.map(apt => ({
+                        id: apt.id,
+                        time: apt.appointment_time || apt.time,
+                        status: apt.status,
+                        dentist_id: apt.dentist_id
+                    })));
+                    
                     return bookedTimes;
                 } else {
-                    console.error('❌ Failed to check booked time slots:', response.status);
+                    const errorText = await response.text();
+                    console.error('❌ Failed to check booked time slots:', response.status, errorText);
                     return [];
                 }
             } catch (error) {
