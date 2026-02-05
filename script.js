@@ -2000,8 +2000,8 @@ async function generateTimeSlotsForService(serviceType, timeGrid) {
         if (isBooked) {
             slot.classList.add('fully-booked');
             slot.disabled = true;
-            slot.textContent = 'FULLY BOOKED'; // Replace time text with FULLY BOOKED only
             slot.style.cursor = 'not-allowed';
+            // Keep the time text, just make it disabled
         } else {
             slot.addEventListener('click', function(e) {
                 e.preventDefault();
