@@ -436,101 +436,55 @@
                     <label for="aptPhone">Phone Number</label>
                     <input type="tel" id="aptPhone" autocomplete="tel" required>
                 </div>
-                <!-- Service Selection with Expandable Time Slots -->
+                <!-- Service Selection -->
                 <div class="form-group">
-                    <label>Select Service</label>
-                    <div class="service-selection-box">
-                        <button type="button" class="service-toggle-btn" id="serviceToggleBtn" onclick="toggleServiceList()">
-                            <span id="selectedServiceText">Select a service</span>
-                            <i class="fas fa-chevron-down" id="serviceToggleIcon"></i>
-                        </button>
-                        <div class="service-selection-list" id="serviceSelectionList" style="display: none;">
-                        <div class="service-card-expandable" data-service="cleaning" data-duration="30 min-1 hr">
-                            <div class="service-card-header">
-                                <div class="service-icon">
-                                    <i class="fas fa-sparkles"></i>
-                                </div>
-                                <div class="service-info">
-                                    <h4>Teeth Cleaning</h4>
-                                    <p class="service-duration-inline">30 min-1 hr</p>
-                                </div>
-                                <span class="service-duration-right">30 min-1 hr</span>
-                                <i class="fas fa-chevron-down service-arrow"></i>
+                    <label>Select Service:</label>
+                    <div class="service-list-container">
+                        <div class="service-item" data-service="cleaning" data-duration="30 min-1 hr">
+                            <div class="service-icon">
+                                <i class="fas fa-sparkles"></i>
                             </div>
-                            <div class="service-time-content" style="display: none;">
-                                <div class="selected-service-info">Available times for Teeth Cleaning (30 min-1 hr)</div>
-                                <div class="appointment-time-grid" data-service="cleaning">
-                                    <!-- Time slots will be generated dynamically -->
-                                </div>
+                            <div class="service-details">
+                                <h4>Teeth Cleaning</h4>
+                                <span class="service-duration">30 min-1 hr</span>
                             </div>
                         </div>
-                        <div class="service-card-expandable" data-service="extraction" data-duration="30 min-2 hrs">
-                            <div class="service-card-header">
-                                <div class="service-icon">
-                                    <i class="fas fa-tooth"></i>
-                                </div>
-                                <div class="service-info">
-                                    <h4>Tooth Extraction</h4>
-                                    <p class="service-duration-inline">30 min-2 hrs</p>
-                                </div>
-                                <span class="service-duration-right">30 min-2 hrs</span>
-                                <i class="fas fa-chevron-down service-arrow"></i>
+                        <div class="service-item" data-service="extraction" data-duration="30 min-2 hrs">
+                            <div class="service-icon">
+                                <i class="fas fa-tooth"></i>
                             </div>
-                            <div class="service-time-content" style="display: none;">
-                                <div class="selected-service-info">Available times for Tooth Extraction (30 min-2 hrs)</div>
-                                <div class="appointment-time-grid" data-service="extraction">
-                                    <!-- Time slots will be generated dynamically -->
-                                </div>
+                            <div class="service-details">
+                                <h4>Tooth Extraction</h4>
+                                <span class="service-duration">30 min-2 hrs</span>
                             </div>
                         </div>
-                        <div class="service-card-expandable" data-service="filling" data-duration="30-60 min">
-                            <div class="service-card-header">
-                                <div class="service-icon">
-                                    <i class="fas fa-fill-drip"></i>
-                                </div>
-                                <div class="service-info">
-                                    <h4>Dental Filling</h4>
-                                    <p class="service-duration-inline">30-60 min</p>
-                                </div>
-                                <span class="service-duration-right">30-60 min</span>
-                                <i class="fas fa-chevron-down service-arrow"></i>
+                        <div class="service-item" data-service="filling" data-duration="30-60 min">
+                            <div class="service-icon">
+                                <i class="fas fa-fill-drip"></i>
                             </div>
-                            <div class="service-time-content" style="display: none;">
-                                <div class="selected-service-info">Available times for Dental Filling (30-60 min)</div>
-                                <div class="appointment-time-grid" data-service="filling">
-                                    <!-- Time slots will be generated dynamically -->
-                                </div>
+                            <div class="service-details">
+                                <h4>Dental Filling</h4>
+                                <span class="service-duration">30-60 min</span>
                             </div>
                         </div>
-                        <div class="service-card-expandable" data-service="denture" data-duration="1-2 hrs per visit">
-                            <div class="service-card-header">
-                                <div class="service-icon">
-                                    <i class="fas fa-teeth"></i>
-                                </div>
-                                <div class="service-info">
-                                    <h4>Denture (Pustiso)</h4>
-                                    <p class="service-duration-inline">1-2 hrs per visit</p>
-                                </div>
-                                <span class="service-duration-right">1-2 hrs per visit</span>
-                                <i class="fas fa-chevron-down service-arrow"></i>
+                        <div class="service-item" data-service="denture" data-duration="1-2 hrs per visit">
+                            <div class="service-icon">
+                                <i class="fas fa-teeth"></i>
                             </div>
-                            <div class="service-time-content" style="display: none;">
-                                <div class="selected-service-info">Available times for Denture (Pustiso) (1-2 hrs per visit)</div>
-                                <div class="appointment-time-grid" data-service="denture">
-                                    <!-- Time slots will be generated dynamically -->
-                                </div>
+                            <div class="service-details">
+                                <h4>Denture (Pustiso)</h4>
+                                <span class="service-duration">1-2 hrs per visit</span>
                             </div>
-                        </div>
                         </div>
                     </div>
                     <input type="hidden" id="aptService" required>
                     <input type="hidden" id="aptTime" required>
                 </div>
                 
-                <!-- Preferred Time Section (shown after service selection) -->
+                <!-- Select Appointment Time Section -->
                 <div class="form-group" id="preferredTimeSection" style="display: none;">
-                    <label>Preferred Time *</label>
-                    <div class="selected-service-display" id="selectedServiceDisplay"></div>
+                    <label>Select Appointment Time:</label>
+                    <div class="selected-service-info-text" id="selectedServiceInfoText"></div>
                     <div class="appointment-time-grid" id="appointmentTimeGrid">
                         <!-- Time slots will be generated dynamically -->
                     </div>

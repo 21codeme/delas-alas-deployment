@@ -1752,12 +1752,74 @@ function toggleServiceList() {
 window.toggleServiceList = toggleServiceList;
 
 function initializeServiceSelection() {
+    // Handle new service-item design
+    const serviceItems = document.querySelectorAll('.service-item');
+    
+    serviceItems.forEach(item => {
+        if (item.dataset.initialized === 'true') {
+            return;
+        }
+        
+        item.dataset.initialized = 'true';
+        
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const serviceValue = item.getAttribute('data-service');
+            const serviceName = item.querySelector('.service-details h4')?.textContent || 'Service';
+            const duration = item.getAttribute('data-duration') || '';
+            
+            console.log('Service selected:', serviceName);
+            
+            // Remove selected class from all items
+            serviceItems.forEach(i => i.classList.remove('selected'));
+            
+            // Add selected class to clicked item
+            item.classList.add('selected');
+            
+            // Set hidden input value
+            const serviceInput = document.getElementById('aptService') || 
+                                document.getElementById('newAptService') || 
+                                document.getElementById('serviceType');
+            
+            if (serviceInput) {
+                const serviceMap = {
+                    'cleaning': 'Teeth Cleaning',
+                    'extraction': 'Tooth Extraction',
+                    'filling': 'Dental Filling',
+                    'denture': 'Denture (Pustiso)'
+                };
+                serviceInput.value = serviceMap[serviceValue] || serviceValue;
+            }
+            
+            // Show Preferred Time section
+            const preferredTimeSection = document.getElementById('preferredTimeSection');
+            const appointmentTimeGrid = document.getElementById('appointmentTimeGrid');
+            const selectedServiceInfoText = document.getElementById('selectedServiceInfoText');
+            
+            if (preferredTimeSection) {
+                preferredTimeSection.style.display = 'block';
+            }
+            
+            if (selectedServiceInfoText) {
+                selectedServiceInfoText.textContent = `Available times for ${serviceName} (${duration})`;
+            }
+            
+            // Generate time slots
+            if (appointmentTimeGrid) {
+                appointmentTimeGrid.innerHTML = ''; // Clear existing
+                generateTimeSlotsForService(serviceValue, appointmentTimeGrid);
+            }
+        });
+    });
+    
+    // Also handle old service-card-expandable design for backward compatibility
     const serviceCards = document.querySelectorAll('.service-card-expandable');
     
     serviceCards.forEach(card => {
-        // Remove any existing click handlers by using a data attribute
         if (card.dataset.initialized === 'true') {
-            return; // Skip if already initialized
+            return;
         }
         
         const header = card.querySelector('.service-card-header');
@@ -1765,19 +1827,15 @@ function initializeServiceSelection() {
         const timeGrid = card.querySelector('.appointment-time-grid');
         
         if (header && timeContent) {
-            // Mark as initialized
             card.dataset.initialized = 'true';
             
             header.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 
-                console.log('Service card clicked:', card.getAttribute('data-service'));
-                
                 const isExpanded = card.classList.contains('expanded');
                 const serviceValue = card.getAttribute('data-service');
                 
-                // Close all other service cards
                 serviceCards.forEach(c => {
                     if (c !== card) {
                         c.classList.remove('expanded');
@@ -1788,23 +1846,18 @@ function initializeServiceSelection() {
                     }
                 });
                 
-                // Toggle current card
                 if (isExpanded) {
-                    // Collapse
                     card.classList.remove('expanded');
                     timeContent.style.display = 'none';
                 } else {
-                    // Expand
                     card.classList.add('expanded');
                     timeContent.style.display = 'block';
                     
-                    // Set hidden input value
                     const serviceInput = document.getElementById('aptService') || 
                                         document.getElementById('newAptService') || 
                                         document.getElementById('serviceType');
                     
                     if (serviceInput) {
-                        // Map service values to proper format
                         const serviceMap = {
                             'cleaning': 'Teeth Cleaning',
                             'extraction': 'Tooth Extraction',
@@ -1812,54 +1865,8 @@ function initializeServiceSelection() {
                             'denture': 'Denture (Pustiso)'
                         };
                         serviceInput.value = serviceMap[serviceValue] || serviceValue;
-                        console.log('Service selected:', serviceInput.value);
                     }
                     
-                    // Update button text with selected service
-                    const selectedServiceText = document.getElementById('selectedServiceText');
-                    const serviceName = card.querySelector('.service-info h4')?.textContent || 'Service selected';
-                    if (selectedServiceText) {
-                        selectedServiceText.textContent = serviceName;
-                        selectedServiceText.classList.remove('placeholder');
-                    }
-                    
-                    // Close the service list dropdown
-                    const serviceList = document.getElementById('serviceSelectionList');
-                    const toggleBtn = document.getElementById('serviceToggleBtn');
-                    if (serviceList && toggleBtn) {
-                        serviceList.style.display = 'none';
-                        toggleBtn.classList.remove('active');
-                        const toggleIcon = document.getElementById('serviceToggleIcon');
-                        if (toggleIcon) {
-                            toggleIcon.style.transform = 'rotate(0deg)';
-                        }
-                    }
-                    
-                    // Show Preferred Time section and generate time slots
-                    const preferredTimeSection = document.getElementById('preferredTimeSection');
-                    const appointmentTimeGrid = document.getElementById('appointmentTimeGrid');
-                    const selectedServiceDisplay = document.getElementById('selectedServiceDisplay');
-                    
-                    if (preferredTimeSection) {
-                        preferredTimeSection.style.display = 'block';
-                    }
-                    
-                    if (selectedServiceDisplay) {
-                        const duration = card.getAttribute('data-duration') || '';
-                        selectedServiceDisplay.innerHTML = `
-                            <div class="selected-service-badge">
-                                <i class="fas fa-check-circle"></i>
-                                <span><strong>${serviceName}</strong> ${duration ? `(${duration})` : ''}</span>
-                            </div>
-                        `;
-                    }
-                    
-                    // Generate time slots in the main time grid
-                    if (appointmentTimeGrid && appointmentTimeGrid.children.length === 0) {
-                        generateTimeSlotsForService(serviceValue, appointmentTimeGrid);
-                    }
-                    
-                    // Also generate in the card's time grid if it exists
                     if (timeGrid && timeGrid.children.length === 0) {
                         generateTimeSlotsForService(serviceValue, timeGrid);
                     }
