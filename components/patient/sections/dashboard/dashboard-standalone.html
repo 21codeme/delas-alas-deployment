@@ -3354,7 +3354,7 @@
                 if (isBooked) {
                     slot.classList.add('fully-booked');
                     slot.disabled = true;
-                    slot.textContent = 'BOOKED';
+                    slot.innerHTML = 'FULLY BOOKED'; // Remove time text completely
                     slot.style.cursor = 'not-allowed';
                 } else {
                     slot.addEventListener('click', function(e) {
