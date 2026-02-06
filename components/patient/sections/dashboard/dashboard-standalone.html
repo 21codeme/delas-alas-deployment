@@ -3419,6 +3419,9 @@
                 '17:00', '17:30', '18:00'
             ];
             
+            // Store timeSlots in timeGrid for later use (as data attribute)
+            timeGrid.setAttribute('data-time-slots', JSON.stringify(timeSlots));
+            
             timeSlots.forEach(time => {
                 const slot = document.createElement('button');
                 slot.type = 'button';
@@ -3462,8 +3465,19 @@
                         // Get duration from timeGrid
                         const durationMinutes = parseInt(timeGrid.getAttribute('data-duration-minutes') || '60');
                         
-                        // Remove selected class and blocked-by-duration class from all slots
-                        document.querySelectorAll('.time-slot').forEach(s => {
+                        // Get timeSlots array from timeGrid (fallback to closure variable)
+                        let slotsArray = timeSlots;
+                        try {
+                            const storedSlots = timeGrid.getAttribute('data-time-slots');
+                            if (storedSlots) {
+                                slotsArray = JSON.parse(storedSlots);
+                            }
+                        } catch (e) {
+                            // Use closure timeSlots array
+                        }
+                        
+                        // Remove selected class and blocked-by-duration class from all slots in this grid
+                        timeGrid.querySelectorAll('.time-slot').forEach(s => {
                             s.classList.remove('selected', 'blocked-by-duration');
                             if (!s.classList.contains('fully-booked')) {
                                 s.disabled = false;
@@ -3476,7 +3490,7 @@
                         this.classList.add('selected');
                         
                         // Block subsequent time slots based on duration
-                        const blockedSlots = getBlockedTimeSlots(time, durationMinutes, timeSlots);
+                        const blockedSlots = getBlockedTimeSlots(time, durationMinutes, slotsArray);
                         blockedSlots.forEach(blockedTime => {
                             const blockedSlot = timeGrid.querySelector(`[data-time="${blockedTime}"]`);
                             if (blockedSlot && !blockedSlot.classList.contains('fully-booked')) {

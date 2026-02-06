@@ -2165,8 +2165,8 @@ async function generateTimeSlotsForService(serviceType, timeGrid) {
                     console.log('Using closure timeSlots array');
                 }
                 
-                // Remove selected class and blocked-by-duration class from all slots
-                document.querySelectorAll('.time-slot').forEach(s => {
+                // Remove selected class and blocked-by-duration class from all slots in this grid
+                timeGrid.querySelectorAll('.time-slot').forEach(s => {
                     s.classList.remove('selected', 'blocked-by-duration');
                     if (!s.classList.contains('fully-booked')) {
                         s.disabled = false;
@@ -2181,7 +2181,8 @@ async function generateTimeSlotsForService(serviceType, timeGrid) {
                 // Block subsequent time slots based on duration
                 const blockedSlots = getBlockedTimeSlots(time, durationMinutes, slotsArray);
                 console.log('Blocked slots calculated:', blockedSlots);
-                console.log('Time slots array:', timeSlots);
+                console.log('Time slots array used:', slotsArray);
+                console.log('Duration minutes:', durationMinutes);
                 blockedSlots.forEach(blockedTime => {
                     const blockedSlot = timeGrid.querySelector(`[data-time="${blockedTime}"]`);
                     console.log('Blocking slot:', blockedTime, 'Found element:', blockedSlot);
