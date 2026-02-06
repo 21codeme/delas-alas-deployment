@@ -2026,7 +2026,9 @@ function getBlockedTimeSlots(selectedTime, durationMinutes, allTimeSlots) {
         const timeTotalMinutes = hour * 60 + min;
         
         // Block slots that fall within the duration (excluding the selected slot itself)
-        if (timeTotalMinutes > selectedTotalMinutes && timeTotalMinutes < endTimeMinutes) {
+        // Use <= to include the end time slot as well (e.g., if appointment is 9:00-10:00, block 9:30 and 10:00)
+        // This ensures no overlapping appointments
+        if (timeTotalMinutes > selectedTotalMinutes && timeTotalMinutes <= endTimeMinutes) {
             blocked.push(time);
         }
     }
