@@ -1635,6 +1635,23 @@ p {
     text-align: center;
 }
 
+/* Blocked by duration styling */
+.time-slot.blocked-by-duration {
+    background-color: #fef3c7;
+    color: #92400e;
+    cursor: not-allowed;
+    border-color: #fbbf24;
+    opacity: 0.5;
+    position: relative;
+}
+
+.time-slot.blocked-by-duration:hover {
+    background-color: #fef3c7;
+    color: #92400e;
+    cursor: not-allowed;
+    transform: none;
+}
+
 /* Responsive Design */
 @media (min-width: 768px) {
     .appointment-time-grid {

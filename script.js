@@ -1966,6 +1966,74 @@ async function getBookedTimeSlots(appointmentDate, dentistId) {
     }
 }
 
+// Helper function to parse duration string and convert to minutes
+function parseDurationToMinutes(durationString) {
+    if (!durationString) return 60; // Default to 60 minutes
+    
+    const duration = durationString.toLowerCase().trim();
+    
+    // Handle "30 min-1 hr" format - take the maximum (1 hr = 60 min)
+    if (duration.includes('min-') && duration.includes('hr')) {
+        const parts = duration.split('-');
+        if (parts.length === 2) {
+            const secondPart = parts[1].trim();
+            if (secondPart.includes('hr')) {
+                const hours = parseInt(secondPart.match(/\d+/)?.[0] || '1');
+                return hours * 60; // Return in minutes
+            }
+        }
+    }
+    
+    // Handle "30-60 min" format - take the maximum
+    if (duration.includes('-') && duration.includes('min')) {
+        const parts = duration.split('-');
+        if (parts.length === 2) {
+            const maxMinutes = parseInt(parts[1].trim().match(/\d+/)?.[0] || '60');
+            return maxMinutes;
+        }
+    }
+    
+    // Handle "1-2 hrs per visit" format - take the maximum
+    if (duration.includes('hrs') || duration.includes('hr')) {
+        const hoursMatch = duration.match(/(\d+)\s*-\s*(\d+)\s*hrs?/);
+        if (hoursMatch) {
+            const maxHours = parseInt(hoursMatch[2] || hoursMatch[1] || '1');
+            return maxHours * 60;
+        }
+        // Single hour value
+        const singleHour = parseInt(duration.match(/(\d+)\s*hrs?/)?.[1] || '1');
+        return singleHour * 60;
+    }
+    
+    // Handle single minute value
+    const minutesMatch = duration.match(/(\d+)\s*min/);
+    if (minutesMatch) {
+        return parseInt(minutesMatch[1] || '60');
+    }
+    
+    return 60; // Default fallback
+}
+
+// Helper function to get time slots that should be blocked based on selected time and duration
+function getBlockedTimeSlots(selectedTime, durationMinutes, allTimeSlots) {
+    const blocked = [];
+    const [selectedHour, selectedMin] = selectedTime.split(':').map(Number);
+    const selectedTotalMinutes = selectedHour * 60 + selectedMin;
+    const endTimeMinutes = selectedTotalMinutes + durationMinutes;
+    
+    for (const time of allTimeSlots) {
+        const [hour, min] = time.split(':').map(Number);
+        const timeTotalMinutes = hour * 60 + min;
+        
+        // Block slots that fall within the duration (excluding the selected slot itself)
+        if (timeTotalMinutes > selectedTotalMinutes && timeTotalMinutes < endTimeMinutes) {
+            blocked.push(time);
+        }
+    }
+    
+    return blocked;
+}
+
 // Generate time slots for a specific service card
 async function generateTimeSlotsForService(serviceType, timeGrid) {
     if (!timeGrid) return;
@@ -1984,6 +2052,22 @@ async function generateTimeSlotsForService(serviceType, timeGrid) {
     if (appointmentDate && dentistId) {
         bookedTimes = await getBookedTimeSlots(appointmentDate, dentistId);
     }
+    
+    // Get selected service duration
+    // Try service-item first, then service-card-expandable
+    let selectedServiceItem = document.querySelector('.service-item.selected');
+    if (!selectedServiceItem) {
+        // Check if timeGrid is inside a service-card-expandable
+        const serviceCard = timeGrid.closest('.service-card-expandable');
+        if (serviceCard) {
+            selectedServiceItem = serviceCard;
+        }
+    }
+    const durationString = selectedServiceItem?.getAttribute('data-duration') || '';
+    const durationMinutes = parseDurationToMinutes(durationString);
+    
+    // Store duration in timeGrid for later use
+    timeGrid.setAttribute('data-duration-minutes', durationMinutes);
     
     // Define time slots (8:00 AM to 6:00 PM, 30-minute intervals)
     const timeSlots = [
@@ -2030,18 +2114,40 @@ async function generateTimeSlotsForService(serviceType, timeGrid) {
                 e.preventDefault();
                 e.stopPropagation();
                 
-                // Don't allow clicking if already booked
-                if (this.classList.contains('fully-booked') || this.disabled) {
+                // Don't allow clicking if already booked or blocked
+                if (this.classList.contains('fully-booked') || this.classList.contains('blocked-by-duration') || this.disabled) {
                     return;
                 }
                 
                 console.log('Time slot clicked:', time);
                 
-                // Remove selected class from all slots
-                document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+                // Get duration from timeGrid
+                const durationMinutes = parseInt(timeGrid.getAttribute('data-duration-minutes') || '60');
+                
+                // Remove selected class and blocked-by-duration class from all slots
+                document.querySelectorAll('.time-slot').forEach(s => {
+                    s.classList.remove('selected', 'blocked-by-duration');
+                    if (!s.classList.contains('fully-booked')) {
+                        s.disabled = false;
+                        s.style.cursor = 'pointer';
+                        s.style.opacity = '1';
+                    }
+                });
                 
                 // Add selected class to clicked slot
                 this.classList.add('selected');
+                
+                // Block subsequent time slots based on duration
+                const blockedSlots = getBlockedTimeSlots(time, durationMinutes, timeSlots);
+                blockedSlots.forEach(blockedTime => {
+                    const blockedSlot = timeGrid.querySelector(`[data-time="${blockedTime}"]`);
+                    if (blockedSlot && !blockedSlot.classList.contains('fully-booked')) {
+                        blockedSlot.classList.add('blocked-by-duration');
+                        blockedSlot.disabled = true;
+                        blockedSlot.style.cursor = 'not-allowed';
+                        blockedSlot.style.opacity = '0.5';
+                    }
+                });
                 
                 // Set hidden input value
                 const timeInput = document.getElementById('aptTime') || 
