@@ -1968,18 +1968,26 @@ async function getBookedTimeSlots(appointmentDate, dentistId) {
 
 // Helper function to parse duration string and convert to minutes
 function parseDurationToMinutes(durationString) {
-    if (!durationString) return 60; // Default to 60 minutes
+    if (!durationString) {
+        console.log('⚠️ No duration string provided, using default 60 minutes');
+        return 60; // Default to 60 minutes
+    }
     
     const duration = durationString.toLowerCase().trim();
+    console.log('📏 Parsing duration:', durationString, '->', duration);
     
     // Handle "30 min-1 hr" format - take the maximum (1 hr = 60 min)
     if (duration.includes('min-') && duration.includes('hr')) {
         const parts = duration.split('-');
+        console.log('  Split by "-":', parts);
         if (parts.length === 2) {
             const secondPart = parts[1].trim();
+            console.log('  Second part:', secondPart);
             if (secondPart.includes('hr')) {
                 const hours = parseInt(secondPart.match(/\d+/)?.[0] || '1');
-                return hours * 60; // Return in minutes
+                const result = hours * 60;
+                console.log('  ✅ Parsed as', hours, 'hour(s) =', result, 'minutes');
+                return result; // Return in minutes
             }
         }
     }
@@ -2021,6 +2029,14 @@ function getBlockedTimeSlots(selectedTime, durationMinutes, allTimeSlots) {
     const selectedTotalMinutes = selectedHour * 60 + selectedMin;
     const endTimeMinutes = selectedTotalMinutes + durationMinutes;
     
+    console.log('🔍 getBlockedTimeSlots called:', {
+        selectedTime,
+        durationMinutes,
+        selectedTotalMinutes,
+        endTimeMinutes,
+        allTimeSlotsLength: allTimeSlots.length
+    });
+    
     for (const time of allTimeSlots) {
         const [hour, min] = time.split(':').map(Number);
         const timeTotalMinutes = hour * 60 + min;
@@ -2028,11 +2044,14 @@ function getBlockedTimeSlots(selectedTime, durationMinutes, allTimeSlots) {
         // Block slots that fall within the duration (excluding the selected slot itself)
         // Use <= to include the end time slot as well (e.g., if appointment is 9:00-10:00, block 9:30 and 10:00)
         // This ensures no overlapping appointments
-        if (timeTotalMinutes > selectedTotalMinutes && timeTotalMinutes <= endTimeMinutes) {
+        const shouldBlock = timeTotalMinutes > selectedTotalMinutes && timeTotalMinutes <= endTimeMinutes;
+        if (shouldBlock) {
             blocked.push(time);
+            console.log(`  ✅ Blocking ${time} (${timeTotalMinutes} min, range: ${selectedTotalMinutes} - ${endTimeMinutes})`);
         }
     }
     
+    console.log('📋 Total blocked slots:', blocked);
     return blocked;
 }
 
@@ -2066,10 +2085,13 @@ async function generateTimeSlotsForService(serviceType, timeGrid) {
         }
     }
     const durationString = selectedServiceItem?.getAttribute('data-duration') || '';
+    console.log('🔍 Service item found:', selectedServiceItem, 'Duration string:', durationString);
     const durationMinutes = parseDurationToMinutes(durationString);
+    console.log('📊 Parsed duration:', durationMinutes, 'minutes');
     
     // Store duration in timeGrid for later use
     timeGrid.setAttribute('data-duration-minutes', durationMinutes);
+    console.log('💾 Stored duration in timeGrid:', timeGrid.getAttribute('data-duration-minutes'));
     
     // Define time slots (8:00 AM to 6:00 PM, 30-minute intervals)
     const timeSlots = [
@@ -2078,6 +2100,9 @@ async function generateTimeSlotsForService(serviceType, timeGrid) {
         '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
         '17:00', '17:30', '18:00'
     ];
+    
+    // Store timeSlots in timeGrid for later use (as data attribute)
+    timeGrid.setAttribute('data-time-slots', JSON.stringify(timeSlots));
     
     // Create time slot buttons
     timeSlots.forEach(time => {
@@ -2125,6 +2150,20 @@ async function generateTimeSlotsForService(serviceType, timeGrid) {
                 
                 // Get duration from timeGrid
                 const durationMinutes = parseInt(timeGrid.getAttribute('data-duration-minutes') || '60');
+                console.log('Duration from timeGrid:', durationMinutes, 'minutes');
+                console.log('Selected time:', time);
+                
+                // Get timeSlots array from timeGrid (fallback to closure variable)
+                let slotsArray = timeSlots;
+                try {
+                    const storedSlots = timeGrid.getAttribute('data-time-slots');
+                    if (storedSlots) {
+                        slotsArray = JSON.parse(storedSlots);
+                        console.log('Using stored timeSlots from data attribute');
+                    }
+                } catch (e) {
+                    console.log('Using closure timeSlots array');
+                }
                 
                 // Remove selected class and blocked-by-duration class from all slots
                 document.querySelectorAll('.time-slot').forEach(s => {
@@ -2140,14 +2179,18 @@ async function generateTimeSlotsForService(serviceType, timeGrid) {
                 this.classList.add('selected');
                 
                 // Block subsequent time slots based on duration
-                const blockedSlots = getBlockedTimeSlots(time, durationMinutes, timeSlots);
+                const blockedSlots = getBlockedTimeSlots(time, durationMinutes, slotsArray);
+                console.log('Blocked slots calculated:', blockedSlots);
+                console.log('Time slots array:', timeSlots);
                 blockedSlots.forEach(blockedTime => {
                     const blockedSlot = timeGrid.querySelector(`[data-time="${blockedTime}"]`);
+                    console.log('Blocking slot:', blockedTime, 'Found element:', blockedSlot);
                     if (blockedSlot && !blockedSlot.classList.contains('fully-booked')) {
                         blockedSlot.classList.add('blocked-by-duration');
                         blockedSlot.disabled = true;
                         blockedSlot.style.cursor = 'not-allowed';
                         blockedSlot.style.opacity = '0.5';
+                        console.log('Successfully blocked:', blockedTime);
                     }
                 });
                 
