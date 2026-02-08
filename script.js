@@ -1955,7 +1955,8 @@ function timeToMinutes(timeStr) {
 
 // Get booked time slots for a specific date and dentist (expanded by service duration)
 async function getBookedTimeSlots(appointmentDate, dentistId) {
-    if (!appointmentDate || !dentistId) return [];
+    const dateNorm = (appointmentDate || '').trim().substring(0, 10);
+    if (!dateNorm || !dentistId) return [];
     const ALL_SLOTS = [
         '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
         '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
@@ -1965,7 +1966,8 @@ async function getBookedTimeSlots(appointmentDate, dentistId) {
     try {
         const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
-        const url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${appointmentDate}&dentist_id=eq.${dentistId}&status=in.(pending,confirmed)&select=appointment_time,status,service_type`;
+        const orFilter = `(dentist_id.eq.${dentistId},confirmed_by_dentist_id.eq.${dentistId})`;
+        const url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${dateNorm}&or=${orFilter}&status=in.(pending,confirmed)&select=appointment_time,status,service_type`;
         const response = await fetch(url, {
             headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
         });
@@ -1980,7 +1982,7 @@ async function getBookedTimeSlots(appointmentDate, dentistId) {
                 const endMinutes = startMinutes + durationMinutes;
                 for (const slot of ALL_SLOTS) {
                     const slotMinutes = timeToMinutes(slot);
-                    if (slotMinutes >= startMinutes && slotMinutes < endMinutes) bookedSet.add(slot);
+                    if (slotMinutes >= startMinutes && slotMinutes <= endMinutes) bookedSet.add(slot);
                 }
             }
             return Array.from(bookedSet);

@@ -1164,7 +1164,7 @@
                     }
                 }
 
-                // Update appointment status to confirmed with new date/time
+                // Update appointment with new date/time and status 'rescheduled' (patient approved)
                 const response = await fetch(`${SUPABASE_URL}/rest/v1/appointments?id=eq.${appointmentId}`, {
                     method: 'PATCH',
                     headers: {
@@ -1176,7 +1176,7 @@
                     body: JSON.stringify({
                         appointment_date: newDate,
                         appointment_time: newTime,
-                        status: 'confirmed',
+                        status: 'rescheduled',
                         updated_at: new Date().toISOString()
                     })
                 });

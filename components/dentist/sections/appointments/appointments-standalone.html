@@ -480,6 +480,11 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             color: #721c24;
         }
 
+        .status-rescheduled {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
         .qr-code {
             width: 40px;
             height: 40px;
@@ -929,6 +934,16 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             text-transform: uppercase;
         }
 
+        .status-rescheduled {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
         /* QR Code Table Cell Styles */
         .qr-code-cell {
             display: flex;
@@ -1116,6 +1131,7 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                         <select id="statusFilter" onchange="filterAppointments()">
                             <option value="all">All Status</option>
                             <option value="confirmed">Confirmed</option>
+                            <option value="rescheduled">Rescheduled</option>
                             <option value="pending">Pending</option>
                             <option value="completed">Completed</option>
                             <option value="cancelled">Cancelled</option>
@@ -1230,6 +1246,7 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                         <select id="editStatus" required>
                             <option value="pending">Pending</option>
                             <option value="confirmed">Confirmed</option>
+                            <option value="rescheduled">Rescheduled</option>
                             <option value="completed">Completed</option>
                             <option value="cancelled">Cancelled</option>
                         </select>
@@ -2352,71 +2369,66 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             }
         }
 
-        // Get booked time slots for a specific date (all dentists)
+        // Service type (as stored in DB) -> duration in minutes (same as patient)
+        function getDurationMinutesForServiceType(serviceType) {
+            if (!serviceType) return 30; // default 30 min so at least start+next slot blocked
+            const s = (serviceType + '').toLowerCase();
+            if (s.includes('cleaning')) return 60;
+            if (s.includes('extraction')) return 120;
+            if (s.includes('filling')) return 60;
+            if (s.includes('denture') || s.includes('pustiso')) return 120;
+            return 60;
+        }
+
+        // Parse time string (HH:MM or HH:MM:SS) to total minutes
+        function timeToMinutes(timeStr) {
+            if (!timeStr) return 0;
+            const parts = (timeStr + '').trim().split(':');
+            const h = parseInt(parts[0], 10) || 0;
+            const m = parseInt(parts[1], 10) || 0;
+            return h * 60 + m;
+        }
+
+        // Get booked time slots for a specific date (all dentists), expanded by service duration (same as patient)
         async function getBookedTimeSlotsForEdit(appointmentDate, dentistId, excludeAppointmentId = null) {
-            if (!appointmentDate) {
-                return [];
-            }
-            
+            if (!appointmentDate) return [];
+            const dateNorm = (appointmentDate + '').trim().substring(0, 10);
+            const ALL_SLOTS = [
+                '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+                '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
+                '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
+                '17:00', '17:30', '18:00'
+            ];
             try {
                 const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
                 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
-                
-                // Build query - get ALL appointments for the date (not just for specific dentist)
-                // Include all statuses except cancelled and archived
-                // Exclude current appointment if rescheduling
-                let url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${appointmentDate}&status=not.in.(cancelled,archived)&select=id,appointment_time,status,dentist_id,patient_name`;
-                if (excludeAppointmentId) {
-                    url += `&id=neq.${excludeAppointmentId}`;
-                }
-                
-                console.log('🔍 Fetching booked slots from URL:', url);
-                
+                // Use in.(...) so we get pending, confirmed, completed, rescheduled (same appointments patient sees)
+                let url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${encodeURIComponent(dateNorm)}&status=in.(pending,confirmed,completed,rescheduled)&select=id,appointment_time,status,dentist_id,patient_name,service_type`;
+                if (excludeAppointmentId) url += `&id=neq.${encodeURIComponent(excludeAppointmentId)}`;
                 const response = await fetch(url, {
-                    headers: {
-                        'apikey': SUPABASE_KEY,
-                        'Authorization': `Bearer ${SUPABASE_KEY}`
-                    }
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
                 });
-                
                 if (response.ok) {
                     const appointments = await response.json();
-                    console.log('📅 Raw appointments response:', appointments);
-                    
-                    // Handle both array and object responses
                     const appointmentsArray = Array.isArray(appointments) ? appointments : (appointments.data || []);
-                    
-                    console.log('📅 Raw appointments array:', appointmentsArray);
-                    console.log('📅 Total appointments found:', appointmentsArray.length);
-                    
-                    // Get all booked times (keep all, even duplicates - multiple appointments can have same time)
-                    const bookedTimes = [];
-                    appointmentsArray.forEach(apt => {
-                        const time = apt.appointment_time || apt.time || '';
-                        if (time && time.trim() !== '') {
-                            bookedTimes.push(time);
-                            console.log('📅 Found booked time:', time, 'from appointment:', apt.id, 'status:', apt.status);
-                        } else {
-                            console.warn('⚠️ Appointment with no time:', apt.id, apt);
+                    const bookedSet = new Set();
+                    for (const apt of appointmentsArray) {
+                        const startTime = apt.appointment_time || apt.time || '';
+                        if (!startTime || !startTime.trim()) continue;
+                        const startMinutes = timeToMinutes(startTime);
+                        const durationMinutes = getDurationMinutesForServiceType(apt.service_type);
+                        const endMinutes = startMinutes + durationMinutes;
+                        for (const slot of ALL_SLOTS) {
+                            const slotMinutes = timeToMinutes(slot);
+                            // Include end slot (e.g. 8:00-8:30 blocks both 8:00 and 8:30)
+                            if (slotMinutes >= startMinutes && slotMinutes <= endMinutes) bookedSet.add(slot);
                         }
-                    });
-                    
-                    console.log('📅 All booked time slots for date', appointmentDate, ':', bookedTimes);
-                    console.log('📅 Unique booked times:', [...new Set(bookedTimes)]);
-                    console.log('📅 Appointment details:', appointmentsArray.map(apt => ({
-                        id: apt.id,
-                        time: apt.appointment_time || apt.time,
-                        status: apt.status,
-                        dentist_id: apt.dentist_id,
-                        patient_name: apt.patient_name
-                    })));
-                    
-                    return bookedTimes;
-                } else {
-                    const errorText = await response.text();
-                    console.error('❌ Failed to check booked time slots:', response.status, errorText);
-                    return [];
+                    }
+                    return Array.from(bookedSet);
                 }
+                const errorText = await response.text();
+                console.error('❌ Failed to check booked time slots:', response.status, errorText);
+                return [];
             } catch (error) {
                 console.error('❌ Error checking booked time slots:', error);
                 return [];
@@ -2507,16 +2519,39 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             // Clear existing slots
             timeGrid.innerHTML = '';
             
-            // Get booked time slots (all dentists for this date)
-            const bookedTimes = await getBookedTimeSlotsForEdit(appointmentDate, dentistId, excludeAppointmentId);
+            // Get booked slots from other appointments (exclude current so we can still select current time)
+            const otherBookedTimes = await getBookedTimeSlotsForEdit(appointmentDate, dentistId, excludeAppointmentId);
+            // Add current appointment's slots so they show as booked (same as patient) but keep selected time clickable
+            let bookedTimes = [...otherBookedTimes];
+            if (excludeAppointmentId && selectedTime) {
+                const serviceSelect = document.getElementById('editService');
+                const currentService = serviceSelect?.value || '';
+                const serviceDurationMap = {
+                    'Teeth Cleaning': 60, 'Tooth Extraction': 120, 'Dental Filling': 60, 'Denture (Pustiso)': 120
+                };
+                const durMin = serviceDurationMap[currentService] || getDurationMinutesForServiceType(currentService) || 30;
+                const startMin = timeToMinutes(selectedTime);
+                const endMin = startMin + durMin;
+                const allSlots = [
+                    '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+                    '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
+                    '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
+                    '17:00', '17:30', '18:00'
+                ];
+                allSlots.forEach(slot => {
+                    const slotMin = timeToMinutes(slot);
+                    if (slotMin >= startMin && slotMin <= endMin) bookedTimes.push(slot);
+                });
+                bookedTimes = [...new Set(bookedTimes)];
+            }
             
-            // Update info text
+            // Update info text (booked = full duration per service, same as patient sees)
             if (bookedTimes.length > 0) {
-                timeInfo.textContent = `⚠️ ${bookedTimes.length} time slot(s) already booked for this date (all dentists)`;
-                timeInfo.style.color = '#ff6b6b';
+                timeInfo.textContent = `⚠️ ${bookedTimes.length} slot(s) booked for this date (all dentists, includes full service duration — same as patient view)`;
+                timeInfo.style.color = '#c92a2a';
             } else {
                 timeInfo.textContent = '✅ All time slots available for this date';
-                timeInfo.style.color = '#51cf66';
+                timeInfo.style.color = '#2f9e44';
             }
             
             // Get selected service duration
@@ -2587,14 +2622,18 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                     return matches;
                 });
                 
-                // Check if this is the selected time
+                // Check if this is the selected time (current appointment - keep it selectable)
                 let normalizedSelected = '';
                 if (selectedTime) {
-                    normalizedSelected = selectedTime.substring(0, 5);
+                    normalizedSelected = String(selectedTime).trim().substring(0, 5);
+                    if (normalizedSelected.length === 4) normalizedSelected = '0' + normalizedSelected;
                 }
-                const isSelected = normalizedSelected === time.substring(0, 5);
+                const normTime = time.substring(0, 5);
+                const isSelected = normalizedSelected === normTime;
+                // If slot is booked but it's the current appointment's start, show as selected not fully-booked
+                const isBookedAndNotSelected = isBooked && !isSelected;
                 
-                if (isBooked) {
+                if (isBookedAndNotSelected) {
                     slot.classList.add('fully-booked');
                     slot.disabled = true;
                     slot.style.cursor = 'not-allowed';

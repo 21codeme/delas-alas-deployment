@@ -2607,7 +2607,10 @@
                     '17:00', '17:30', '18:00'
                 ];
                 
-                const url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${appointmentDate}&dentist_id=eq.${dentistId}&status=in.(pending,confirmed)&select=appointment_time,status,service_type`;
+                const dateNorm = (appointmentDate || '').trim().substring(0, 10);
+                if (!dateNorm || !dentistId) return [];
+                const orFilter = `(dentist_id.eq.${dentistId},confirmed_by_dentist_id.eq.${dentistId})`;
+                const url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${dateNorm}&or=${orFilter}&status=in.(pending,confirmed)&select=appointment_time,status,service_type`;
                 
                 const response = await fetch(url, {
                     headers: {
@@ -2629,7 +2632,7 @@
                         const endMinutes = startMinutes + durationMinutes;
                         for (const slot of ALL_SLOTS) {
                             const slotMinutes = timeToMinutes(slot);
-                            if (slotMinutes >= startMinutes && slotMinutes < endMinutes) {
+                            if (slotMinutes >= startMinutes && slotMinutes <= endMinutes) {
                                 bookedSet.add(slot);
                             }
                         }

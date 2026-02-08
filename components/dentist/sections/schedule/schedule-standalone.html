@@ -701,7 +701,7 @@
                         id: a.id,
                         date: a.appointment_date,
                         time: a.appointment_time || '10:00:00',
-                        status: (a.status === 'confirmed' || a.status === 'pending' || a.status === 'completed') ? 'booked' : 'available',
+                        status: (a.status === 'confirmed' || a.status === 'rescheduled' || a.status === 'pending' || a.status === 'completed') ? 'booked' : 'available',
                         _srcStatus: a.status || 'pending',
                         patientName: a.patient_name || 'Patient',
                         service: a.service_type || 'General',
@@ -857,7 +857,7 @@
                 });
                 
                 const confirmedCount = dayAppointments.filter(slot => 
-                    slot.status === 'booked' && (slot._srcStatus === 'confirmed' || slot._srcStatus === 'completed')
+                    slot.status === 'booked' && (slot._srcStatus === 'confirmed' || slot._srcStatus === 'rescheduled' || slot._srcStatus === 'completed')
                 ).length;
                 
                 const pendingCount = dayAppointments.filter(slot => 

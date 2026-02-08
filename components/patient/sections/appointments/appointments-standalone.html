@@ -1981,7 +1981,13 @@
                     '17:00', '17:30', '18:00'
                 ];
                 
-                const url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${appointmentDate}&dentist_id=eq.${dentistId}&status=in.(pending,confirmed)&select=appointment_time,status,service_type`;
+                // Normalize date to YYYY-MM-DD (in case of datetime string)
+                const dateNorm = (appointmentDate || '').trim().substring(0, 10);
+                if (!dateNorm || !dentistId) return [];
+                
+                // Include both dentist_id and confirmed_by_dentist_id so we see all bookings for this dentist
+                const orFilter = `(dentist_id.eq.${dentistId},confirmed_by_dentist_id.eq.${dentistId})`;
+                const url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${dateNorm}&or=${orFilter}&status=in.(pending,confirmed)&select=appointment_time,status,service_type`;
                 
                 const response = await fetch(url, {
                     headers: {
@@ -1992,10 +1998,10 @@
                 
                 if (response.ok) {
                     const appointments = await response.json();
-                    window.currentBookedAppointments = appointments;
+                    window.currentBookedAppointments = appointments || [];
                     
                     const bookedSet = new Set();
-                    for (const apt of appointments) {
+                    for (const apt of (appointments || [])) {
                         const startTime = apt.appointment_time || '';
                         if (!startTime) continue;
                         const startMinutes = timeToMinutes(startTime);
@@ -2003,7 +2009,7 @@
                         const endMinutes = startMinutes + durationMinutes;
                         for (const slot of ALL_SLOTS) {
                             const slotMinutes = timeToMinutes(slot);
-                            if (slotMinutes >= startMinutes && slotMinutes < endMinutes) {
+                            if (slotMinutes >= startMinutes && slotMinutes <= endMinutes) {
                                 bookedSet.add(slot);
                             }
                         }

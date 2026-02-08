@@ -848,7 +848,7 @@
                 const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
                 const weekAhead = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
                 
-                const appointments = await callSupabaseAPI('GET', `appointments?appointment_date=gte.${weekAgo}&appointment_date=lte.${weekAhead}&status=neq.confirmed&select=id,patient_name,service_type,appointment_date,appointment_time,status`);
+                const appointments = await callSupabaseAPI('GET', `appointments?appointment_date=gte.${weekAgo}&appointment_date=lte.${weekAhead}&status=not.in.(confirmed,rescheduled)&select=id,patient_name,service_type,appointment_date,appointment_time,status`);
                 
                 // Load unread messages for the current dentist
                 const messages = await callSupabaseAPI('GET', `messages?receiver_id=eq.${user.id}&is_read=eq.false&select=id,sender_id,content,created_at`);
@@ -1211,7 +1211,7 @@
                 const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
                 const weekAhead = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
                 
-                const confirmedAppointments = await callSupabaseAPI('GET', `appointments?appointment_date=gte.${weekAgo}&appointment_date=lte.${weekAhead}&status=eq.confirmed&select=id,patient_name,service_type,appointment_date,appointment_time,status`);
+                const confirmedAppointments = await callSupabaseAPI('GET', `appointments?appointment_date=gte.${weekAgo}&appointment_date=lte.${weekAhead}&status=in.(confirmed,rescheduled)&select=id,patient_name,service_type,appointment_date,appointment_time,status`);
                 
                 if (Array.isArray(confirmedAppointments) && confirmedAppointments.length > 0) {
                     // '📅 Found', confirmedAppointments.length, 'confirmed appointments');
@@ -1225,24 +1225,25 @@
                         const isPast = appointmentDate < today;
                         
                         let title, priority;
+                        const isRescheduled = apt.status === 'rescheduled';
                         if (isToday) {
-                            title = 'Confirmed Appointment Today';
+                            title = isRescheduled ? 'Rescheduled Appointment Today' : 'Confirmed Appointment Today';
                             priority = 'high';
                         } else if (isTomorrow) {
-                            title = 'Confirmed Appointment Tomorrow';
+                            title = isRescheduled ? 'Rescheduled Appointment Tomorrow' : 'Confirmed Appointment Tomorrow';
                             priority = 'normal';
                         } else if (isPast) {
-                            title = 'Past Confirmed Appointment';
+                            title = isRescheduled ? 'Past Rescheduled Appointment' : 'Past Confirmed Appointment';
                             priority = 'low';
                         } else {
-                            title = 'Upcoming Confirmed Appointment';
+                            title = isRescheduled ? 'Upcoming Rescheduled Appointment' : 'Upcoming Confirmed Appointment';
                             priority = 'normal';
                         }
                         
                         await createNotification({
                             type: 'schedule',
                             title: title,
-                            message: `${apt.patient_name} has a confirmed appointment for ${apt.service_type} on ${apt.appointment_date} at ${apt.appointment_time}`,
+                            message: `${apt.patient_name} has a ${isRescheduled ? 'rescheduled' : 'confirmed'} appointment for ${apt.service_type} on ${apt.appointment_date} at ${apt.appointment_time}`,
                             data: {
                                 appointment_id: apt.id,
                                 patient_name: apt.patient_name,
@@ -1420,8 +1421,8 @@
                 }
                 
                 // Load PENDING appointments for today and tomorrow (not confirmed ones)
-                const todayAppointments = await callSupabaseAPI('GET', `appointments?appointment_date=eq.${today}&status=neq.confirmed&select=id,patient_name,service_type,appointment_time,status`);
-                const tomorrowAppointments = await callSupabaseAPI('GET', `appointments?appointment_date=eq.${tomorrow}&status=neq.confirmed&select=id,patient_name,service_type,appointment_time,status`);
+                const todayAppointments = await callSupabaseAPI('GET', `appointments?appointment_date=eq.${today}&status=not.in.(confirmed,rescheduled)&select=id,patient_name,service_type,appointment_time,status`);
+                const tomorrowAppointments = await callSupabaseAPI('GET', `appointments?appointment_date=eq.${tomorrow}&status=not.in.(confirmed,rescheduled)&select=id,patient_name,service_type,appointment_time,status`);
                 
                 // Create notifications for today's appointments
                 if (Array.isArray(todayAppointments) && todayAppointments.length > 0) {
