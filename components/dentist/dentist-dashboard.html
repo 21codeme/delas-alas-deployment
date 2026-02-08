@@ -513,7 +513,7 @@
             } else if (event.data && event.data.action === 'updateProfilePicture') {
                 updateSidebarProfilePicture(event.data.imageData);
             } else if (event.data && event.data.action === 'updateNotificationBadge') {
-                updateNotificationBadge();
+                loadNotifications();
             } else if (event.data && event.data.action === 'createConfirmedAppointmentNotification') {
                 createConfirmedAppointmentNotification(event.data.appointment);
             } else if (event.data && event.data.action === 'createMessageNotification') {
