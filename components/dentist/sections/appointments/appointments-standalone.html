@@ -2265,6 +2265,14 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                     alert('There are no appointments to delete.');
                     return;
                 }
+                const appointmentIds = allIds.map(r => r.id).filter(Boolean);
+                let notifDeleted = 0;
+                try {
+                    const notifResult = await callSupabaseAPI('POST', 'rpc/delete_notifications_by_appointment_ids', { p_appointment_ids: appointmentIds });
+                    notifDeleted = typeof notifResult === 'number' ? notifResult : 0;
+                } catch (e) {
+                    console.warn('Could not delete related notifications (run database/DELETE_NOTIFICATIONS_BY_APPOINTMENT_IDS.sql in Supabase if needed):', e);
+                }
                 let deleted = 0;
                 for (const row of allIds) {
                     const id = row.id;
@@ -2278,7 +2286,12 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                     } catch (e) { console.error('Delete failed for', id, e); }
                 }
                 await loadAppointments();
-                alert(deleted === allIds.length ? `All ${deleted} appointment(s) have been deleted. Patients will see no booked schedules.` : `Deleted ${deleted} of ${allIds.length} appointment(s). Check console for errors.`);
+                if (notifDeleted > 0 && window.parent && window.parent !== window && typeof window.parent.loadNotifications === 'function') {
+                    window.parent.loadNotifications();
+                }
+                let msg = deleted === allIds.length ? `All ${deleted} appointment(s) have been deleted. Patients will see no booked schedules.` : `Deleted ${deleted} of ${allIds.length} appointment(s). Check console for errors.`;
+                if (notifDeleted > 0) msg += `\n\n${notifDeleted} related notification(s) were also removed.`;
+                alert(msg);
             } catch (err) {
                 console.error('Delete all appointments error:', err);
                 alert('Failed to delete appointments. If you see a 403 error, run the SQL policy in database/ALLOW_DENTIST_DELETE_APPOINTMENTS.sql in Supabase.');
