@@ -1933,34 +1933,60 @@ function initializeServiceSelection() {
     });
 }
 
-// Get booked time slots for a specific date and dentist
+// Service type (as stored in DB) -> duration in minutes
+function getDurationMinutesForServiceType(serviceType) {
+    if (!serviceType) return 60;
+    const s = (serviceType + '').toLowerCase();
+    if (s.includes('cleaning')) return 60;
+    if (s.includes('extraction')) return 120;
+    if (s.includes('filling')) return 60;
+    if (s.includes('denture') || s.includes('pustiso')) return 120;
+    return 60;
+}
+
+// Parse time string (HH:MM or HH:MM:SS) to total minutes
+function timeToMinutes(timeStr) {
+    if (!timeStr) return 0;
+    const parts = (timeStr + '').trim().split(':');
+    const h = parseInt(parts[0], 10) || 0;
+    const m = parseInt(parts[1], 10) || 0;
+    return h * 60 + m;
+}
+
+// Get booked time slots for a specific date and dentist (expanded by service duration)
 async function getBookedTimeSlots(appointmentDate, dentistId) {
-    if (!appointmentDate || !dentistId) {
-        return [];
-    }
-    
+    if (!appointmentDate || !dentistId) return [];
+    const ALL_SLOTS = [
+        '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+        '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
+        '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
+        '17:00', '17:30', '18:00'
+    ];
     try {
         const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
-        
-        const url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${appointmentDate}&dentist_id=eq.${dentistId}&status=in.(pending,confirmed)&select=appointment_time,status`;
-        
+        const url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${appointmentDate}&dentist_id=eq.${dentistId}&status=in.(pending,confirmed)&select=appointment_time,status,service_type`;
         const response = await fetch(url, {
-            headers: {
-                'apikey': SUPABASE_KEY,
-                'Authorization': `Bearer ${SUPABASE_KEY}`
-            }
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
         });
-        
         if (response.ok) {
             const appointments = await response.json();
-            const bookedTimes = appointments.map(apt => apt.appointment_time || '').filter(time => time);
-            console.log('📅 Booked time slots:', bookedTimes);
-            return bookedTimes;
-        } else {
-            console.error('❌ Failed to check booked time slots:', response.status);
-            return [];
+            const bookedSet = new Set();
+            for (const apt of appointments) {
+                const startTime = apt.appointment_time || '';
+                if (!startTime) continue;
+                const startMinutes = timeToMinutes(startTime);
+                const durationMinutes = getDurationMinutesForServiceType(apt.service_type);
+                const endMinutes = startMinutes + durationMinutes;
+                for (const slot of ALL_SLOTS) {
+                    const slotMinutes = timeToMinutes(slot);
+                    if (slotMinutes >= startMinutes && slotMinutes < endMinutes) bookedSet.add(slot);
+                }
+            }
+            return Array.from(bookedSet);
         }
+        console.error('❌ Failed to check booked time slots:', response.status);
+        return [];
     } catch (error) {
         console.error('❌ Error checking booked time slots:', error);
         return [];
