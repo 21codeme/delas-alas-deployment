@@ -399,6 +399,18 @@
         </div>
     </div>
 
+    <!-- Modal: View contact form message (from index) -->
+    <div id="contactFormViewModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center; padding:20px;" onclick="if(event.target===this) closeContactFormViewModal()">
+        <div style="background:#fff; border-radius:12px; max-width:480px; width:90%; padding:24px; box-shadow:0 8px 32px rgba(0,0,0,0.2);" onclick="event.stopPropagation()">
+            <h3 style="margin:0 0 16px 0; color:#333;">Contact form message</h3>
+            <div id="contactFormViewContent" style="color:#555; font-size:15px; line-height:1.6;"></div>
+            <div style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
+                <a id="contactFormReplyMailto" href="#" style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:#28a745; color:#fff; border-radius:8px; text-decoration:none; font-size:14px;" target="_blank" rel="noopener"><i class="fas fa-reply"></i> Reply via email</a>
+                <button type="button" style="padding:8px 16px; background:#6c757d; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:14px;" onclick="closeContactFormViewModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Global variables
         let notifications = [];
@@ -703,8 +715,12 @@
                 
                 // For messages, show content preview if available
                 let displayMessage = notification.message;
-                if (notification.type === 'message' && notification.data && notification.data.sender_name) {
+                const isContactForm = notification.data && notification.data.source === 'contact_form';
+                if (notification.type === 'message' && notification.data && notification.data.sender_name && !isContactForm) {
                     displayMessage = `From ${notification.data.sender_name}: ${displayMessage}`;
+                }
+                if (isContactForm && notification.data.contact_message) {
+                    displayMessage = notification.data.contact_message.length > 120 ? notification.data.contact_message.substring(0, 120) + '...' : notification.data.contact_message;
                 }
                 
                 return `
@@ -719,16 +735,23 @@
                         </div>
                         <div class="notification-actions">
                             ${notification.type === 'appointment' ? `
-                                <button class="btn btn-primary" onclick="viewAppointment('${notification.id}')">
+                                <button class="btn btn-primary" onclick="event.stopPropagation(); viewAppointment('${notification.id}')">
                                     <i class="fas fa-eye"></i> View
                                 </button>
                             ` : ''}
-                            ${notification.type === 'message' ? `
-                                <button class="btn btn-success" onclick="replyMessage('${notification.id}')">
+                            ${isContactForm ? `
+                                <button class="btn btn-primary" onclick="event.stopPropagation(); viewContactFormMessage('${notification.id}')">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                <button class="btn btn-success" onclick="event.stopPropagation(); replyContactForm('${notification.id}')">
                                     <i class="fas fa-reply"></i> Reply
                                 </button>
-                            ` : ''}
-                            <button class="btn btn-secondary" onclick="markAsRead('${notification.id}')">
+                            ` : (notification.type === 'message' ? `
+                                <button class="btn btn-success" onclick="event.stopPropagation(); replyMessage('${notification.id}')">
+                                    <i class="fas fa-reply"></i> Reply
+                                </button>
+                            ` : '')}
+                            <button class="btn btn-secondary" onclick="event.stopPropagation(); markAsRead('${notification.id}')">
                                 <i class="fas fa-check"></i> Mark Read
                             </button>
                         </div>
@@ -860,15 +883,55 @@
             }
         }
 
-        // Reply to message
+        // Reply to message (in-app messages: go to Messages tab)
         function replyMessage(notificationId) {
             const notification = notifications.find(n => n.id === notificationId);
             if (notification) {
-                // Navigate to messages section
                 if (window.parent && window.parent.loadSection) {
                     window.parent.loadSection('messages');
                 }
             }
+        }
+
+        // --- Contact form (from index): view full message and reply via email ---
+        function viewContactFormMessage(notificationId) {
+            const notification = notifications.find(n => n.id === notificationId);
+            if (!notification || !notification.data || notification.data.source !== 'contact_form') return;
+            const d = notification.data;
+            const name = d.contact_name || '—';
+            const email = d.contact_email || '—';
+            const phone = d.contact_phone || '—';
+            const message = (d.contact_message || notification.message || '—').replace(/\n/g, '<br>');
+            document.getElementById('contactFormViewContent').innerHTML = `
+                <p><strong>Name:</strong> ${escapeHtml(name)}</p>
+                <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+                <p><strong>Phone:</strong> ${escapeHtml(phone)}</p>
+                <p><strong>Message:</strong></p>
+                <p style="white-space:pre-wrap; background:#f5f5f5; padding:12px; border-radius:8px;">${escapeHtml(d.contact_message || notification.message || '')}</p>
+            `;
+            const mailto = document.getElementById('contactFormReplyMailto');
+            mailto.href = `mailto:${encodeURIComponent(email || '')}?subject=${encodeURIComponent('Re: Delas Alas Dental Clinic - your message')}`;
+            document.getElementById('contactFormViewModal').style.display = 'flex';
+        }
+        function closeContactFormViewModal() {
+            document.getElementById('contactFormViewModal').style.display = 'none';
+        }
+        function replyContactForm(notificationId) {
+            const notification = notifications.find(n => n.id === notificationId);
+            if (!notification || !notification.data || notification.data.source !== 'contact_form') return;
+            const email = (notification.data.contact_email || '').trim();
+            if (!email) {
+                alert('No email address for this contact.');
+                return;
+            }
+            const subject = encodeURIComponent('Re: Delas Alas Dental Clinic - your message');
+            window.location.href = `mailto:${encodeURIComponent(email)}?subject=${subject}`;
+        }
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         // Show error
