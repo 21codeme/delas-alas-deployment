@@ -376,6 +376,18 @@
                 .join(' ');
         }
 
+        // Expose auth token for iframe (notifications mark-as-read); same-origin so can read localStorage
+        function getAuthToken() {
+            try {
+                const key = 'sb-xlubjwiumytdkxrzojdg-auth-token';
+                const raw = localStorage.getItem(key) || localStorage.getItem('authToken');
+                if (typeof raw !== 'string' || !raw.length) return null;
+                if (!raw.startsWith('{')) return raw;
+                const p = JSON.parse(raw);
+                return p.access_token || p.session?.access_token || p.currentSession?.access_token || null;
+            } catch (e) { return null; }
+        }
+
         // Load user data from localStorage (set by main app)
         async function loadUserData() {
             try {

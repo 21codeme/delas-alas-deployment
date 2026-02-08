@@ -862,11 +862,9 @@
                         if (notification.type === 'message' && notification.data && notification.data.message_id) {
                             await markMessageAsRead(notification);
                         }
-                        // Reload from DB so list and count stay in sync; after refresh, read state persists
-                        await loadNotifications();
+                        // Do not reload list here so local read state is not overwritten; parent will refetch badge
                     } catch (error) {
                         console.error('❌ Error marking notification as read:', error);
-                        // If PATCH failed (e.g. no auth token), still update UI locally
                         updateStats();
                         displayNotifications();
                     }
@@ -1005,14 +1003,20 @@
         function getNotificationsAuthToken() {
             try {
                 const authKey = 'sb-xlubjwiumytdkxrzojdg-auth-token';
-                const raw = localStorage.getItem(authKey) || localStorage.getItem('authToken');
-                if (typeof raw === 'string' && raw.length > 0) {
-                    if (raw.startsWith('{')) {
-                        const parsed = JSON.parse(raw);
-                        return parsed.access_token || parsed.session?.access_token || null;
+                let raw = localStorage.getItem(authKey) || localStorage.getItem('authToken');
+                if (typeof raw !== 'string' || raw.length === 0) {
+                    if (window.parent && window.parent !== window && typeof window.parent.getAuthToken === 'function') {
+                        return window.parent.getAuthToken();
                     }
-                    return raw;
+                    return null;
                 }
+                if (!raw.startsWith('{')) return raw;
+                const parsed = JSON.parse(raw);
+                return parsed.access_token
+                    || parsed.session?.access_token
+                    || parsed.currentSession?.access_token
+                    || (parsed.data && parsed.data.session && parsed.data.session.access_token)
+                    || null;
             } catch (e) {}
             return null;
         }
