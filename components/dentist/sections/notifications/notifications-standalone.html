@@ -850,21 +850,40 @@
                         await markMessageAsRead(notification);
                     }
                 } else {
-                    // This is a Supabase notification, update in database (uses user JWT so it persists)
+                    // Supabase notification: persist mark-as-read via RPC (works without JWT so it stays after refresh)
+                    const userData = localStorage.getItem('currentUser');
+                    const userId = userData ? (JSON.parse(userData) || {}).id : null;
                     try {
-                        await callSupabaseAPI('PATCH', `notifications?id=eq.${notificationId}`, {
-                            is_read: true,
-                            updated_at: new Date().toISOString()
-                        });
-                        console.log('✅ Supabase notification marked as read:', notificationId);
-                        
-                        // If it's a message notification, mark the actual message as read
+                        if (userId) {
+                            await callSupabaseAPI('POST', 'rpc/mark_notification_read', {
+                                p_notification_id: notificationId,
+                                p_user_id: userId
+                            });
+                            console.log('✅ Supabase notification marked as read:', notificationId);
+                        } else {
+                            await callSupabaseAPI('PATCH', `notifications?id=eq.${notificationId}`, {
+                                is_read: true,
+                                updated_at: new Date().toISOString()
+                            });
+                            console.log('✅ Supabase notification marked as read (PATCH):', notificationId);
+                        }
                         if (notification.type === 'message' && notification.data && notification.data.message_id) {
                             await markMessageAsRead(notification);
                         }
-                        // Do not reload list here so local read state is not overwritten; parent will refetch badge
                     } catch (error) {
-                        console.error('❌ Error marking notification as read:', error);
+                        if (userId) {
+                            try {
+                                await callSupabaseAPI('PATCH', `notifications?id=eq.${notificationId}`, {
+                                    is_read: true,
+                                    updated_at: new Date().toISOString()
+                                });
+                                console.log('✅ Supabase notification marked as read (PATCH fallback):', notificationId);
+                            } catch (patchErr) {
+                                console.error('❌ Error marking notification as read:', patchErr);
+                            }
+                        } else {
+                            console.error('❌ Error marking notification as read:', error);
+                        }
                         updateStats();
                         displayNotifications();
                     }
