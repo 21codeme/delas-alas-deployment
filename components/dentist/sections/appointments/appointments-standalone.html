@@ -1433,8 +1433,8 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
 
             try {
                 // Load ALL appointments excluding archived ones
-                // Order by appointment_date and appointment_time descending (most recent first)
-                const data = await callSupabaseAPI('GET', 'appointments?status=neq.archived&order=appointment_date.desc,appointment_time.desc');
+                // Order by created_at descending = whoever booked most recently appears first
+                const data = await callSupabaseAPI('GET', 'appointments?status=neq.archived&order=created_at.desc');
 
                 if (data && data.length > 0) {
                     const now = new Date();
@@ -1467,15 +1467,14 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                         };
                     });
                     
-                    // Sort by appointment date/time descending (latest/most recent first)
+                    // Sort by booking order: newest booking first (created_at)
                     appointments.sort((a, b) => {
-                        const dateA = new Date(a.date + ' ' + a.time);
-                        const dateB = new Date(b.date + ' ' + b.time);
-                        // Sort by date descending (most recent first)
-                        return dateB - dateA;
+                        const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                        const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                        return tB - tA;
                     });
                     
-                    // Limit to 30 most recent appointments
+                    // Limit to 30 most recently booked
                     appointments = appointments.slice(0, 30);
                     
                     const pastCount = appointments.filter(apt => apt.isPast).length;
@@ -1604,11 +1603,11 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             
             console.log(`📊 Filtered appointments: ${filteredAppointments.length} of ${appointments.length} total (showing max 30 upcoming appointments)`);
 
-            // Sort by appointment date/time descending (latest/most recent first)
+            // Sort by booking order: newest booking first (created_at)
             filteredAppointments.sort((a, b) => {
-                const dateA = new Date(a.date + ' ' + a.time);
-                const dateB = new Date(b.date + ' ' + b.time);
-                return dateB - dateA; // Descending order (most recent first)
+                const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                return tB - tA;
             });
 
             displayAppointments();
