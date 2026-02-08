@@ -680,7 +680,7 @@
                 <div class="services-header">
                     <div class="header-left">
                         <h1>🦷 Services Management</h1>
-                        <p>Manage clinic services and pricing</p>
+                        <p>Our Services — Comprehensive dental care for all ages</p>
                     </div>
                     <div class="header-right">
                         <button class="btn btn-primary" onclick="addNewService()">
@@ -689,7 +689,7 @@
                     </div>
                 </div>
 
-                <!-- Services Grid -->
+                <!-- Services Grid (same content as index Our Services) -->
                 <div class="services-grid" id="servicesGrid">
                     <div class="loading">Loading services...</div>
                 </div>
@@ -835,58 +835,108 @@
             }
         }
 
-        // Display services
-        function displayServices() {
-            console.log('Displaying services:', services);
-            const grid = document.getElementById('servicesGrid');
-            
-            if (services.length === 0) {
-                grid.innerHTML = `
-                    <div style="padding: 40px; color: #666; text-align: center; grid-column: 1 / -1;">
-                        <i class="fas fa-tools" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
-                        <h3 style="margin: 0 0 10px 0;">No services added yet</h3>
-                        <p style="margin: 0;">Add your clinic services to get started</p>
-                        <button class="btn btn-primary" onclick="addNewService()" style="margin-top: 20px;">
-                            <i class="fas fa-plus"></i> Add First Service
-                        </button>
-                    </div>
-                `;
-                return;
+        // Our Services (same content as index.html "Our Services" section)
+        const OUR_SERVICES = [
+            {
+                name: 'Teeth Cleaning',
+                icon: 'fa-sparkles',
+                description: 'Professional teeth cleaning and oral hygiene services',
+                notes: [
+                    'Removes plaque and tartar buildup',
+                    'Prevents gum disease',
+                    'Fresh breath and brighter smile',
+                    'Regular checkup included'
+                ]
+            },
+            {
+                name: 'Tooth Extraction',
+                icon: 'fa-tooth',
+                description: 'Safe and professional tooth removal services',
+                notes: [
+                    'Painless extraction procedure',
+                    'Post-extraction care instructions',
+                    'Follow-up appointments available',
+                    'Emergency extractions available'
+                ]
+            },
+            {
+                name: 'Dental Filling',
+                icon: 'fa-fill-drip',
+                description: 'Quality dental fillings for cavities and tooth restoration',
+                notes: [
+                    'Composite and amalgam fillings',
+                    'Tooth-colored materials',
+                    'Long-lasting results',
+                    'Comfortable procedure'
+                ]
+            },
+            {
+                name: 'Denture (Pustiso)',
+                icon: 'fa-teeth',
+                description: 'Custom-made dentures for missing teeth replacement',
+                notes: [
+                    'Full and partial dentures',
+                    'Custom fit and comfortable',
+                    'Natural-looking appearance',
+                    'Multiple visits for fitting'
+                ]
             }
+        ];
 
-            // Group services by category first
-            const groupedServices = groupServicesByCategory(services);
-            
-            grid.innerHTML = Object.keys(groupedServices).map(category => {
-                const categoryServices = groupedServices[category];
-                const categoryIcon = getCategoryIcon(category);
-                
-                return `
+        // Display services (same as index Our Services)
+        function displayServices() {
+            const grid = document.getElementById('servicesGrid');
+            if (!grid) return;
+
+            grid.innerHTML = OUR_SERVICES.map(service => `
                 <div class="service-card">
-                    <div class="service-icon">
-                        <i class="fas ${categoryIcon}"></i>
+                    <div class="service-header">
+                        <div class="service-icon">
+                            <i class="fas ${service.icon}"></i>
+                        </div>
+                        <div class="service-info">
+                            <h3>${service.name}</h3>
+                        </div>
                     </div>
-                    <h3>${category}</h3>
-                    <p>Professional ${category.toLowerCase()} services</p>
+                    <p class="service-description">${service.description}</p>
                     <ul class="service-features">
-                        ${categoryServices.slice(0, 4).map(service => `
-                            <li>
-                                <i class="fas fa-check" style="color: #28a745; margin-right: 8px;"></i>
-                                ${service.name}
-                            </li>
-                        `).join('')}
+                        ${service.notes.map(note => `<li><i class="fas fa-check" style="color: #28a745; margin-right: 8px;"></i> ${note}</li>`).join('')}
                     </ul>
                     <div class="service-actions">
-                        <button class="btn btn-outline" onclick="viewCategoryServices('${category}')">
+                        <button class="btn btn-outline" onclick="viewOurServiceDetail('${service.name.replace(/'/g, "\\'")}')">
                             <i class="fas fa-eye"></i> View All
                         </button>
-                        <button class="btn btn-primary" onclick="editCategoryServices('${category}')">
+                        <button class="btn btn-primary" onclick="manageOurService('${service.name.replace(/'/g, "\\'")}')">
                             <i class="fas fa-edit"></i> Manage
                         </button>
                     </div>
                 </div>
+            `).join('');
+        }
+
+        function viewOurServiceDetail(name) {
+            const service = OUR_SERVICES.find(s => s.name === name);
+            if (!service) return;
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            modalTitle.innerHTML = `<i class="fas ${service.icon}"></i> ${service.name}`;
+            modalBody.innerHTML = `
+                <p class="service-description" style="margin-bottom: 15px;">${service.description}</p>
+                <div class="form-group">
+                    <label>Features</label>
+                    <ul class="service-features" style="list-style: none; padding: 0;">
+                        ${service.notes.map(note => `<li style="padding: 8px 0;"><i class="fas fa-check" style="color: #28a745; margin-right: 8px;"></i> ${note}</li>`).join('')}
+                    </ul>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-secondary" onclick="closeModal()"><i class="fas fa-times"></i> Close</button>
+                </div>
             `;
-            }).join('');
+            document.getElementById('serviceModal').style.display = 'block';
+        }
+
+        function manageOurService(name) {
+            viewOurServiceDetail(name);
         }
 
         // Group services by category (infer from service name/description)
