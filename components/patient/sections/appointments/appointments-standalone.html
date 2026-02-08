@@ -1999,7 +1999,7 @@
                 
                 // Include both dentist_id and confirmed_by_dentist_id so we see all bookings for this dentist
                 const orFilter = `(dentist_id.eq.${dentistId},confirmed_by_dentist_id.eq.${dentistId})`;
-                const url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${dateNorm}&or=${orFilter}&status=in.(pending,confirmed,rescheduled)&select=appointment_time,status,service_type`;
+                const url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${dateNorm}&or=${orFilter}&status=in.(pending,confirmed,completed,rescheduled)&select=appointment_time,status,service_type`;
                 
                 const response = await fetch(url, {
                     headers: {
