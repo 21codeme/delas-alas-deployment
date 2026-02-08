@@ -514,6 +514,26 @@
         </div>
     </div>
 
+    <!-- Guest booking consent (no account): confirmation by email only, no QR -->
+    <div id="guestBookingConsentModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 480px;">
+            <span class="close" onclick="closeModal('guestBookingConsentModal')">&times;</span>
+            <h3 style="margin-top: 0;"><i class="fas fa-info-circle" style="color: #2196f3;"></i> Booking without account</h3>
+            <p style="color: #555; line-height: 1.6; margin: 0 0 16px 0;">
+                Because you don't have an account, the confirmation that your appointment is <strong>approved</strong> will be sent <strong>only to your email</strong> after the dentist approves it.
+            </p>
+            <p style="color: #555; line-height: 1.6; margin: 0 0 20px 0;">
+                <strong>QR code will not be generated</strong> — you have no account; confirmation is by email only.
+            </p>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('guestBookingConsentModal')">Cancel</button>
+                <button type="button" class="btn btn-primary" id="guestConsentAgreeBtn" onclick="confirmGuestBooking()">
+                    <i class="fas fa-check"></i> Agree
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="local-supabase.js"></script>
     <script src="script.js"></script>

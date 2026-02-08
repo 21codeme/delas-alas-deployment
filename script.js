@@ -1563,11 +1563,20 @@ async function handleAppointment(event) {
         return;
     }
     
+    const currentUserData = JSON.parse(localStorage.getItem('currentUser'));
+    // Guest (no account): show consent modal first; on Agree we submit again with _guestBookingAgreed
+    if (!currentUserData && !window._guestBookingAgreed) {
+        const modal = document.getElementById('guestBookingConsentModal');
+        if (modal) {
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        return;
+    }
+    
     try {
-        // Get current user if logged in
-        const currentUserData = JSON.parse(localStorage.getItem('currentUser'));
+        if (window._guestBookingAgreed) window._guestBookingAgreed = false;
         
-        // Create appointment in Supabase
         const { data, error } = await supabase
             .from('appointments')
             .insert([{
@@ -1586,29 +1595,44 @@ async function handleAppointment(event) {
         
         if (error) {
             showToast('Appointment booking failed: ' + error.message, 'error');
-        return;
-    }
-    
-    showToast('Appointment booked and confirmed successfully! Confirmation email sent.', 'success');
-    closeModal('appointmentModal');
-    
-    // Format time for display
-    const timeDisplay = formatTimeForDisplay(selectedTime);
-    
-    // Send confirmation email
-    await sendAppointmentConfirmation({
-        name,
-        email,
-        service,
-        date,
-        time: timeDisplay,
-        dentistName: 'Dr. Delas Alas' // Default dentist name
-    });
+            return;
+        }
         
+        closeModal('appointmentModal');
+        const guestModal = document.getElementById('guestBookingConsentModal');
+        if (guestModal) guestModal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        
+        const timeDisplay = formatTimeForDisplay(selectedTime);
+        
+        if (currentUserData) {
+            showToast('Appointment booked and confirmed successfully! Confirmation email sent.', 'success');
+            await sendAppointmentConfirmation({
+                name,
+                email,
+                service,
+                date,
+                time: timeDisplay,
+                dentistName: 'Dr. Delas Alas'
+            });
+        } else {
+            showToast('Booking received. You will get an email once the dentist approves. No QR code (no account).', 'success');
+        }
     } catch (error) {
         console.error('Appointment booking error:', error);
         showToast('Appointment booking failed. Please try again.', 'error');
     }
+}
+
+function confirmGuestBooking() {
+    const modal = document.getElementById('guestBookingConsentModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+    window._guestBookingAgreed = true;
+    const form = document.getElementById('appointmentForm');
+    if (form) form.requestSubmit();
 }
 
 function handleContact(event) {
