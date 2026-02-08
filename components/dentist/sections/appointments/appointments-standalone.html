@@ -2523,22 +2523,24 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             const otherBookedTimes = await getBookedTimeSlotsForEdit(appointmentDate, dentistId, excludeAppointmentId);
             // Add current appointment's slots so they show as booked (same as patient) but keep selected time clickable
             let bookedTimes = [...otherBookedTimes];
+            const allSlotsList = [
+                '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+                '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
+                '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
+                '17:00', '17:30', '18:00'
+            ];
             if (excludeAppointmentId && selectedTime) {
                 const serviceSelect = document.getElementById('editService');
-                const currentService = serviceSelect?.value || '';
+                const currentService = (serviceSelect?.value || '').trim();
                 const serviceDurationMap = {
                     'Teeth Cleaning': 60, 'Tooth Extraction': 120, 'Dental Filling': 60, 'Denture (Pustiso)': 120
                 };
-                const durMin = serviceDurationMap[currentService] || getDurationMinutesForServiceType(currentService) || 30;
-                const startMin = timeToMinutes(selectedTime);
+                const durMin = Math.max(30, serviceDurationMap[currentService] || getDurationMinutesForServiceType(currentService) || 30);
+                const st = String(selectedTime).trim();
+                const selectedNorm = st.length >= 5 ? st.substring(0, 5) : (st.length === 4 ? '0' + st : st);
+                const startMin = timeToMinutes(selectedNorm);
                 const endMin = startMin + durMin;
-                const allSlots = [
-                    '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
-                    '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
-                    '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
-                    '17:00', '17:30', '18:00'
-                ];
-                allSlots.forEach(slot => {
+                allSlotsList.forEach(slot => {
                     const slotMin = timeToMinutes(slot);
                     if (slotMin >= startMin && slotMin <= endMin) bookedTimes.push(slot);
                 });
@@ -2625,10 +2627,12 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 // Check if this is the selected time (current appointment - keep it selectable)
                 let normalizedSelected = '';
                 if (selectedTime) {
-                    normalizedSelected = String(selectedTime).trim().substring(0, 5);
+                    const st = String(selectedTime).trim();
+                    normalizedSelected = st.length >= 5 ? st.substring(0, 5) : (st.length === 4 ? '0' + st : st);
                     if (normalizedSelected.length === 4) normalizedSelected = '0' + normalizedSelected;
                 }
-                const normTime = time.substring(0, 5);
+                let normTime = time.substring(0, 5);
+                if (normTime.length === 4) normTime = '0' + normTime;
                 const isSelected = normalizedSelected === normTime;
                 // If slot is booked but it's the current appointment's start, show as selected not fully-booked
                 const isBookedAndNotSelected = isBooked && !isSelected;
