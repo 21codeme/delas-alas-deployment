@@ -853,6 +853,25 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             opacity: 0.6;
         }
 
+        .service-item.new-booking-service {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .service-item.new-booking-service:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        .service-item.new-booking-service.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        }
+
         /* QR Code Styles */
         .qr-code-container {
             text-align: center;
@@ -1961,125 +1980,60 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                                 <label>Patient Name *</label>
                                 <input type="text" id="newAptName" value="${safeName}" required readonly style="background: #f8f9fa;">
                             </div>
-                            
                             <div class="form-group">
                                 <label>Email Address *</label>
                                 <input type="email" id="newAptEmail" value="${safeEmail}" required readonly style="background: #f8f9fa;">
                             </div>
-                            
                             <div class="form-group">
                                 <label>Phone Number *</label>
                                 <input type="tel" id="newAptPhone" value="${safePhone}" required readonly style="background: #f8f9fa;">
                             </div>
-                            
-                            <!-- Service Selection with Expandable Time Slots -->
+                            <div class="form-group">
+                                <label>Preferred Date *</label>
+                                <input type="date" id="newAptDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Select Dentist *</label>
+                                <select id="newAptDentist" required>
+                                    <option value="">Loading dentists...</option>
+                                </select>
+                            </div>
                             <div class="form-group">
                                 <label>Select Service *</label>
-                                <div class="service-selection-box">
-                                    <button type="button" class="service-toggle-btn" id="serviceToggleBtn" onclick="toggleServiceList()">
-                                        <span id="selectedServiceText">Select a service</span>
-                                        <i class="fas fa-chevron-down" id="serviceToggleIcon"></i>
-                                    </button>
-                                    <div class="service-selection-list" id="serviceSelectionList" style="display: none;">
-                                    <div class="service-card-expandable" data-service="cleaning" data-duration="30 min-1 hr">
-                                        <div class="service-card-header">
-                                            <div class="service-icon">
-                                                <i class="fas fa-broom"></i>
-                                            </div>
-                                            <div class="service-info">
-                                                <h4>Teeth Cleaning</h4>
-                                                <p class="service-duration-inline">30 min-1 hr</p>
-                                            </div>
-                                            <span class="service-duration-right">30 min-1 hr</span>
-                                            <i class="fas fa-chevron-down service-arrow"></i>
-                                        </div>
-                                        <div class="service-time-content" style="display: none;">
-                                            <div class="selected-service-info">Available times for Teeth Cleaning (30 min-1 hr)</div>
-                                            <div class="appointment-time-grid" data-service="cleaning">
-                                                <!-- Time slots will be generated dynamically -->
-                                            </div>
-                                        </div>
+                                <div class="service-list-container" style="display:grid; gap:10px;">
+                                    <div class="service-item new-booking-service" data-service="cleaning" data-duration="30 min-1 hr" data-service-name="Teeth Cleaning">
+                                        <div class="service-icon" style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;display:flex;align-items:center;justify-content:center;"><i class="fas fa-broom"></i></div>
+                                        <div class="service-details" style="flex:1;"><h4 style="margin:0;font-size:1rem;">Teeth Cleaning</h4><span class="service-duration" style="font-size:12px;color:#6b7280;">30 min-1 hr</span></div>
                                     </div>
-                                    <div class="service-card-expandable" data-service="extraction" data-duration="30 min-2 hrs">
-                                        <div class="service-card-header">
-                                            <div class="service-icon">
-                                                <i class="fas fa-tooth"></i>
-                                            </div>
-                                            <div class="service-info">
-                                                <h4>Tooth Extraction</h4>
-                                                <p class="service-duration-inline">30 min-2 hrs</p>
-                                            </div>
-                                            <span class="service-duration-right">30 min-2 hrs</span>
-                                            <i class="fas fa-chevron-down service-arrow"></i>
-                                        </div>
-                                        <div class="service-time-content" style="display: none;">
-                                            <div class="selected-service-info">Available times for Tooth Extraction (30 min-2 hrs)</div>
-                                            <div class="appointment-time-grid" data-service="extraction">
-                                                <!-- Time slots will be generated dynamically -->
-                                            </div>
-                                        </div>
+                                    <div class="service-item new-booking-service" data-service="extraction" data-duration="30 min-2 hrs" data-service-name="Tooth Extraction">
+                                        <div class="service-icon" style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;display:flex;align-items:center;justify-content:center;"><i class="fas fa-tooth"></i></div>
+                                        <div class="service-details" style="flex:1;"><h4 style="margin:0;font-size:1rem;">Tooth Extraction</h4><span class="service-duration" style="font-size:12px;color:#6b7280;">30 min-2 hrs</span></div>
                                     </div>
-                                    <div class="service-card-expandable" data-service="filling" data-duration="30-60 min">
-                                        <div class="service-card-header">
-                                            <div class="service-icon">
-                                                <i class="fas fa-fill-drip"></i>
-                                            </div>
-                                            <div class="service-info">
-                                                <h4>Dental Filling</h4>
-                                                <p class="service-duration-inline">30-60 min</p>
-                                            </div>
-                                            <span class="service-duration-right">30-60 min</span>
-                                            <i class="fas fa-chevron-down service-arrow"></i>
-                                        </div>
-                                        <div class="service-time-content" style="display: none;">
-                                            <div class="selected-service-info">Available times for Dental Filling (30-60 min)</div>
-                                            <div class="appointment-time-grid" data-service="filling">
-                                                <!-- Time slots will be generated dynamically -->
-                                            </div>
-                                        </div>
+                                    <div class="service-item new-booking-service" data-service="filling" data-duration="30-60 min" data-service-name="Dental Filling">
+                                        <div class="service-icon" style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;display:flex;align-items:center;justify-content:center;"><i class="fas fa-fill-drip"></i></div>
+                                        <div class="service-details" style="flex:1;"><h4 style="margin:0;font-size:1rem;">Dental Filling</h4><span class="service-duration" style="font-size:12px;color:#6b7280;">30-60 min</span></div>
                                     </div>
-                                    <div class="service-card-expandable" data-service="denture" data-duration="1-2 hrs per visit">
-                                        <div class="service-card-header">
-                                            <div class="service-icon">
-                                                <i class="fas fa-teeth"></i>
-                                            </div>
-                                            <div class="service-info">
-                                                <h4>Denture (Pustiso)</h4>
-                                                <p class="service-duration-inline">1-2 hrs per visit</p>
-                                            </div>
-                                            <span class="service-duration-right">1-2 hrs per visit</span>
-                                            <i class="fas fa-chevron-down service-arrow"></i>
-                                        </div>
-                                        <div class="service-time-content" style="display: none;">
-                                            <div class="selected-service-info">Available times for Denture (Pustiso) (1-2 hrs per visit)</div>
-                                            <div class="appointment-time-grid" data-service="denture">
-                                                <!-- Time slots will be generated dynamically -->
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <div class="service-item new-booking-service" data-service="denture" data-duration="1-2 hrs per visit" data-service-name="Denture (Pustiso)">
+                                        <div class="service-icon" style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;display:flex;align-items:center;justify-content:center;"><i class="fas fa-teeth"></i></div>
+                                        <div class="service-details" style="flex:1;"><h4 style="margin:0;font-size:1rem;">Denture (Pustiso)</h4><span class="service-duration" style="font-size:12px;color:#6b7280;">1-2 hrs per visit</span></div>
                                     </div>
                                 </div>
                                 <input type="hidden" id="newAptService" required>
                                 <input type="hidden" id="newAptTime" required>
                             </div>
-                            
-                            <div class="form-group">
-                                <label>Appointment Date *</label>
-                                <input type="date" id="newAptDate" required>
+                            <div class="form-group" id="newAptTimeSection" style="display:none;">
+                                <label>Select Appointment Time *</label>
+                                <div id="newAptTimeGridCaption" style="font-size:13px;color:#6b7280;margin-bottom:8px;"></div>
+                                <div id="newAptTimeGrid" class="appointment-time-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;"></div>
                             </div>
-                            
                             <div class="form-group">
                                 <label>Additional Notes</label>
-                                <textarea id="newAptMessage" placeholder="Any specific concerns or requests..."></textarea>
+                                <textarea id="newAptMessage" rows="3" placeholder="Any specific concerns or requests..."></textarea>
                             </div>
-                            
                             <input type="hidden" id="newAptPatientId" value="${safeId}">
-                            
                             <div class="modal-actions">
                                 <button type="button" class="btn btn-secondary" onclick="closeBookingFormModal()">Cancel</button>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-calendar-plus"></i> Book Appointment
-                                </button>
+                                <button type="submit" class="btn btn-primary"><i class="fas fa-calendar-plus"></i> Book Appointment</button>
                             </div>
                         </form>
                     </div>
@@ -2088,71 +2042,166 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             
             document.body.appendChild(modal);
             
-            // Set minimum date to today (allow booking on exact date)
             const dateInput = document.getElementById('newAptDate');
             if (dateInput) {
                 const today = new Date();
-                const year = today.getFullYear();
-                const month = String(today.getMonth() + 1).padStart(2, '0');
-                const day = String(today.getDate()).padStart(2, '0');
-                dateInput.min = `${year}-${month}-${day}`;
+                dateInput.min = today.toISOString().slice(0, 10);
             }
             
-            // Handle form submission
+            populateDentistsDropdownForNewBooking();
+            wireNewBookingFormListeners();
+            
             document.getElementById('newAppointmentForm').onsubmit = async function(e) {
                 e.preventDefault();
-                
                 const patientId = document.getElementById('newAptPatientId').value;
                 const name = document.getElementById('newAptName').value;
                 const email = document.getElementById('newAptEmail').value;
                 const phone = document.getElementById('newAptPhone').value;
                 const service = document.getElementById('newAptService').value;
                 const date = document.getElementById('newAptDate').value;
+                const dentistId = document.getElementById('newAptDentist').value;
+                let time = (document.getElementById('newAptTime').value || '').trim();
                 const message = document.getElementById('newAptMessage').value;
-                
-                // Validate form
-                if (!name || !email || !phone || !service || !date) {
-                    alert('Please fill in all required fields');
+                if (!name || !email || !phone || !service || !date || !dentistId) {
+                    alert('Please fill in all required fields including Date, Dentist, Service, and Time.');
                     return;
                 }
-                
-                // Set default time to 10:00 AM if not specified
-                const time = '10:00';
-                
-                // Get current logged-in dentist ID
-                const currentUserData = JSON.parse(localStorage.getItem('currentUser') || '{}');
-                const currentDentistId = currentUserData?.id || null;
-                
+                if (!time) {
+                    alert('Please select an appointment time.');
+                    return;
+                }
+                if (time.length === 5 && !time.includes(':')) time = time.slice(0,2) + ':' + time.slice(2);
+                if (time.length === 4) time = '0' + time.slice(0,1) + ':' + time.slice(1);
+                if (!time.match(/^\d{1,2}:\d{2}/)) time = '10:00';
+                const duration = getDurationMinutesForServiceType(service);
                 try {
                     const appointmentData = {
                         patient_id: patientId || null,
-                        dentist_id: currentDentistId,
+                        dentist_id: dentistId,
                         service_type: service,
                         appointment_date: date,
-                        appointment_time: time + ':00',
-                        duration: 60,
+                        appointment_time: (() => { let t = time.trim(); if (/^\d{1,2}:\d{2}:\d{2}$/.test(t)) return t; if (/^\d{1,2}:\d{2}$/.test(t)) return t + ':00'; return '10:00:00'; })(),
+                        duration: duration || 60,
                         notes: message,
                         patient_name: name,
                         patient_email: email,
                         patient_phone: phone,
                         status: 'pending'
                     };
-                    
-                    console.log('📝 Creating appointment:', appointmentData);
-                    
-                    // Create appointment using direct API
-                    const data = await callSupabaseAPI('POST', 'appointments', appointmentData);
-                    
-                    console.log('✅ Appointment created:', data);
+                    await callSupabaseAPI('POST', 'appointments', appointmentData);
                     alert('Appointment booked successfully!');
                     closeBookingFormModal();
                     loadAppointments();
-                    
                 } catch (error) {
                     console.error('❌ Error creating appointment:', error);
-                    alert('Error booking appointment: ' + error.message);
+                    alert('Error booking appointment: ' + (error.message || 'Unknown error'));
                 }
             };
+        }
+        
+        async function populateDentistsDropdownForNewBooking() {
+            const select = document.getElementById('newAptDentist');
+            if (!select) return;
+            try {
+                const dentists = await callSupabaseAPI('GET', 'users?user_type=eq.dentist');
+                const list = Array.isArray(dentists) ? dentists : [];
+                const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                select.innerHTML = '<option value="">Select Dentist</option>' + list.map(d => 
+                    `<option value="${d.id}" ${d.id === currentUser.id ? 'selected' : ''}>${d.name || d.email || d.id}</option>`
+                ).join('');
+            } catch (e) {
+                select.innerHTML = '<option value="">Failed to load dentists</option>';
+            }
+        }
+        
+        function wireNewBookingFormListeners() {
+            const dateEl = document.getElementById('newAptDate');
+            const dentistEl = document.getElementById('newAptDentist');
+            dateEl && dateEl.addEventListener('change', refreshNewBookingTimeGrid);
+            dentistEl && dentistEl.addEventListener('change', refreshNewBookingTimeGrid);
+            document.querySelectorAll('.new-booking-service').forEach(item => {
+                item.addEventListener('click', function() {
+                    document.querySelectorAll('.new-booking-service').forEach(i => i.classList.remove('selected'));
+                    this.classList.add('selected');
+                    const name = this.getAttribute('data-service-name');
+                    const duration = this.getAttribute('data-duration');
+                    document.getElementById('newAptService').value = name || '';
+                    document.getElementById('newAptTime').value = '';
+                    const section = document.getElementById('newAptTimeSection');
+                    const caption = document.getElementById('newAptTimeGridCaption');
+                    section.style.display = 'block';
+                    caption.textContent = 'Available times for ' + (name || '') + ' (' + (duration || '') + ')';
+                    refreshNewBookingTimeGrid();
+                });
+            });
+        }
+        
+        async function refreshNewBookingTimeGrid() {
+            const section = document.getElementById('newAptTimeSection');
+            const grid = document.getElementById('newAptTimeGrid');
+            const dateVal = document.getElementById('newAptDate')?.value;
+            const dentistVal = document.getElementById('newAptDentist')?.value;
+            const serviceVal = document.getElementById('newAptService')?.value;
+            if (!section || !grid) return;
+            if (!dateVal || !dentistVal || !serviceVal) {
+                grid.innerHTML = '<p style="color:#6b7280;grid-column:1/-1;">Select Preferred Date, Dentist, and Service above.</p>';
+                return;
+            }
+            const booked = await getBookedTimeSlotsForNewBooking(dateVal, dentistVal);
+            const durationMin = getDurationMinutesForServiceType(serviceVal);
+            const ALL_SLOTS = ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00'];
+            grid.innerHTML = '';
+            ALL_SLOTS.forEach(t => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'time-slot';
+                btn.setAttribute('data-time', t);
+                const isBooked = booked.some(b => String(b).trim().substring(0,5) === t);
+                if (isBooked) {
+                    btn.classList.add('fully-booked');
+                    btn.disabled = true;
+                    btn.textContent = t.substring(0,5);
+                } else {
+                    btn.textContent = t.substring(0,5);
+                    btn.addEventListener('click', function() {
+                        grid.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+                        this.classList.add('selected');
+                        document.getElementById('newAptTime').value = t;
+                    });
+                }
+                grid.appendChild(btn);
+            });
+        }
+        
+        async function getBookedTimeSlotsForNewBooking(appointmentDate, dentistId) {
+            if (!appointmentDate || !dentistId) return [];
+            const dateNorm = (appointmentDate + '').trim().substring(0, 10);
+            const ALL_SLOTS = ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00'];
+            try {
+                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${encodeURIComponent(dateNorm)}&status=in.(pending,confirmed,completed,rescheduled)&select=id,appointment_time,service_type,dentist_id`, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+                if (!response.ok) return [];
+                const appointments = await response.json();
+                const list = Array.isArray(appointments) ? appointments : [];
+                const bookedSet = new Set();
+                for (const apt of list) {
+                    if (apt.dentist_id !== dentistId) continue;
+                    const startMinutes = timeToMinutes(apt.appointment_time || '');
+                    const durationMinutes = getDurationMinutesForServiceType(apt.service_type);
+                    const endMinutes = startMinutes + durationMinutes;
+                    for (const slot of ALL_SLOTS) {
+                        const slotMin = timeToMinutes(slot);
+                        if (slotMin >= startMinutes && slotMin <= endMinutes) bookedSet.add(slot);
+                    }
+                }
+                return Array.from(bookedSet);
+            } catch (err) {
+                console.error('getBookedTimeSlotsForNewBooking', err);
+                return [];
+            }
         }
         
         // Close booking form modal
