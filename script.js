@@ -419,11 +419,9 @@ function setupEventListeners() {
     if (aptDate) {
         aptDate.addEventListener('change', async function() {
             checkAvailability();
-            // Refresh time slots if service is already selected
             const appointmentTimeGrid = document.getElementById('appointmentTimeGrid');
             const serviceInput = document.getElementById('aptService');
             if (appointmentTimeGrid && serviceInput && serviceInput.value) {
-                // Get service value from service input
                 const serviceMap = {
                     'Teeth Cleaning': 'cleaning',
                     'Tooth Extraction': 'extraction',
@@ -431,19 +429,19 @@ function setupEventListeners() {
                     'Denture (Pustiso)': 'denture'
                 };
                 const serviceValue = serviceMap[serviceInput.value] || serviceInput.value.toLowerCase();
+                const durationEl = document.querySelector(`.service-item[data-service="${serviceValue}"]`) || document.querySelector(`.service-card-expandable[data-service="${serviceValue}"]`);
+                const durationStr = durationEl ? (durationEl.getAttribute('data-duration') || '') : '';
                 appointmentTimeGrid.innerHTML = '';
-                await generateTimeSlotsForService(serviceValue, appointmentTimeGrid);
+                await generateTimeSlotsForService(serviceValue, appointmentTimeGrid, durationStr);
             }
         });
     }
     
     if (aptDentist) {
         aptDentist.addEventListener('change', async function() {
-            // Refresh time slots if service is already selected
             const appointmentTimeGrid = document.getElementById('appointmentTimeGrid');
             const serviceInput = document.getElementById('aptService');
             if (appointmentTimeGrid && serviceInput && serviceInput.value) {
-                // Get service value from service input
                 const serviceMap = {
                     'Teeth Cleaning': 'cleaning',
                     'Tooth Extraction': 'extraction',
@@ -451,8 +449,10 @@ function setupEventListeners() {
                     'Denture (Pustiso)': 'denture'
                 };
                 const serviceValue = serviceMap[serviceInput.value] || serviceInput.value.toLowerCase();
+                const durationEl = document.querySelector(`.service-item[data-service="${serviceValue}"]`) || document.querySelector(`.service-card-expandable[data-service="${serviceValue}"]`);
+                const durationStr = durationEl ? (durationEl.getAttribute('data-duration') || '') : '';
                 appointmentTimeGrid.innerHTML = '';
-                await generateTimeSlotsForService(serviceValue, appointmentTimeGrid);
+                await generateTimeSlotsForService(serviceValue, appointmentTimeGrid, durationStr);
             }
         });
     }
@@ -1860,10 +1860,10 @@ function initializeServiceSelection() {
                 selectedServiceInfoText.textContent = `Available times for ${serviceName} (${duration})`;
             }
             
-            // Generate time slots
+            // Generate time slots (pass duration so blocking works)
             if (appointmentTimeGrid) {
                 appointmentTimeGrid.innerHTML = ''; // Clear existing
-                await generateTimeSlotsForService(serviceValue, appointmentTimeGrid);
+                await generateTimeSlotsForService(serviceValue, appointmentTimeGrid, duration);
             }
         });
     });
@@ -1921,10 +1921,11 @@ function initializeServiceSelection() {
                         serviceInput.value = serviceMap[serviceValue] || serviceValue;
                     }
                     
-                    // Always regenerate to check for booked slots
+                    // Always regenerate to check for booked slots (pass duration from card)
                     if (timeGrid) {
                         timeGrid.innerHTML = ''; // Clear existing
-                        await generateTimeSlotsForService(serviceValue, timeGrid);
+                        const durationStr = card.getAttribute('data-duration') || '';
+                        await generateTimeSlotsForService(serviceValue, timeGrid, durationStr);
                     }
                 }
             });
@@ -2055,8 +2056,8 @@ function getBlockedTimeSlots(selectedTime, durationMinutes, allTimeSlots) {
     return blocked;
 }
 
-// Generate time slots for a specific service card
-async function generateTimeSlotsForService(serviceType, timeGrid) {
+// Generate time slots for a specific service card (durationStringOverride: pass from caller so duration is always correct)
+async function generateTimeSlotsForService(serviceType, timeGrid, durationStringOverride) {
     if (!timeGrid) return;
     
     // Clear existing slots
@@ -2074,24 +2075,28 @@ async function generateTimeSlotsForService(serviceType, timeGrid) {
         bookedTimes = await getBookedTimeSlots(appointmentDate, dentistId);
     }
     
-    // Get selected service duration
-    // Try service-item first, then service-card-expandable
-    let selectedServiceItem = document.querySelector('.service-item.selected');
-    if (!selectedServiceItem) {
-        // Check if timeGrid is inside a service-card-expandable
-        const serviceCard = timeGrid.closest('.service-card-expandable');
-        if (serviceCard) {
-            selectedServiceItem = serviceCard;
+    // Get duration: explicit override first, then .selected / card, then by service type
+    let durationString = durationStringOverride || '';
+    if (!durationString) {
+        let selectedServiceItem = document.querySelector('.service-item.selected');
+        if (!selectedServiceItem) {
+            const serviceCard = timeGrid.closest('.service-card-expandable');
+            if (serviceCard) selectedServiceItem = serviceCard;
+        }
+        if (selectedServiceItem) durationString = selectedServiceItem.getAttribute('data-duration') || '';
+    }
+    if (!durationString && serviceType) {
+        const byService = document.querySelector(`.service-item[data-service="${serviceType}"]`);
+        if (byService) durationString = byService.getAttribute('data-duration') || '';
+        if (!durationString) {
+            const byCard = document.querySelector(`.service-card-expandable[data-service="${serviceType}"]`);
+            if (byCard) durationString = byCard.getAttribute('data-duration') || '';
         }
     }
-    const durationString = selectedServiceItem?.getAttribute('data-duration') || '';
-    console.log('🔍 Service item found:', selectedServiceItem, 'Duration string:', durationString);
     const durationMinutes = parseDurationToMinutes(durationString);
-    console.log('📊 Parsed duration:', durationMinutes, 'minutes');
     
     // Store duration in timeGrid for later use
     timeGrid.setAttribute('data-duration-minutes', durationMinutes);
-    console.log('💾 Stored duration in timeGrid:', timeGrid.getAttribute('data-duration-minutes'));
     
     // Define time slots (8:00 AM to 6:00 PM, 30-minute intervals)
     const timeSlots = [
@@ -2172,6 +2177,7 @@ async function generateTimeSlotsForService(serviceType, timeGrid) {
                         s.disabled = false;
                         s.style.cursor = 'pointer';
                         s.style.opacity = '1';
+                        s.style.pointerEvents = '';
                     }
                 });
                 
@@ -2180,18 +2186,14 @@ async function generateTimeSlotsForService(serviceType, timeGrid) {
                 
                 // Block subsequent time slots based on duration
                 const blockedSlots = getBlockedTimeSlots(time, durationMinutes, slotsArray);
-                console.log('Blocked slots calculated:', blockedSlots);
-                console.log('Time slots array used:', slotsArray);
-                console.log('Duration minutes:', durationMinutes);
                 blockedSlots.forEach(blockedTime => {
-                    const blockedSlot = timeGrid.querySelector(`[data-time="${blockedTime}"]`);
-                    console.log('Blocking slot:', blockedTime, 'Found element:', blockedSlot);
+                    const blockedSlot = timeGrid.querySelector(`.time-slot[data-time="${blockedTime}"]`);
                     if (blockedSlot && !blockedSlot.classList.contains('fully-booked')) {
                         blockedSlot.classList.add('blocked-by-duration');
                         blockedSlot.disabled = true;
                         blockedSlot.style.cursor = 'not-allowed';
-                        blockedSlot.style.opacity = '0.5';
-                        console.log('Successfully blocked:', blockedTime);
+                        blockedSlot.style.opacity = '0.6';
+                        blockedSlot.style.pointerEvents = 'none';
                     }
                 });
                 

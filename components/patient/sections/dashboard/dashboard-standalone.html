@@ -1291,6 +1291,20 @@
             color: #999;
             white-space: nowrap;
         }
+
+        /* Blocked by duration (slots covered by selected time + service duration) */
+        .time-slot.blocked-by-duration {
+            background-color: #fef3c7 !important;
+            color: #92400e !important;
+            cursor: not-allowed !important;
+            border-color: #fbbf24 !important;
+            opacity: 0.6 !important;
+            pointer-events: none;
+        }
+        .time-slot.blocked-by-duration:hover {
+            background-color: #fef3c7 !important;
+            transform: none;
+        }
             color: white;
             border-color: #4a90e2;
         }
@@ -1780,7 +1794,6 @@
             if (aptDateInput) {
                 aptDateInput.addEventListener('change', async function() {
                     await updateAvailableTimeSlots();
-                    // Refresh time slots if service is already selected
                     const appointmentTimeGrid = document.getElementById('appointmentTimeGrid');
                     const serviceInput = document.getElementById('aptService');
                     if (appointmentTimeGrid && serviceInput && serviceInput.value) {
@@ -1791,8 +1804,10 @@
                             'Denture (Pustiso)': 'denture'
                         };
                         const serviceValue = serviceMap[serviceInput.value] || serviceInput.value.toLowerCase();
+                        const durationEl = document.querySelector(`.service-item[data-service="${serviceValue}"]`);
+                        const durationStr = durationEl ? durationEl.getAttribute('data-duration') || '' : '';
                         appointmentTimeGrid.innerHTML = '';
-                        await generateTimeSlotsForService(serviceValue, appointmentTimeGrid);
+                        await generateTimeSlotsForService(serviceValue, appointmentTimeGrid, durationStr);
                     }
                 });
             }
@@ -1800,7 +1815,6 @@
             if (aptDentistSelect) {
                 aptDentistSelect.addEventListener('change', async function() {
                     await updateAvailableTimeSlots();
-                    // Refresh time slots if service is already selected
                     const appointmentTimeGrid = document.getElementById('appointmentTimeGrid');
                     const serviceInput = document.getElementById('aptService');
                     if (appointmentTimeGrid && serviceInput && serviceInput.value) {
@@ -1811,8 +1825,10 @@
                             'Denture (Pustiso)': 'denture'
                         };
                         const serviceValue = serviceMap[serviceInput.value] || serviceInput.value.toLowerCase();
+                        const durationEl = document.querySelector(`.service-item[data-service="${serviceValue}"]`);
+                        const durationStr = durationEl ? durationEl.getAttribute('data-duration') || '' : '';
                         appointmentTimeGrid.innerHTML = '';
-                        await generateTimeSlotsForService(serviceValue, appointmentTimeGrid);
+                        await generateTimeSlotsForService(serviceValue, appointmentTimeGrid, durationStr);
                     }
                 });
             }
@@ -3299,11 +3315,11 @@
                         selectedServiceInfoText.textContent = `Available times for ${serviceName} (${duration})`;
                     }
                     
-                    // Generate time slots (always regenerate to check for booked slots)
+                    // Generate time slots (pass duration so blocking works even if .selected not yet applied)
                     if (appointmentTimeGrid) {
                         appointmentTimeGrid.innerHTML = '';
                         if (typeof generateTimeSlotsForService === 'function') {
-                            await generateTimeSlotsForService(serviceValue, appointmentTimeGrid);
+                            await generateTimeSlotsForService(serviceValue, appointmentTimeGrid, duration);
                         }
                     }
                 });
@@ -3380,8 +3396,8 @@
             return blocked;
         }
 
-        // Generate time slots
-        async function generateTimeSlotsForService(serviceType, timeGrid) {
+        // Generate time slots (durationStringOverride: pass from caller so duration is always correct)
+        async function generateTimeSlotsForService(serviceType, timeGrid, durationStringOverride) {
             if (!timeGrid) return;
             
             timeGrid.innerHTML = '';
@@ -3396,17 +3412,20 @@
                 bookedTimes = await getBookedTimeSlots(appointmentDate, dentistId);
             }
             
-            // Get selected service duration
-            // Try service-item first, then service-card-expandable
-            let selectedServiceItem = document.querySelector('.service-item.selected');
-            if (!selectedServiceItem) {
-                // Check if timeGrid is inside a service-card-expandable
-                const serviceCard = timeGrid.closest('.service-card-expandable');
-                if (serviceCard) {
-                    selectedServiceItem = serviceCard;
+            // Get selected service duration: explicit override first, then .selected, then by service type
+            let durationString = durationStringOverride || '';
+            if (!durationString) {
+                let selectedServiceItem = document.querySelector('.service-item.selected');
+                if (!selectedServiceItem) {
+                    const serviceCard = timeGrid.closest('.service-card-expandable');
+                    if (serviceCard) selectedServiceItem = serviceCard;
                 }
+                if (selectedServiceItem) durationString = selectedServiceItem.getAttribute('data-duration') || '';
             }
-            const durationString = selectedServiceItem?.getAttribute('data-duration') || '';
+            if (!durationString && serviceType) {
+                const byService = document.querySelector(`.service-item[data-service="${serviceType}"]`);
+                if (byService) durationString = byService.getAttribute('data-duration') || '';
+            }
             const durationMinutes = parseDurationToMinutes(durationString);
             
             // Store duration in timeGrid for later use
@@ -3481,8 +3500,10 @@
                             s.classList.remove('selected', 'blocked-by-duration');
                             if (!s.classList.contains('fully-booked')) {
                                 s.disabled = false;
+                                s.removeAttribute('aria-disabled');
                                 s.style.cursor = 'pointer';
                                 s.style.opacity = '1';
+                                s.style.pointerEvents = '';
                             }
                         });
                         
@@ -3492,12 +3513,14 @@
                         // Block subsequent time slots based on duration
                         const blockedSlots = getBlockedTimeSlots(time, durationMinutes, slotsArray);
                         blockedSlots.forEach(blockedTime => {
-                            const blockedSlot = timeGrid.querySelector(`[data-time="${blockedTime}"]`);
+                            const blockedSlot = timeGrid.querySelector(`.time-slot[data-time="${blockedTime}"]`);
                             if (blockedSlot && !blockedSlot.classList.contains('fully-booked')) {
                                 blockedSlot.classList.add('blocked-by-duration');
                                 blockedSlot.disabled = true;
+                                blockedSlot.setAttribute('aria-disabled', 'true');
                                 blockedSlot.style.cursor = 'not-allowed';
-                                blockedSlot.style.opacity = '0.5';
+                                blockedSlot.style.opacity = '0.6';
+                                blockedSlot.style.pointerEvents = 'none';
                             }
                         });
                         

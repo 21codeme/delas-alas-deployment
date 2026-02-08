@@ -980,6 +980,19 @@
             color: #999;
             white-space: nowrap;
         }
+
+        .time-slot.blocked-by-duration {
+            background-color: #fef3c7 !important;
+            color: #92400e !important;
+            cursor: not-allowed !important;
+            border-color: #fbbf24 !important;
+            opacity: 0.6 !important;
+            pointer-events: none;
+        }
+        .time-slot.blocked-by-duration:hover {
+            background-color: #fef3c7 !important;
+            transform: none;
+        }
     </style>
 </head>
 <body>
@@ -1185,7 +1198,7 @@
                 
                 item.dataset.initialized = 'true';
                 
-                item.addEventListener('click', function(e) {
+                item.addEventListener('click', async function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     
@@ -1229,10 +1242,10 @@
                         selectedServiceInfoText.textContent = `Available times for ${serviceName} (${duration})`;
                     }
                     
-                    // Generate time slots
+                    // Generate time slots (pass duration so blocking works)
                     if (appointmentTimeGrid) {
                         appointmentTimeGrid.innerHTML = '';
-                        generateTimeSlotsForService(serviceValue, appointmentTimeGrid);
+                        await generateTimeSlotsForService(serviceValue, appointmentTimeGrid, duration);
                     }
                 });
             });
@@ -1290,10 +1303,11 @@
                                 serviceInput.value = serviceMap[serviceValue] || serviceValue;
                             }
                             
-                            // Always regenerate to check for booked slots
+                            // Always regenerate to check for booked slots (pass duration from card)
                             if (timeGrid) {
                                 timeGrid.innerHTML = '';
-                                await generateTimeSlotsForService(serviceValue, timeGrid);
+                                const durationStr = card.getAttribute('data-duration') || '';
+                                await generateTimeSlotsForService(serviceValue, timeGrid, durationStr);
                             }
                         }
                     });
@@ -1371,8 +1385,8 @@
             return blocked;
         }
 
-        // Generate time slots
-        async function generateTimeSlotsForService(serviceType, timeGrid) {
+        // Generate time slots (durationStringOverride: pass from caller so duration is always correct)
+        async function generateTimeSlotsForService(serviceType, timeGrid, durationStringOverride) {
             if (!timeGrid) return;
             
             timeGrid.innerHTML = '';
@@ -1387,17 +1401,24 @@
                 bookedTimes = await getBookedTimeSlots(appointmentDate, dentistId);
             }
             
-            // Get selected service duration
-            // Try service-item first, then service-card-expandable
-            let selectedServiceItem = document.querySelector('.service-item.selected');
-            if (!selectedServiceItem) {
-                // Check if timeGrid is inside a service-card-expandable
-                const serviceCard = timeGrid.closest('.service-card-expandable');
-                if (serviceCard) {
-                    selectedServiceItem = serviceCard;
+            // Get duration: explicit override first, then .selected, then by service type
+            let durationString = durationStringOverride || '';
+            if (!durationString) {
+                let selectedServiceItem = document.querySelector('.service-item.selected');
+                if (!selectedServiceItem) {
+                    const serviceCard = timeGrid.closest('.service-card-expandable');
+                    if (serviceCard) selectedServiceItem = serviceCard;
+                }
+                if (selectedServiceItem) durationString = selectedServiceItem.getAttribute('data-duration') || '';
+            }
+            if (!durationString && serviceType) {
+                const byService = document.querySelector(`.service-item[data-service="${serviceType}"]`);
+                if (byService) durationString = byService.getAttribute('data-duration') || '';
+                if (!durationString) {
+                    const byCard = document.querySelector(`.service-card-expandable[data-service="${serviceType}"]`);
+                    if (byCard) durationString = byCard.getAttribute('data-duration') || '';
                 }
             }
-            const durationString = selectedServiceItem?.getAttribute('data-duration') || '';
             const durationMinutes = parseDurationToMinutes(durationString);
             
             // Store duration in timeGrid for later use
@@ -1474,6 +1495,7 @@
                                 s.disabled = false;
                                 s.style.cursor = 'pointer';
                                 s.style.opacity = '1';
+                                s.style.pointerEvents = '';
                             }
                         });
                         
@@ -1483,12 +1505,13 @@
                         // Block subsequent time slots based on duration
                         const blockedSlots = getBlockedTimeSlots(time, durationMinutes, slotsArray);
                         blockedSlots.forEach(blockedTime => {
-                            const blockedSlot = timeGrid.querySelector(`[data-time="${blockedTime}"]`);
+                            const blockedSlot = timeGrid.querySelector(`.time-slot[data-time="${blockedTime}"]`);
                             if (blockedSlot && !blockedSlot.classList.contains('fully-booked')) {
                                 blockedSlot.classList.add('blocked-by-duration');
                                 blockedSlot.disabled = true;
                                 blockedSlot.style.cursor = 'not-allowed';
-                                blockedSlot.style.opacity = '0.5';
+                                blockedSlot.style.opacity = '0.6';
+                                blockedSlot.style.pointerEvents = 'none';
                             }
                         });
                         
