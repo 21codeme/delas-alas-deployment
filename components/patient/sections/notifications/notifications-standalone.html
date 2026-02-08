@@ -632,20 +632,23 @@
                         
                         // Check if reschedule has been handled (approved or rejected)
                         let rescheduleHandled = false;
-                        if (isRescheduled && notif.data && notif.data.appointment_id) {
+                        const rescheduleHandledIds = JSON.parse(localStorage.getItem('rescheduleHandledNotificationIds') || '{}');
+                        if (rescheduleHandledIds[notif.id]) {
+                            rescheduleHandled = true;
+                        }
+                        if (!rescheduleHandled && isRescheduled && notif.data && notif.data.appointment_id) {
                             const appointmentId = notif.data.appointment_id;
                             const currentAppointment = appointmentsMap[appointmentId];
-                            
                             if (currentAppointment) {
-                                const currentDate = currentAppointment.appointment_date;
-                                const currentTime = currentAppointment.appointment_time ? currentAppointment.appointment_time.substring(0, 5) : ''; // HH:MM format
-                                const oldDate = notif.data.old_date || '';
-                                const oldTime = notif.data.old_time ? notif.data.old_time.substring(0, 5) : '';
-                                const newDate = notif.data.appointment_date || '';
-                                const newTime = notif.data.appointment_time ? notif.data.appointment_time.substring(0, 5) : '';
-                                
-                                // Check if appointment matches old schedule (rejected) or new schedule (approved)
-                                if ((currentDate === oldDate && currentTime === oldTime) || 
+                                const toYmd = (d) => !d ? '' : (typeof d === 'string' ? d.split('T')[0] : d);
+                                const toHm = (t) => !t ? '' : String(t).substring(0, 5);
+                                const currentDate = toYmd(currentAppointment.appointment_date);
+                                const currentTime = toHm(currentAppointment.appointment_time);
+                                const oldDate = toYmd(notif.data.old_date);
+                                const oldTime = toHm(notif.data.old_time);
+                                const newDate = toYmd(notif.data.appointment_date);
+                                const newTime = toHm(notif.data.appointment_time);
+                                if ((currentDate === oldDate && currentTime === oldTime) ||
                                     (currentDate === newDate && currentTime === newTime)) {
                                     rescheduleHandled = true;
                                 }
@@ -1012,6 +1015,9 @@
                                  (notification.data && notification.data.old_date);
             
             if (isRescheduled) {
+                if (notification.rescheduleHandled) {
+                    return;
+                }
                 viewRescheduleDetails(notificationId);
                 return;
             }
@@ -1182,9 +1188,12 @@
                 });
 
                 if (response.ok) {
-                    // Mark notification as read
+                    // Mark notification as read and record that reschedule was handled (so View button disappears)
                     if (notificationId) {
                         await markAsRead(notificationId);
+                        const handled = JSON.parse(localStorage.getItem('rescheduleHandledNotificationIds') || '{}');
+                        handled[notificationId] = true;
+                        localStorage.setItem('rescheduleHandledNotificationIds', JSON.stringify(handled));
                     }
 
                     // Send confirmation email to patient
@@ -1299,9 +1308,12 @@
                 });
 
                 if (response.ok) {
-                    // Mark notification as read
+                    // Mark notification as read and record that reschedule was handled (so View button disappears)
                     if (notificationId) {
                         await markAsRead(notificationId);
+                        const handled = JSON.parse(localStorage.getItem('rescheduleHandledNotificationIds') || '{}');
+                        handled[notificationId] = true;
+                        localStorage.setItem('rescheduleHandledNotificationIds', JSON.stringify(handled));
                     }
 
                     // Show success message
