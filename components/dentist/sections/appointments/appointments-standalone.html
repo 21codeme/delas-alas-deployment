@@ -2183,8 +2183,8 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             const dateNorm = (appointmentDate + '').trim().substring(0, 10);
             const ALL_SLOTS = ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00'];
             try {
-                // Use dentist_id only (no or/confirmed_by_dentist_id) to avoid 400 if column missing
-                const endpoint = `appointments?appointment_date=eq.${encodeURIComponent(dateNorm)}&dentist_id=eq.${encodeURIComponent(dentistId)}&status=in.(pending,confirmed,completed,rescheduled)&select=id,appointment_time,service_type,dentist_id`;
+                // Fetch by date only (same as list view); filter by dentist_id in code so we get data even if DB column name differs
+                const endpoint = `appointments?appointment_date=eq.${encodeURIComponent(dateNorm)}&status=in.(pending,confirmed,completed,rescheduled)&select=id,appointment_time,service_type,dentist_id`;
                 let appointments;
                 try {
                     appointments = await callSupabaseAPI('GET', endpoint);
@@ -2192,7 +2192,15 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                     console.warn('getBookedTimeSlotsForNewBooking fallback:', e);
                     return [];
                 }
-                const list = Array.isArray(appointments) ? appointments : [];
+                const rawList = Array.isArray(appointments) ? appointments : [];
+                const dentistIdStr = String(dentistId).toLowerCase();
+                let list = rawList.filter(function(apt) {
+                    const d = apt.dentist_id || apt.dentistId || '';
+                    return String(d).toLowerCase() === dentistIdStr;
+                });
+                if (list.length === 0 && rawList.length > 0) {
+                    list = rawList;
+                }
                 const bookedSet = new Set();
                 for (const apt of list) {
                     const startMinutes = timeToMinutes(apt.appointment_time || '');
