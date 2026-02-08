@@ -1,8 +1,11 @@
--- Fix Appointments RLS Policy for Calendar View
--- Run this in your Supabase SQL Editor to allow patients to see appointment counts
--- This allows patients to see how many other users booked on each date (for calendar)
+-- Fix Appointments RLS Policy for Calendar View and Booked Slots
+-- Run this in your Supabase SQL Editor if:
+--   - Calendar dates show no indicator even when there are appointments, or
+--   - Patient booking modal shows all time slots as available (booked slots not visible)
+-- This allows the app to read appointments by date so calendar counts and time-slot availability work.
 
 -- 1. Drop ALL existing policies for appointments table
+DROP POLICY IF EXISTS "Allow all users to view appointment dates for calendar" ON appointments;
 DROP POLICY IF EXISTS "Users can view own appointments" ON appointments;
 DROP POLICY IF EXISTS "Patients can view own appointments" ON appointments;
 DROP POLICY IF EXISTS "Dentists can view all appointments" ON appointments;

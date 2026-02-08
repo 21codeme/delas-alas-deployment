@@ -2180,27 +2180,7 @@
                 const isToday = date.toDateString() === new Date().toDateString();
                 const dateStr = date.toDateString();
                 
-                // Patient's own appointments (including past appointments)
-                const myAppointments = appointments.filter(a => {
-                    const aptDate = new Date(a.appointment_date);
-                    return aptDate.toDateString() === dateStr;
-                });
-                const myPending = myAppointments.filter(a => a.status === 'pending').length;
-                const myConfirmed = myAppointments.filter(a => a.status === 'confirmed' || a.status === 'rescheduled').length;
-                const myCompleted = myAppointments.filter(a => a.status === 'completed').length;
-                
-                // Debug logging for date 21
-                if (d === 21) {
-                    console.log(`📅 Date 21 appointments:`, {
-                        dateStr,
-                        myAppointments,
-                        myPending,
-                        myConfirmed,
-                        totalAppointments: appointments.length
-                    });
-                }
-                
-                // All appointments on this date (including past and future appointments)
+                // All appointments on this date (from month data - single source of truth for indicators)
                 const dayAppointments = allAppointments.filter(a => {
                     if (!a || !a.appointment_date) return false;
                     try {
@@ -2211,12 +2191,17 @@
                     }
                 });
                 const totalBookings = dayAppointments.length;
-                
-                // Count of OTHER users' appointments (excluding patient's own) - includes past and future
                 const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                
+                // "My" counts from dayAppointments so indicator matches what's on the calendar (fix: show indicator when day has my appointments even if status is completed/other)
+                const myOnThisDay = dayAppointments.filter(a => a.patient_id && String(a.patient_id) === String(currentUser.id));
+                const myPending = myOnThisDay.filter(a => (a.status || '').toLowerCase() === 'pending').length;
+                const myConfirmed = myOnThisDay.filter(a => ['confirmed', 'rescheduled'].includes((a.status || '').toLowerCase())).length;
+                const myCompleted = myOnThisDay.filter(a => (a.status || '').toLowerCase() === 'completed').length;
+                
+                // Count of OTHER users' appointments (excluding patient's own)
                 const otherUsersAppointments = dayAppointments.filter(a => {
-                    // Filter out current patient's appointments
-                    return a.patient_id && a.patient_id !== currentUser.id;
+                    return a.patient_id && String(a.patient_id) !== String(currentUser.id);
                 });
                 const otherUsersCount = otherUsersAppointments.length;
                 
@@ -2226,20 +2211,6 @@
                     const status = a.status?.toLowerCase() || '';
                     return status === 'pending' || status === 'confirmed' || status === 'rescheduled';
                 }).length;
-                
-                // Debug logging for ALL dates (to see what's happening)
-                if (d <= 5 || otherUsersCount > 0 || myPending > 0 || myConfirmed > 0) {
-                    console.log(`📅 Date ${d} (${dateStr}):`, {
-                        totalBookings,
-                        activeBookings,
-                        otherUsersCount,
-                        myPending,
-                        myConfirmed,
-                        dayAppointments: dayAppointments.length,
-                        allAppointmentsLength: allAppointments?.length || 0,
-                        currentUser: currentUser?.id || 'no user'
-                    });
-                }
                 
                 // Check if date is full (8 booking limit including pending and confirmed)
                 const MAX_BOOKINGS_PER_DAY = 8;
@@ -2267,6 +2238,10 @@
                 if (myConfirmed > 0) {
                     indicator += `<span class="indicator indicator-my" title="Your ${myConfirmed} confirmed/rescheduled ${myConfirmed === 1 ? 'appointment' : 'appointments'}">✓${myConfirmed}</span>`;
                 }
+                // Show indicator when user has any appointment on this day (e.g. completed) so day is never "empty" when it has my appointment
+                if (myOnThisDay.length > 0 && myPending === 0 && myConfirmed === 0) {
+                    indicator += `<span class="indicator indicator-my" title="Your ${myOnThisDay.length} ${myOnThisDay.length === 1 ? 'appointment' : 'appointments'} on this date">✓${myOnThisDay.length}</span>`;
+                }
                 
                 // Show FULL indicator if day is full (8 bookings reached)
                 if (isFull && myPending === 0 && myConfirmed === 0) {
@@ -2286,18 +2261,6 @@
                 const isClickable = !isFull && !isPastDate;
                 const dateString = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                 const clickHandler = isClickable ? `onclick="openBookAppointmentModal('${dateString}')"` : '';
-                
-                // Debug: Log if indicator is empty but there should be appointments
-                if (indicator === '' && (totalBookings > 0 || dayAppointments.length > 0)) {
-                    console.warn(`⚠️ Date ${d}: No indicator but has appointments!`, {
-                        totalBookings,
-                        otherUsersCount,
-                        myPending,
-                        myConfirmed,
-                        dayAppointments: dayAppointments.length,
-                        allAppointments: allAppointments?.length || 0
-                    });
-                }
                 
                 html += `
                     <div class="calendar-day ${dayClass.trim()}" ${clickHandler} style="cursor: ${isClickable ? 'pointer' : 'default'}">
@@ -2700,7 +2663,6 @@
                 // Get booked time slots only when both date and dentist are selected
                 bookedTimes = await getBookedTimeSlots(appointmentDate, dentistId);
                 appointments = window.currentBookedAppointments || [];
-                console.log('📋 Using appointments for status check:', appointments);
             }
             
             // Clear and rebuild time selector
@@ -2728,8 +2690,6 @@
                         // Compare with slot value (also normalize slot value HH:MM:SS -> HH:MM)
                         let normalizedSlot = slot.value.substring(0, 5);
                         
-                        console.log('🔍 Comparing:', normalizedBooked, 'with', normalizedSlot);
-                        
                         if (normalizedBooked === normalizedSlot) {
                             isBooked = true;
                             // Find appointment that covers this slot (by duration)
@@ -2747,10 +2707,8 @@
                         option.disabled = true;
                         const statusLabel = bookedStatus === 'pending' ? ' (Pending)' : bookedStatus === 'confirmed' ? ' (Confirmed)' : ' (Booked)';
                         option.textContent = slot.label + statusLabel;
-                        console.log('🚫 Time slot', slot.value, 'is booked - Status:', bookedStatus);
                     } else {
                         option.textContent = slot.label + ' (Available)';
-                        console.log('✅ Time slot', slot.value, 'is available');
                     }
                 } else {
                     // If no date or dentist selected, just show the time
@@ -3158,6 +3116,11 @@
             // Pre-fill date if provided
             if (selectedDate) {
                 document.getElementById('aptDate').value = selectedDate;
+                // Pre-select first dentist so booked slots load immediately (user can change dentist after)
+                const dentistSelect = document.getElementById('aptDentist');
+                if (dentistSelect && dentistSelect.options.length > 1) {
+                    dentistSelect.selectedIndex = 1;
+                }
             }
             
             // Pre-fill user data if available
@@ -3171,7 +3134,7 @@
             const modal = document.getElementById('bookAppointmentModal');
             modal.classList.add('show');
             
-            // Update available time slots (will show all as disabled until dentist is selected)
+            // Update available time slots (with date + dentist so booked slots show if RLS allows)
             await updateAvailableTimeSlots();
             
             showToast('Appointment booking form opened', 'info');
