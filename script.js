@@ -2474,65 +2474,36 @@ async function loadServicesFromDatabase() {
     }
 }
 
-// Display services on the index page
-function displayServicesOnIndex(services) {
-    console.log('🎨 Displaying services on index page:', services);
-    const servicesGrid = document.getElementById('servicesGrid');
-    
-    if (!servicesGrid) {
-        console.log('❌ Services grid not found');
-        return;
-    }
+// Default "Our Services" (4 fixed services)
+const INDEX_DEFAULT_SERVICES = [
+    { name: 'Teeth Cleaning', icon: 'fa-broom', description: 'Professional teeth cleaning and oral hygiene services', notes: ['Removes plaque and tartar buildup', 'Prevents gum disease', 'Fresh breath and brighter smile', 'Regular checkup included'] },
+    { name: 'Tooth Extraction', icon: 'fa-tooth', description: 'Safe and professional tooth removal services', notes: ['Painless extraction procedure', 'Post-extraction care instructions', 'Follow-up appointments available', 'Emergency extractions available'] },
+    { name: 'Dental Filling', icon: 'fa-fill-drip', description: 'Quality dental fillings for cavities and tooth restoration', notes: ['Composite and amalgam fillings', 'Tooth-colored materials', 'Long-lasting results', 'Comfortable procedure'] },
+    { name: 'Denture (Pustiso)', icon: 'fa-teeth', description: 'Custom-made dentures for missing teeth replacement', notes: ['Full and partial dentures', 'Custom fit and comfortable', 'Natural-looking appearance', 'Multiple visits for fitting'] }
+];
 
-    // Always show the 4 specific services as requested
-    const specificServices = [
-        {
-            name: 'Teeth Cleaning',
-            icon: 'fa-broom',
-            description: 'Professional teeth cleaning and oral hygiene services',
-            notes: [
-                'Removes plaque and tartar buildup',
-                'Prevents gum disease',
-                'Fresh breath and brighter smile',
-                'Regular checkup included'
-            ]
-        },
-        {
-            name: 'Tooth Extraction',
-            icon: 'fa-tooth',
-            description: 'Safe and professional tooth removal services',
-            notes: [
-                'Painless extraction procedure',
-                'Post-extraction care instructions',
-                'Follow-up appointments available',
-                'Emergency extractions available'
-            ]
-        },
-        {
-            name: 'Dental Filling',
-            icon: 'fa-fill-drip',
-            description: 'Quality dental fillings for cavities and tooth restoration',
-            notes: [
-                'Composite and amalgam fillings',
-                'Tooth-colored materials',
-                'Long-lasting results',
-                'Comfortable procedure'
-            ]
-        },
-        {
-            name: 'Denture (Pustiso)',
-            icon: 'fa-teeth',
-            description: 'Custom-made dentures for missing teeth replacement',
-            notes: [
-                'Full and partial dentures',
-                'Custom fit and comfortable',
-                'Natural-looking appearance',
-                'Multiple visits for fitting'
-            ]
-        }
-    ];
-    
-    servicesGrid.innerHTML = specificServices.map(service => `
+const DEFAULT_SERVICE_NAMES = ['Teeth Cleaning', 'Tooth Extraction', 'Dental Filling', 'Denture (Pustiso)'];
+
+// Display services on the index page (default 4 + custom services from DB)
+function displayServicesOnIndex(servicesFromDb) {
+    console.log('🎨 Displaying services on index page. From DB:', servicesFromDb?.length || 0);
+    const servicesGrid = document.getElementById('servicesGrid');
+    if (!servicesGrid) return;
+
+    // Custom services from DB (exclude names that match the 4 defaults to avoid duplicates)
+    const customServices = (servicesFromDb || []).filter(s => {
+        const name = (s.name || s.service_name || '').trim();
+        return name && !DEFAULT_SERVICE_NAMES.includes(name);
+    }).map(s => ({
+        name: s.name || s.service_name || 'Custom Service',
+        icon: s.icon || 'fa-tooth',
+        description: s.description || 'Contact clinic for details.',
+        notes: Array.isArray(s.notes) ? s.notes : (s.description ? [s.description] : ['Contact clinic for details.'])
+    }));
+
+    const allServices = [...INDEX_DEFAULT_SERVICES, ...customServices];
+
+    servicesGrid.innerHTML = allServices.map(service => `
         <div class="service-card">
             <div class="service-icon">
                 <i class="fas ${service.icon}"></i>
@@ -2545,8 +2516,7 @@ function displayServicesOnIndex(services) {
             <button class="btn btn-outline" onclick="showAppointmentModal()">Book Now</button>
         </div>
     `).join('');
-    
-    console.log('✅ Services displayed successfully');
+    console.log('✅ Services displayed:', INDEX_DEFAULT_SERVICES.length, 'default +', customServices.length, 'custom');
 }
 
 // Group services by category (infer from service name/description since DB doesn't have category field)
@@ -2615,73 +2585,9 @@ function getCategoryIcon(category) {
     return icons[category] || 'fa-tooth';
 }
 
-// Show fallback services if database fails
+// Show fallback services if database fails (default 4 only, no custom)
 function showFallbackServices() {
-    const servicesGrid = document.getElementById('servicesGrid');
-    
-    if (!servicesGrid) return;
-
-    // Use the same 4 specific services
-    const specificServices = [
-        {
-            name: 'Teeth Cleaning',
-            icon: 'fa-broom',
-            description: 'Professional teeth cleaning and oral hygiene services',
-            notes: [
-                'Removes plaque and tartar buildup',
-                'Prevents gum disease',
-                'Fresh breath and brighter smile',
-                'Regular checkup included'
-            ]
-        },
-        {
-            name: 'Tooth Extraction',
-            icon: 'fa-tooth',
-            description: 'Safe and professional tooth removal services',
-            notes: [
-                'Painless extraction procedure',
-                'Post-extraction care instructions',
-                'Follow-up appointments available',
-                'Emergency extractions available'
-            ]
-        },
-        {
-            name: 'Dental Filling',
-            icon: 'fa-fill-drip',
-            description: 'Quality dental fillings for cavities and tooth restoration',
-            notes: [
-                'Composite and amalgam fillings',
-                'Tooth-colored materials',
-                'Long-lasting results',
-                'Comfortable procedure'
-            ]
-        },
-        {
-            name: 'Denture (Pustiso)',
-            icon: 'fa-teeth',
-            description: 'Custom-made dentures for missing teeth replacement',
-            notes: [
-                'Full and partial dentures',
-                'Custom fit and comfortable',
-                'Natural-looking appearance',
-                'Multiple visits for fitting'
-            ]
-        }
-    ];
-
-    servicesGrid.innerHTML = specificServices.map(service => `
-        <div class="service-card">
-            <div class="service-icon">
-                <i class="fas ${service.icon}"></i>
-            </div>
-            <h3>${service.name}</h3>
-            <p>${service.description}</p>
-            <ul class="service-features">
-                ${service.notes.map(note => `<li><i class="fas fa-check"></i> ${note}</li>`).join('')}
-            </ul>
-            <button class="btn btn-outline" onclick="showAppointmentModal()">Book Now</button>
-        </div>
-    `).join('');
+    displayServicesOnIndex([]);
 }
 
 // Export functions for global access - make sure toggleMobileMenu is available immediately
