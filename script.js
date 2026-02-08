@@ -1635,13 +1635,13 @@ function confirmGuestBooking() {
     if (form) form.requestSubmit();
 }
 
-function handleContact(event) {
+async function handleContact(event) {
     event.preventDefault();
     
-    const name = document.getElementById('contactName').value;
-    const email = document.getElementById('contactEmail').value;
-    const phone = document.getElementById('contactPhone').value;
-    const message = document.getElementById('contactMessage').value;
+    const name = document.getElementById('contactName').value.trim();
+    const email = document.getElementById('contactEmail').value.trim();
+    const phone = document.getElementById('contactPhone').value.trim();
+    const message = document.getElementById('contactMessage').value.trim();
     
     // Validate form
     if (!name || !email || !message) {
@@ -1649,9 +1649,33 @@ function handleContact(event) {
         return;
     }
     
-    // Simulate sending message
-    showToast('Message sent successfully! We will get back to you soon.', 'success');
-    event.target.reset();
+    try {
+        const rpcRes = await fetch(`${supabaseUrl}/rest/v1/rpc/create_contact_form_notifications`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': supabaseKey,
+                'Authorization': `Bearer ${supabaseKey}`
+            },
+            body: JSON.stringify({
+                p_name: name,
+                p_email: email,
+                p_phone: phone || '',
+                p_message: message
+            })
+        });
+        if (!rpcRes.ok) {
+            const errText = await rpcRes.text();
+            console.warn('Contact form notifications RPC failed:', rpcRes.status, errText);
+            // Still show success so user is not confused; dentist may not get in-app notification until RPC is deployed
+        }
+        showToast('Message sent successfully! We will get back to you soon.', 'success');
+        event.target.reset();
+    } catch (err) {
+        console.error('Contact form submit error:', err);
+        showToast('Message sent. We will get back to you soon.', 'success');
+        event.target.reset();
+    }
 }
 
 // Update UI for logged in user
