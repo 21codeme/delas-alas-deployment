@@ -28,7 +28,7 @@ CREATE TABLE appointments (
   patient_name TEXT NOT NULL,
   patient_email TEXT NOT NULL,
   patient_phone TEXT NOT NULL,
-  status TEXT CHECK (status IN ('pending', 'confirmed', 'completed', 'cancelled')) DEFAULT 'pending',
+  status TEXT CHECK (status IN ('pending', 'confirmed', 'completed', 'cancelled', 'rescheduled')) DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
