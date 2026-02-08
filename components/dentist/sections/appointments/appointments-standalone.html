@@ -1793,11 +1793,18 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                     </td>
                     <td>
                         <div style="display: flex; gap: 5px;">
-                            ${isGuestBooking(appointment) ? `
-                                <button class="btn btn-sm btn-primary" onclick="approveGuestAppointment('${appointment.id}')" ${appointment.status === 'confirmed' ? 'disabled' : ''}>
-                                    <i class="fas fa-check"></i> ${appointment.status === 'confirmed' ? 'Approved' : 'Approve'}
+                            ${isGuestBooking(appointment) ? (
+                                appointment.status === 'confirmed'
+                                    ? `
+                                <button class="btn btn-sm btn-primary" onclick="viewAppointment('${appointment.id}')">View</button>
+                                <button class="btn btn-sm btn-secondary" onclick="editAppointment('${appointment.id}')">Reschedule</button>
+                            `
+                                    : `
+                                <button class="btn btn-sm btn-primary" onclick="approveGuestAppointment('${appointment.id}')">
+                                    <i class="fas fa-check"></i> Approve
                                 </button>
-                            ` : `
+                            `
+                            ) : `
                                 <button class="btn btn-sm btn-primary" onclick="viewAppointment('${appointment.id}')">View</button>
                                 <button class="btn btn-sm btn-secondary" onclick="editAppointment('${appointment.id}')">Reschedule</button>
                             `}
@@ -3258,6 +3265,33 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                     })();
                 }
                 
+                // Guest (booked from index, no account): send reschedule confirmation to email only
+                if (isRescheduled && isGuestBooking(appointment) && appointment.email && appointment.email !== 'No email provided' && appointment.email.trim() !== '') {
+                    try {
+                        const apiBaseUrl = window.location.origin.includes('vercel.app') ? window.location.origin : (window.location.origin.includes('localhost') ? 'http://localhost:3000' : window.location.origin);
+                        const emailRes = await fetch(`${apiBaseUrl}/api/send-appointment-email`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                email: appointment.email,
+                                patientName: appointment.patientName,
+                                serviceType: appointment.service,
+                                appointmentDate: appointment.date,
+                                appointmentTime: appointment.time || '10:00:00',
+                                dentistName: appointment.dentistName || 'Dentist',
+                                notes: (appointment.notes || '') + (appointment.notes ? ' ' : '') + '(Rescheduled)'
+                            })
+                        });
+                        if (emailRes.ok) {
+                            console.log('✅ Reschedule confirmation email sent to guest:', appointment.email);
+                        } else {
+                            console.warn('⚠️ Failed to send reschedule email to guest');
+                        }
+                    } catch (emailErr) {
+                        console.warn('⚠️ Error sending reschedule email to guest:', emailErr);
+                    }
+                }
+                
                 // If status changed to "confirmed", send confirmation email
                 if (appointment.status === 'confirmed' && oldStatus !== 'confirmed') {
                     console.log('📧 Status changed to confirmed, sending email...');
@@ -3339,8 +3373,10 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                     } else {
                         alert('Appointment updated and confirmed successfully! Note: Patient email not available, so no email notification was sent.');
                     }
+                } else if (isRescheduled && isGuestBooking(appointment)) {
+                    alert('Appointment rescheduled. A confirmation email has been sent to ' + (appointment.email || 'the guest') + '.');
                 } else {
-                alert('Appointment updated successfully!');
+                    alert('Appointment updated successfully!');
                 }
             }
         }
