@@ -2129,7 +2129,7 @@ async function generateTimeSlotsForService(serviceType, timeGrid, durationString
         const msg = document.createElement('p');
         msg.className = 'time-grid-message';
         msg.style.cssText = 'color:#6b7280;padding:12px;margin:0;font-size:14px;';
-        msg.textContent = 'Select Preferred Date and Dentist above to see available times and which are already booked.';
+        msg.textContent = 'Select Preferred Date and Dentist (below) to see available times and which are already booked.';
         timeGrid.appendChild(msg);
         return;
     }

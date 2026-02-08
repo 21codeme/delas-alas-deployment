@@ -481,10 +481,11 @@
                     <input type="hidden" id="aptTime" required>
                 </div>
                 
-                <!-- Preferred Date & Dentist (same as patient booking form) -->
-                <div class="form-group">
-                    <label for="aptDate">Preferred Date</label>
-                    <input type="date" id="aptDate" required min="">
+                <!-- Same order as patient: Time section, then Dentist, then Date -->
+                <div class="form-group" id="preferredTimeSection">
+                    <label>Select Appointment Time:</label>
+                    <div class="selected-service-info-text" id="selectedServiceInfoText"></div>
+                    <div class="appointment-time-grid" id="appointmentTimeGrid"></div>
                 </div>
                 <div class="form-group">
                     <label for="aptDentist">Select Dentist</label>
@@ -492,13 +493,9 @@
                         <option value="">Loading dentists...</option>
                     </select>
                 </div>
-                <!-- Select Appointment Time (shows available vs booked like patient) -->
-                <div class="form-group" id="preferredTimeSection" style="display: none;">
-                    <label>Select Appointment Time:</label>
-                    <div class="selected-service-info-text" id="selectedServiceInfoText"></div>
-                    <div class="appointment-time-grid" id="appointmentTimeGrid">
-                        <!-- Time slots generated here; booked slots disabled -->
-                    </div>
+                <div class="form-group">
+                    <label for="aptDate">Preferred Date</label>
+                    <input type="date" id="aptDate" required min="">
                 </div>
                 
                 <div class="availability-status" id="availabilityStatus" style="display: none;">
