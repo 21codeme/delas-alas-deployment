@@ -1453,6 +1453,7 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                             patientName: apt.patient_name || 'Unknown Patient',
                             patientId: apt.patient_id || 'N/A',
                             service: apt.service_type || 'General Checkup',
+                            duration: apt.duration != null ? apt.duration : 60,
                             date: apt.appointment_date,
                             time: apt.appointment_time || '10:00',
                             status: apt.status || 'pending',
@@ -2246,7 +2247,8 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             const appointment = appointments.find(apt => apt.id === id);
             if (appointment) {
                 currentAppointmentId = id;
-                
+                const mins = appointment.duration != null ? appointment.duration : 60;
+                const durationStr = mins >= 60 ? (mins % 60 === 0 ? (mins / 60) + ' hr' : Math.floor(mins / 60) + ' hr ' + (mins % 60) + ' min') : mins + ' min';
                 // Populate appointment info
                 const appointmentInfo = document.getElementById('viewAppointmentInfo');
                 appointmentInfo.innerHTML = `
@@ -2270,6 +2272,10 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                     <div class="info-row">
                         <span class="info-label">Time:</span>
                         <span class="info-value">${appointment.time}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Duration:</span>
+                        <span class="info-value">${durationStr}</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Status:</span>

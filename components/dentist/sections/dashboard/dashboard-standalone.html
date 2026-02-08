@@ -645,6 +645,7 @@
                         patientName: apt.patient_name || 'Unknown Patient',
                         patientId: apt.patient_id || 'N/A',
                         service: apt.service_type || 'General Checkup',
+                        duration: apt.duration != null ? apt.duration : 60,
                         date: apt.appointment_date,
                         time: apt.appointment_time || '10:00:00',
                         status: apt.status || 'pending',
@@ -900,10 +901,13 @@
             const apt = appointments.find(a => String(a.id) === String(id));
             if (!apt) { return; }
             const body = document.getElementById('viewAppointmentBody');
+            const durationMins = apt.duration != null ? apt.duration : 60;
+            const durationStr = durationMins >= 60 ? (durationMins % 60 === 0 ? `${durationMins / 60} hr` : `${Math.floor(durationMins / 60)} hr ${durationMins % 60} min`) : `${durationMins} min`;
             const rows = [
                 ['Patient Name:', apt.patientName],
                 ['Patient ID:', apt.patientId || '—'],
                 ['Service:', apt.service],
+                ['Duration:', durationStr],
                 ['Date:', apt.date],
                 ['Time:', (apt.time || '10:00:00').slice(0,5)],
                 ['Status:', apt.status?.toUpperCase()],
