@@ -1995,11 +1995,9 @@
                 
                 // Normalize date to YYYY-MM-DD (in case of datetime string)
                 const dateNorm = (appointmentDate || '').trim().substring(0, 10);
-                if (!dateNorm || !dentistId) return [];
-                
-                // Include both dentist_id and confirmed_by_dentist_id so we see all bookings for this dentist
-                const orFilter = `(dentist_id.eq.${dentistId},confirmed_by_dentist_id.eq.${dentistId})`;
-                const url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${dateNorm}&or=${orFilter}&status=in.(pending,confirmed,completed,rescheduled)&select=appointment_time,status,service_type`;
+                if (!dateNorm) return [];
+                // Fetch by date only; filter by dentist in code (same fix as dentist side)
+                const url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${encodeURIComponent(dateNorm)}&status=in.(pending,confirmed,completed,rescheduled)&select=appointment_time,status,service_type,dentist_id`;
                 
                 const response = await fetch(url, {
                     headers: {
@@ -2009,11 +2007,15 @@
                 });
                 
                 if (response.ok) {
-                    const appointments = await response.json();
-                    window.currentBookedAppointments = appointments || [];
+                    const allForDate = await response.json();
+                    const appointmentsArray = Array.isArray(allForDate) ? allForDate : (allForDate.data || []);
+                    const filtered = dentistId
+                        ? appointmentsArray.filter(apt => apt.dentist_id && String(apt.dentist_id) === String(dentistId))
+                        : appointmentsArray;
+                    window.currentBookedAppointments = filtered || [];
                     
                     const bookedSet = new Set();
-                    for (const apt of (appointments || [])) {
+                    for (const apt of filtered) {
                         const startTime = apt.appointment_time || '';
                         if (!startTime) continue;
                         const startMinutes = timeToMinutes(startTime);
