@@ -1794,7 +1794,7 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                     <td>
                         <div style="display: flex; gap: 5px;">
                             ${isGuestBooking(appointment) ? (
-                                appointment.status === 'confirmed'
+                                (appointment.status === 'confirmed' || appointment.status === 'rescheduled')
                                     ? `
                                 <button class="btn btn-sm btn-primary" onclick="viewAppointment('${appointment.id}')">View</button>
                                 <button class="btn btn-sm btn-secondary" onclick="editAppointment('${appointment.id}')">Reschedule</button>
