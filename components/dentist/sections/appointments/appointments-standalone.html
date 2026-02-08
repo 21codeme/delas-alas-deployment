@@ -2267,11 +2267,13 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 }
                 const appointmentIds = allIds.map(r => r.id).filter(Boolean);
                 let notifDeleted = 0;
+                let notifError = null;
                 try {
                     const notifResult = await callSupabaseAPI('POST', 'rpc/delete_notifications_by_appointment_ids', { p_appointment_ids: appointmentIds });
                     notifDeleted = typeof notifResult === 'number' ? notifResult : 0;
                 } catch (e) {
-                    console.warn('Could not delete related notifications (run database/DELETE_NOTIFICATIONS_BY_APPOINTMENT_IDS.sql in Supabase if needed):', e);
+                    notifError = e;
+                    console.warn('Could not delete related notifications:', e);
                 }
                 let deleted = 0;
                 for (const row of allIds) {
@@ -2290,7 +2292,8 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                     window.parent.loadNotifications();
                 }
                 let msg = deleted === allIds.length ? `All ${deleted} appointment(s) have been deleted. Patients will see no booked schedules.` : `Deleted ${deleted} of ${allIds.length} appointment(s). Check console for errors.`;
-                if (notifDeleted > 0) msg += `\n\n${notifDeleted} related notification(s) were also removed.`;
+                if (notifDeleted > 0) msg += `\n\n${notifDeleted} related notification(s) were also removed from Patient and Dentist.`;
+                if (notifError) msg += `\n\n⚠️ Notifications were not removed (old ones will still show). To fix: run database/DELETE_NOTIFICATIONS_BY_APPOINTMENT_IDS.sql in Supabase SQL Editor, then Delete All again if needed.`;
                 alert(msg);
             } catch (err) {
                 console.error('Delete all appointments error:', err);

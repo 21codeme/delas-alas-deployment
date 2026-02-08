@@ -10,9 +10,14 @@ AS $$
 DECLARE
   deleted_count integer;
 BEGIN
+  IF p_appointment_ids IS NULL OR array_length(p_appointment_ids, 1) IS NULL THEN
+    RETURN 0;
+  END IF;
   WITH deleted AS (
     DELETE FROM public.notifications
-    WHERE (data->>'appointment_id')::uuid = ANY(p_appointment_ids)
+    WHERE data ? 'appointment_id'
+      AND trim(data->>'appointment_id') <> ''
+      AND (data->>'appointment_id') IN (SELECT unnest(p_appointment_ids)::text)
     RETURNING id
   )
   SELECT count(*)::integer INTO deleted_count FROM deleted;
