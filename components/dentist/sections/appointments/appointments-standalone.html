@@ -2261,8 +2261,18 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 const list = await callSupabaseAPI('GET', 'appointments?select=id');
                 const allIds = Array.isArray(list) ? list : (list && list.data ? list.data : []);
                 if (allIds.length === 0) {
+                    let orphanDeleted = 0;
+                    try {
+                        const orphanResult = await callSupabaseAPI('POST', 'rpc/delete_orphan_appointment_notifications', {});
+                        orphanDeleted = typeof orphanResult === 'number' ? orphanResult : 0;
+                    } catch (e) { console.warn('Orphan notifications cleanup:', e); }
                     if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-trash-alt"></i> Delete All Appointments'; }
-                    alert('There are no appointments to delete.');
+                    if (orphanDeleted > 0) {
+                        if (window.parent && window.parent !== window && typeof window.parent.loadNotifications === 'function') window.parent.loadNotifications();
+                        alert('There are no appointments to delete.\n\n' + orphanDeleted + ' notification(s) that referenced deleted appointments were removed. Refresh the Notifications page to see the update.');
+                    } else {
+                        alert('There are no appointments to delete.\n\nIf old appointment notifications still show, run database/DELETE_NOTIFICATIONS_BY_APPOINTMENT_IDS.sql in Supabase SQL Editor, then click Delete All again to clean them.');
+                    }
                     return;
                 }
                 const appointmentIds = allIds.map(r => r.id).filter(Boolean);
