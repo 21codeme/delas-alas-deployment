@@ -2484,24 +2484,13 @@ const INDEX_DEFAULT_SERVICES = [
 
 const DEFAULT_SERVICE_NAMES = ['Teeth Cleaning', 'Tooth Extraction', 'Dental Filling', 'Denture (Pustiso)'];
 
-// Display services on the index page (default 4 + custom services from DB)
+// Display services on the index page — only these 4 services (no extras from DB)
 function displayServicesOnIndex(servicesFromDb) {
-    console.log('🎨 Displaying services on index page. From DB:', servicesFromDb?.length || 0);
     const servicesGrid = document.getElementById('servicesGrid');
     if (!servicesGrid) return;
 
-    // Custom services from DB (exclude names that match the 4 defaults to avoid duplicates)
-    const customServices = (servicesFromDb || []).filter(s => {
-        const name = (s.name || s.service_name || '').trim();
-        return name && !DEFAULT_SERVICE_NAMES.includes(name);
-    }).map(s => ({
-        name: s.name || s.service_name || 'Custom Service',
-        icon: s.icon || 'fa-tooth',
-        description: s.description || 'Contact clinic for details.',
-        notes: Array.isArray(s.notes) ? s.notes : (s.description ? [s.description] : ['Contact clinic for details.'])
-    }));
-
-    const allServices = [...INDEX_DEFAULT_SERVICES, ...customServices];
+    // Only show the 4 fixed services (Teeth Cleaning, Tooth Extraction, Dental Filling, Denture (Pustiso))
+    const allServices = INDEX_DEFAULT_SERVICES;
 
     servicesGrid.innerHTML = allServices.map(service => `
         <div class="service-card">
@@ -2516,7 +2505,7 @@ function displayServicesOnIndex(servicesFromDb) {
             <button class="btn btn-outline" onclick="showAppointmentModal()">Book Now</button>
         </div>
     `).join('');
-    console.log('✅ Services displayed:', INDEX_DEFAULT_SERVICES.length, 'default +', customServices.length, 'custom');
+    console.log('✅ Services displayed (4 only):', allServices.length);
 }
 
 // Group services by category (infer from service name/description since DB doesn't have category field)
