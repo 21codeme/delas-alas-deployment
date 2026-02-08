@@ -2488,7 +2488,7 @@ function displayServicesOnIndex(services) {
     const specificServices = [
         {
             name: 'Teeth Cleaning',
-            icon: 'fa-sparkles',
+            icon: 'fa-broom',
             description: 'Professional teeth cleaning and oral hygiene services',
             notes: [
                 'Removes plaque and tartar buildup',
@@ -2625,7 +2625,7 @@ function showFallbackServices() {
     const specificServices = [
         {
             name: 'Teeth Cleaning',
-            icon: 'fa-sparkles',
+            icon: 'fa-broom',
             description: 'Professional teeth cleaning and oral hygiene services',
             notes: [
                 'Removes plaque and tartar buildup',
