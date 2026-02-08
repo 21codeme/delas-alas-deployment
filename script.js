@@ -605,14 +605,14 @@ function showResetPasswordModal() {
     document.body.style.overflow = 'hidden';
 }
 
-function showAppointmentModal(serviceType = '') {
+async function showAppointmentModal(serviceType = '') {
     const modal = document.getElementById('appointmentModal');
     const serviceSelect = document.getElementById('aptService');
-    
     if (serviceType && serviceSelect) {
         serviceSelect.value = serviceType;
     }
-    
+    setMinDate();
+    await loadDentistsForIndexModal();
     modal.style.display = 'block';
     document.body.style.overflow = 'hidden';
 }
@@ -747,14 +747,39 @@ function setMinDate() {
     const dateInput = document.getElementById('aptDate');
     if (dateInput) {
         const today = new Date();
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        
-        const year = tomorrow.getFullYear();
-        const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
-        const day = String(tomorrow.getDate()).padStart(2, '0');
-        
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
         dateInput.min = `${year}-${month}-${day}`;
+    }
+}
+
+// Load dentists into index modal dropdown (same as patient booking form)
+async function loadDentistsForIndexModal() {
+    const select = document.getElementById('aptDentist');
+    if (!select) return;
+    select.innerHTML = '<option value="">Loading...</option>';
+    try {
+        const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/users?user_type=eq.dentist&select=id,name,email&order=name.asc`, {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        });
+        if (res.ok) {
+            const dentists = await res.json();
+            select.innerHTML = '<option value="">Select Dentist</option>';
+            (Array.isArray(dentists) ? dentists : []).forEach(function (d) {
+                const opt = document.createElement('option');
+                opt.value = d.id;
+                opt.textContent = d.name || d.email || 'Dentist';
+                select.appendChild(opt);
+            });
+            if (select.options.length > 1) select.selectedIndex = 1;
+        } else {
+            select.innerHTML = '<option value="">No dentists available</option>';
+        }
+    } catch (e) {
+        select.innerHTML = '<option value="">Error loading dentists</option>';
     }
 }
 
@@ -1503,6 +1528,7 @@ async function handleAppointment(event) {
                         document.getElementById('serviceType');
     const service = serviceInput ? serviceInput.value : '';
     const date = document.getElementById('aptDate').value;
+    const dentistId = document.getElementById('aptDentist') ? document.getElementById('aptDentist').value : '';
     const message = document.getElementById('aptMessage') ? document.getElementById('aptMessage').value : '';
     
     // Get selected time
@@ -1512,8 +1538,8 @@ async function handleAppointment(event) {
     const selectedTime = timeInput ? timeInput.value : '10:00:00';
     
     // Validate form
-    if (!name || !email || !phone || !service || !date) {
-        showToast('Please fill in all required fields', 'error');
+    if (!name || !email || !phone || !service || !date || !dentistId) {
+        showToast('Please fill in all required fields (including Preferred Date and Dentist)', 'error');
         return;
     }
     
@@ -1546,15 +1572,16 @@ async function handleAppointment(event) {
             .from('appointments')
             .insert([{
                 patient_id: currentUserData?.id || null,
+                dentist_id: dentistId,
                 service_type: service,
                 appointment_date: date,
                 appointment_time: selectedTime,
-                duration: 60, // Default duration in minutes
+                duration: 60,
                 notes: message,
                 patient_name: name,
                 patient_email: email,
                 patient_phone: phone,
-                status: 'confirmed'
+                status: 'pending'
             }]);
         
         if (error) {
@@ -1953,10 +1980,10 @@ function timeToMinutes(timeStr) {
     return h * 60 + m;
 }
 
-// Get booked time slots for a specific date and dentist (expanded by service duration)
+// Get booked time slots for a specific date and dentist (fetch by date only, filter dentist in code — same as patient)
 async function getBookedTimeSlots(appointmentDate, dentistId) {
     const dateNorm = (appointmentDate || '').trim().substring(0, 10);
-    if (!dateNorm || !dentistId) return [];
+    if (!dateNorm) return [];
     const ALL_SLOTS = [
         '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
         '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
@@ -1966,15 +1993,18 @@ async function getBookedTimeSlots(appointmentDate, dentistId) {
     try {
         const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
-        const orFilter = `(dentist_id.eq.${dentistId},confirmed_by_dentist_id.eq.${dentistId})`;
-        const url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${dateNorm}&or=${orFilter}&status=in.(pending,confirmed)&select=appointment_time,status,service_type`;
+        const url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${encodeURIComponent(dateNorm)}&status=in.(pending,confirmed,rescheduled)&select=appointment_time,service_type,dentist_id`;
         const response = await fetch(url, {
             headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
         });
         if (response.ok) {
-            const appointments = await response.json();
+            const allForDate = await response.json();
+            const list = Array.isArray(allForDate) ? allForDate : (allForDate.data || []);
+            const filtered = dentistId
+                ? list.filter(function (apt) { return apt.dentist_id && String(apt.dentist_id) === String(dentistId); })
+                : list;
             const bookedSet = new Set();
-            for (const apt of appointments) {
+            for (const apt of filtered) {
                 const startTime = apt.appointment_time || '';
                 if (!startTime) continue;
                 const startMinutes = timeToMinutes(startTime);
@@ -1987,10 +2017,9 @@ async function getBookedTimeSlots(appointmentDate, dentistId) {
             }
             return Array.from(bookedSet);
         }
-        console.error('❌ Failed to check booked time slots:', response.status);
         return [];
     } catch (error) {
-        console.error('❌ Error checking booked time slots:', error);
+        console.error('getBookedTimeSlots error:', error);
         return [];
     }
 }
@@ -2088,20 +2117,24 @@ function getBlockedTimeSlots(selectedTime, durationMinutes, allTimeSlots) {
 async function generateTimeSlotsForService(serviceType, timeGrid, durationStringOverride) {
     if (!timeGrid) return;
     
-    // Clear existing slots
     timeGrid.innerHTML = '';
     
-    // Get selected date and dentist
     const appointmentDate = document.getElementById('aptDate')?.value || 
                            document.getElementById('newAptDate')?.value || '';
     const dentistId = document.getElementById('aptDentist')?.value || 
                      document.getElementById('newAptDentist')?.value || '';
     
-    // Get booked time slots if date and dentist are selected
-    let bookedTimes = [];
-    if (appointmentDate && dentistId) {
-        bookedTimes = await getBookedTimeSlots(appointmentDate, dentistId);
+    // On index/patient form: require date and dentist to show slots (so booked slots are visible)
+    if (!appointmentDate || !dentistId) {
+        const msg = document.createElement('p');
+        msg.className = 'time-grid-message';
+        msg.style.cssText = 'color:#6b7280;padding:12px;margin:0;font-size:14px;';
+        msg.textContent = 'Select Preferred Date and Dentist above to see available times and which are already booked.';
+        timeGrid.appendChild(msg);
+        return;
     }
+    
+    let bookedTimes = await getBookedTimeSlots(appointmentDate, dentistId);
     
     // Get duration: explicit override first, then .selected / card, then by service type
     let durationString = durationStringOverride || '';

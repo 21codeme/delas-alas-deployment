@@ -481,23 +481,23 @@
                     <input type="hidden" id="aptTime" required>
                 </div>
                 
-                <!-- Select Appointment Time Section -->
+                <!-- Preferred Date & Dentist (same as patient booking form) -->
+                <div class="form-group">
+                    <label for="aptDate">Preferred Date</label>
+                    <input type="date" id="aptDate" required min="">
+                </div>
+                <div class="form-group">
+                    <label for="aptDentist">Select Dentist</label>
+                    <select id="aptDentist" autocomplete="off" required>
+                        <option value="">Loading dentists...</option>
+                    </select>
+                </div>
+                <!-- Select Appointment Time (shows available vs booked like patient) -->
                 <div class="form-group" id="preferredTimeSection" style="display: none;">
                     <label>Select Appointment Time:</label>
                     <div class="selected-service-info-text" id="selectedServiceInfoText"></div>
                     <div class="appointment-time-grid" id="appointmentTimeGrid">
-                        <!-- Time slots will be generated dynamically -->
-                    </div>
-                </div>
-                
-                <!-- Calendar Integration -->
-                <div class="form-group">
-                    <label for="aptDate">Preferred Date</label>
-                    <div class="calendar-container">
-                        <input type="date" id="aptDate" required min="">
-                        <div class="calendar-info">
-                            <small>Select your preferred date. Available dates will be highlighted.</small>
-                        </div>
+                        <!-- Time slots generated here; booked slots disabled -->
                     </div>
                 </div>
                 
