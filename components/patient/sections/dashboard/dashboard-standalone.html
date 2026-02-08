@@ -380,6 +380,11 @@
             color: white;
         }
 
+        .status-rescheduled {
+            background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+            color: white;
+        }
+
         .quick-actions {
             padding: 25px;
             display: grid;
@@ -1305,9 +1310,6 @@
             background-color: #fef3c7 !important;
             transform: none;
         }
-            color: white;
-            border-color: #4a90e2;
-        }
 
         .time-slot.disabled,
         .time-slot.fully-booked {
@@ -1901,10 +1903,10 @@
             const generateQRForPatient = async () => {
                 try {
                     const confirmedAppointments = appointments.filter(apt => 
-                        apt.status === 'confirmed'
+                        apt.status === 'confirmed' || apt.status === 'rescheduled'
                     );
                     if (confirmedAppointments.length > 0) {
-                        console.log('🔍 Auto-generating QR code with', confirmedAppointments.length, 'confirmed appointments');
+                        console.log('🔍 Auto-generating QR code with', confirmedAppointments.length, 'confirmed/rescheduled appointments');
                         await generatePatientQR();
                     } else {
                         console.log('⏳ No confirmed appointments found for QR code');
@@ -2121,6 +2123,7 @@
                 });
                 
                 const statusText = appointment.status === 'confirmed' ? 'Confirmed' : 
+                                 appointment.status === 'rescheduled' ? 'Rescheduled' : 
                                  appointment.status === 'pending' ? 'Pending' : 
                                  appointment.status === 'cancelled' ? 'Cancelled' : 
                                  appointment.status;
@@ -2183,7 +2186,7 @@
                     return aptDate.toDateString() === dateStr;
                 });
                 const myPending = myAppointments.filter(a => a.status === 'pending').length;
-                const myConfirmed = myAppointments.filter(a => a.status === 'confirmed').length;
+                const myConfirmed = myAppointments.filter(a => a.status === 'confirmed' || a.status === 'rescheduled').length;
                 const myCompleted = myAppointments.filter(a => a.status === 'completed').length;
                 
                 // Debug logging for date 21
@@ -2217,11 +2220,11 @@
                 });
                 const otherUsersCount = otherUsersAppointments.length;
                 
-                // Count ALL bookings (pending + confirmed) for this date
+                // Count ALL bookings (pending + confirmed + rescheduled) for this date
                 // Exclude completed and cancelled appointments from the count
                 const activeBookings = dayAppointments.filter(a => {
                     const status = a.status?.toLowerCase() || '';
-                    return status === 'pending' || status === 'confirmed';
+                    return status === 'pending' || status === 'confirmed' || status === 'rescheduled';
                 }).length;
                 
                 // Debug logging for ALL dates (to see what's happening)
@@ -2262,7 +2265,7 @@
                     indicator += `<span class="indicator indicator-pending" title="Your ${myPending} pending ${myPending === 1 ? 'appointment' : 'appointments'}">P${myPending}</span>`;
                 }
                 if (myConfirmed > 0) {
-                    indicator += `<span class="indicator indicator-my" title="Your ${myConfirmed} confirmed ${myConfirmed === 1 ? 'appointment' : 'appointments'}">✓${myConfirmed}</span>`;
+                    indicator += `<span class="indicator indicator-my" title="Your ${myConfirmed} confirmed/rescheduled ${myConfirmed === 1 ? 'appointment' : 'appointments'}">✓${myConfirmed}</span>`;
                 }
                 
                 // Show FULL indicator if day is full (8 bookings reached)
@@ -2610,7 +2613,7 @@
                 const dateNorm = (appointmentDate || '').trim().substring(0, 10);
                 if (!dateNorm || !dentistId) return [];
                 const orFilter = `(dentist_id.eq.${dentistId},confirmed_by_dentist_id.eq.${dentistId})`;
-                const url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${dateNorm}&or=${orFilter}&status=in.(pending,confirmed)&select=appointment_time,status,service_type`;
+                const url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${dateNorm}&or=${orFilter}&status=in.(pending,confirmed,rescheduled)&select=appointment_time,status,service_type`;
                 
                 const response = await fetch(url, {
                     headers: {
@@ -2910,9 +2913,9 @@
                 return;
             }
 
-            // Get patient's confirmed appointments (including past appointments for display)
+            // Get patient's confirmed/rescheduled appointments (including past for display)
             const confirmedAppointments = appointments.filter(apt => 
-                apt.status === 'confirmed'
+                apt.status === 'confirmed' || apt.status === 'rescheduled'
             );
 
             console.log('📋 Confirmed appointments found:', confirmedAppointments.length);

@@ -234,6 +234,12 @@
             color: white;
         }
 
+        .appointment-status.confirmed,
+        .appointment-status.rescheduled {
+            background: #2196f3;
+            color: white;
+        }
+
         .appointment-details {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1029,6 +1035,12 @@
                     <div class="filter-tab" onclick="filterAppointments('pending', this)">
                         <i class="fas fa-clock"></i> Pending
                     </div>
+                    <div class="filter-tab" onclick="filterAppointments('confirmed', this)">
+                        <i class="fas fa-check-circle"></i> Confirmed
+                    </div>
+                    <div class="filter-tab" onclick="filterAppointments('rescheduled', this)">
+                        <i class="fas fa-calendar-alt"></i> Rescheduled
+                    </div>
                     <div class="filter-tab" onclick="filterAppointments('completed', this)">
                         <i class="fas fa-check"></i> Completed
                     </div>
@@ -1740,7 +1752,7 @@
                 <div class="appointment-card ${appointment.status}">
                     <div class="appointment-header">
                         <div class="appointment-service">${appointment.service_type || 'General Checkup'}</div>
-                        <div class="appointment-status ${appointment.status}">${appointment.status}</div>
+                        <div class="appointment-status ${appointment.status}">${(appointment.status || '').toUpperCase()}</div>
                     </div>
                     
                     <div class="appointment-details">
@@ -1766,7 +1778,7 @@
                     ` : ''}
                     
                     <div class="appointment-actions">
-                        ${appointment.status === 'confirmed' ? `
+                        ${(appointment.status === 'confirmed' || appointment.status === 'rescheduled') ? `
                             <button class="action-btn view" onclick="viewAppointment('${appointment.id}')">
                                 <i class="fas fa-qrcode"></i> View QR Code
                             </button>
@@ -1987,7 +1999,7 @@
                 
                 // Include both dentist_id and confirmed_by_dentist_id so we see all bookings for this dentist
                 const orFilter = `(dentist_id.eq.${dentistId},confirmed_by_dentist_id.eq.${dentistId})`;
-                const url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${dateNorm}&or=${orFilter}&status=in.(pending,confirmed)&select=appointment_time,status,service_type`;
+                const url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${dateNorm}&or=${orFilter}&status=in.(pending,confirmed,rescheduled)&select=appointment_time,status,service_type`;
                 
                 const response = await fetch(url, {
                     headers: {
@@ -2278,10 +2290,10 @@
                 
                 if (response.ok) {
                     const appointments = await response.json();
-                    // Count only pending and confirmed appointments
+                    // Count pending, confirmed, and rescheduled appointments
                     const activeBookings = appointments.filter(apt => {
                         const status = apt.status?.toLowerCase() || '';
-                        return status === 'pending' || status === 'confirmed';
+                        return status === 'pending' || status === 'confirmed' || status === 'rescheduled';
                     }).length;
                     
                     const MAX_BOOKINGS_PER_DAY = 8;
@@ -2565,13 +2577,13 @@
         function viewPatientSchedule() {
             console.log('👁️ View QR Code button clicked');
             
-            // Get patient's confirmed appointments
+            // Get patient's confirmed/rescheduled appointments
             const confirmedAppointments = appointments.filter(apt => 
-                apt.status === 'confirmed'
+                apt.status === 'confirmed' || apt.status === 'rescheduled'
             );
 
             if (confirmedAppointments.length === 0) {
-                alert('No confirmed appointments found to generate QR code.');
+                alert('No confirmed or rescheduled appointments found to generate QR code.');
                 return;
             }
 
