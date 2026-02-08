@@ -399,13 +399,17 @@
         </div>
     </div>
 
-    <!-- Modal: View contact form message (from index) -->
+    <!-- Modal: View contact form message (from index) + reply in-app, sent to user email -->
     <div id="contactFormViewModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center; padding:20px;" onclick="if(event.target===this) closeContactFormViewModal()">
-        <div style="background:#fff; border-radius:12px; max-width:480px; width:90%; padding:24px; box-shadow:0 8px 32px rgba(0,0,0,0.2);" onclick="event.stopPropagation()">
-            <h3 style="margin:0 0 16px 0; color:#333;">Contact form message</h3>
+        <div style="background:#fff; border-radius:12px; max-width:520px; width:90%; padding:24px; box-shadow:0 8px 32px rgba(0,0,0,0.2);" onclick="event.stopPropagation()">
+            <h3 style="margin:0 0 16px 0; color:#333;">Contact form message (from website — no account)</h3>
             <div id="contactFormViewContent" style="color:#555; font-size:15px; line-height:1.6;"></div>
+            <div style="margin-top:16px;">
+                <label style="display:block; font-weight:600; color:#333; margin-bottom:6px;">Your reply (sent to sender's email — contact form only; patients with accounts use Messages)</label>
+                <textarea id="contactFormReplyText" rows="4" placeholder="Type your reply here..." style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-size:14px; resize:vertical; box-sizing:border-box;"></textarea>
+            </div>
             <div style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
-                <a id="contactFormReplyMailto" href="#" style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:#28a745; color:#fff; border-radius:8px; text-decoration:none; font-size:14px;" target="_blank" rel="noopener"><i class="fas fa-reply"></i> Reply via email</a>
+                <button type="button" id="contactFormSendReplyBtn" style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:#28a745; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:14px;" onclick="sendContactFormReply()"><i class="fas fa-paper-plane"></i> Send reply</button>
                 <button type="button" style="padding:8px 16px; background:#6c757d; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:14px;" onclick="closeContactFormViewModal()">Close</button>
             </div>
         </div>
@@ -415,6 +419,8 @@
         // Global variables
         let notifications = [];
         let currentTab = 'all';
+        let currentContactFormTo = '';
+        let currentContactFormName = '';
 
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
@@ -743,11 +749,11 @@
                                 <button class="btn btn-primary" onclick="event.stopPropagation(); viewContactFormMessage('${notification.id}')">
                                     <i class="fas fa-eye"></i> View
                                 </button>
-                                <button class="btn btn-success" onclick="event.stopPropagation(); replyContactForm('${notification.id}')">
-                                    <i class="fas fa-reply"></i> Reply
+                                <button class="btn btn-success" onclick="event.stopPropagation(); replyContactForm('${notification.id}')" title="Reply via email (contact form - no account)">
+                                    <i class="fas fa-reply"></i> Reply (email)
                                 </button>
                             ` : (notification.type === 'message' ? `
-                                <button class="btn btn-success" onclick="event.stopPropagation(); replyMessage('${notification.id}')">
+                                <button class="btn btn-success" onclick="event.stopPropagation(); replyMessage('${notification.id}')" title="Reply in Messages (patient with account)">
                                     <i class="fas fa-reply"></i> Reply
                                 </button>
                             ` : '')}
@@ -893,39 +899,80 @@
             }
         }
 
-        // --- Contact form (from index): view full message and reply via email ---
+        // --- Contact form (from index): view full message, reply in modal, send to user email ---
         function viewContactFormMessage(notificationId) {
             const notification = notifications.find(n => n.id === notificationId);
             if (!notification || !notification.data || notification.data.source !== 'contact_form') return;
             const d = notification.data;
             const name = d.contact_name || '—';
-            const email = d.contact_email || '—';
+            const email = (d.contact_email || '').trim();
             const phone = d.contact_phone || '—';
-            const message = (d.contact_message || notification.message || '—').replace(/\n/g, '<br>');
+            currentContactFormTo = email;
+            currentContactFormName = (d.contact_name || '').trim();
             document.getElementById('contactFormViewContent').innerHTML = `
                 <p><strong>Name:</strong> ${escapeHtml(name)}</p>
-                <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+                <p><strong>Email:</strong> ${escapeHtml(email || '—')}</p>
                 <p><strong>Phone:</strong> ${escapeHtml(phone)}</p>
                 <p><strong>Message:</strong></p>
                 <p style="white-space:pre-wrap; background:#f5f5f5; padding:12px; border-radius:8px;">${escapeHtml(d.contact_message || notification.message || '')}</p>
             `;
-            const mailto = document.getElementById('contactFormReplyMailto');
-            mailto.href = `mailto:${encodeURIComponent(email || '')}?subject=${encodeURIComponent('Re: Delas Alas Dental Clinic - your message')}`;
+            const replyEl = document.getElementById('contactFormReplyText');
+            if (replyEl) replyEl.value = '';
             document.getElementById('contactFormViewModal').style.display = 'flex';
         }
         function closeContactFormViewModal() {
             document.getElementById('contactFormViewModal').style.display = 'none';
+            const replyEl = document.getElementById('contactFormReplyText');
+            if (replyEl) replyEl.value = '';
+            currentContactFormTo = '';
+            currentContactFormName = '';
         }
-        function replyContactForm(notificationId) {
-            const notification = notifications.find(n => n.id === notificationId);
-            if (!notification || !notification.data || notification.data.source !== 'contact_form') return;
-            const email = (notification.data.contact_email || '').trim();
-            if (!email) {
+        async function sendContactFormReply() {
+            const replyEl = document.getElementById('contactFormReplyText');
+            const replyText = replyEl ? replyEl.value.trim() : '';
+            if (!replyText) {
+                alert('Please type your reply first.');
+                return;
+            }
+            if (!currentContactFormTo) {
                 alert('No email address for this contact.');
                 return;
             }
-            const subject = encodeURIComponent('Re: Delas Alas Dental Clinic - your message');
-            window.location.href = `mailto:${encodeURIComponent(email)}?subject=${subject}`;
+            const btn = document.getElementById('contactFormSendReplyBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            }
+            const apiBase = window.location.origin.includes('vercel.app') ? window.location.origin : (window.location.origin.includes('localhost') ? 'http://localhost:3000' : window.location.origin);
+            try {
+                const res = await fetch(`${apiBase}/api/send-contact-reply`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: currentContactFormTo,
+                        replyText: replyText,
+                        subject: 'Re: Delas Alas Dental Clinic - your message',
+                        recipientName: currentContactFormName || undefined
+                    })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.success) {
+                    alert('Reply sent successfully to ' + currentContactFormTo);
+                    closeContactFormViewModal();
+                } else {
+                    alert('Failed to send reply: ' + (data.error || res.statusText || 'Please try again.'));
+                }
+            } catch (err) {
+                console.error('Send contact reply error:', err);
+                alert('Failed to send reply. Please check your connection and try again.');
+            }
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send reply';
+            }
+        }
+        function replyContactForm(notificationId) {
+            viewContactFormMessage(notificationId);
         }
         function escapeHtml(text) {
             if (!text) return '';
