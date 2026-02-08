@@ -2164,7 +2164,8 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
                 if (isBooked) {
                     btn.classList.add('fully-booked');
                     btn.disabled = true;
-                    btn.textContent = t.substring(0,5);
+                    btn.textContent = t.substring(0,5) + ' (Booked)';
+                    btn.title = 'This time is already booked';
                 } else {
                     btn.textContent = t.substring(0,5);
                     btn.addEventListener('click', function() {
@@ -2182,21 +2183,18 @@ ${patientId},${appointment.patientName},${appointment.phone || 'N/A'},${appointm
             const dateNorm = (appointmentDate + '').trim().substring(0, 10);
             const ALL_SLOTS = ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00'];
             try {
-                const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
-                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
-                // Same as patient: include both dentist_id and confirmed_by_dentist_id so all bookings for this dentist are visible
-                const orFilter = `(dentist_id.eq.${encodeURIComponent(dentistId)},confirmed_by_dentist_id.eq.${encodeURIComponent(dentistId)})`;
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/appointments?appointment_date=eq.${encodeURIComponent(dateNorm)}&or=${orFilter}&status=in.(pending,confirmed,completed,rescheduled)&select=id,appointment_time,service_type,dentist_id,confirmed_by_dentist_id`, {
-                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-                });
-                if (!response.ok) return [];
-                const appointments = await response.json();
+                // Use dentist_id only (no or/confirmed_by_dentist_id) to avoid 400 if column missing
+                const endpoint = `appointments?appointment_date=eq.${encodeURIComponent(dateNorm)}&dentist_id=eq.${encodeURIComponent(dentistId)}&status=in.(pending,confirmed,completed,rescheduled)&select=id,appointment_time,service_type,dentist_id`;
+                let appointments;
+                try {
+                    appointments = await callSupabaseAPI('GET', endpoint);
+                } catch (e) {
+                    console.warn('getBookedTimeSlotsForNewBooking fallback:', e);
+                    return [];
+                }
                 const list = Array.isArray(appointments) ? appointments : [];
-                const dentistIdStr = String(dentistId);
                 const bookedSet = new Set();
                 for (const apt of list) {
-                    const aptDentist = apt.dentist_id || apt.confirmed_by_dentist_id;
-                    if (String(aptDentist) !== dentistIdStr) continue;
                     const startMinutes = timeToMinutes(apt.appointment_time || '');
                     const durationMinutes = getDurationMinutesForServiceType(apt.service_type);
                     const endMinutes = startMinutes + durationMinutes;
