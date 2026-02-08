@@ -749,9 +749,6 @@
                                 <button class="btn btn-primary" onclick="event.stopPropagation(); viewContactFormMessage('${notification.id}')">
                                     <i class="fas fa-eye"></i> View
                                 </button>
-                                <button class="btn btn-success" onclick="event.stopPropagation(); replyContactForm('${notification.id}')" title="Reply via email (contact form - no account)">
-                                    <i class="fas fa-reply"></i> Reply (email)
-                                </button>
                             ` : (notification.type === 'message' ? `
                                 <button class="btn btn-success" onclick="event.stopPropagation(); replyMessage('${notification.id}')" title="Reply in Messages (patient with account)">
                                     <i class="fas fa-reply"></i> Reply
@@ -956,15 +953,18 @@
                     })
                 });
                 const data = await res.json().catch(() => ({}));
+                console.log('Send contact reply API:', res.status, data);
                 if (res.ok && data.success) {
-                    alert('Reply sent successfully to ' + currentContactFormTo);
+                    alert('Reply sent successfully to ' + currentContactFormTo + '. (Kung wala sa inbox, check Spam.)');
                     closeContactFormViewModal();
                 } else {
-                    alert('Failed to send reply: ' + (data.error || res.statusText || 'Please try again.'));
+                    const errMsg = data.error || res.statusText || 'Please try again.';
+                    console.warn('Send contact reply failed:', errMsg);
+                    alert('Failed to send reply: ' + errMsg + '\n\nKung "Email service not configured", i-set sa Vercel ang GMAIL_USER at GMAIL_APP_PASSWORD.');
                 }
             } catch (err) {
                 console.error('Send contact reply error:', err);
-                alert('Failed to send reply. Please check your connection and try again.');
+                alert('Failed to send reply. Check console (F12). Kung deployed sa Vercel, tiyaking naka-set ang GMAIL_USER at GMAIL_APP_PASSWORD sa Environment Variables.');
             }
             if (btn) {
                 btn.disabled = false;
