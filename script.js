@@ -2441,36 +2441,13 @@ async function loadServicesFromDatabase() {
 
         if (response.ok) {
             const data = await response.json();
-            console.log('✅ Services loaded from Supabase:', data?.length || 0, 'services');
-            console.log('Services data:', data);
-            displayServicesOnIndex(data || []);
-        } else {
-            console.error('❌ Error loading from Supabase, trying localStorage...');
-            // Fallback to localStorage
-            const localServices = localStorage.getItem('dentalServices');
-            if (localServices) {
-                const localData = JSON.parse(localServices);
-                console.log('📦 Using localStorage services:', localData.length);
-                displayServicesOnIndex(localData || []);
-            } else {
-                showFallbackServices();
-            }
+            console.log('✅ Services loaded from Supabase (index shows 4 only):', data?.length || 0, 'in DB');
         }
+        // Index always shows only the 4 fixed services (never DB or localStorage extras)
+        displayServicesOnIndex();
     } catch (error) {
         console.error('❌ Error loading services:', error);
-        // Fallback to localStorage
-        try {
-            const localServices = localStorage.getItem('dentalServices');
-            if (localServices) {
-                const localData = JSON.parse(localServices);
-                console.log('📦 Using localStorage services:', localData.length);
-                displayServicesOnIndex(localData || []);
-            } else {
-                showFallbackServices();
-            }
-        } catch (e) {
-            showFallbackServices();
-        }
+        displayServicesOnIndex();
     }
 }
 
@@ -2484,12 +2461,12 @@ const INDEX_DEFAULT_SERVICES = [
 
 const DEFAULT_SERVICE_NAMES = ['Teeth Cleaning', 'Tooth Extraction', 'Dental Filling', 'Denture (Pustiso)'];
 
-// Display services on the index page — only these 4 services (no extras from DB)
-function displayServicesOnIndex(servicesFromDb) {
+// Display services on the index page — only these 4 services (ignores DB/localStorage)
+function displayServicesOnIndex() {
     const servicesGrid = document.getElementById('servicesGrid');
     if (!servicesGrid) return;
 
-    // Only show the 4 fixed services (Teeth Cleaning, Tooth Extraction, Dental Filling, Denture (Pustiso))
+    // Always show only the 4 fixed services (no custom/DB services on index)
     const allServices = INDEX_DEFAULT_SERVICES;
 
     servicesGrid.innerHTML = allServices.map(service => `
@@ -2574,9 +2551,9 @@ function getCategoryIcon(category) {
     return icons[category] || 'fa-tooth';
 }
 
-// Show fallback services if database fails (default 4 only, no custom)
+// Show fallback services (same 4 only)
 function showFallbackServices() {
-    displayServicesOnIndex([]);
+    displayServicesOnIndex();
 }
 
 // Export functions for global access - make sure toggleMobileMenu is available immediately
