@@ -1261,10 +1261,6 @@ async function resendOTP() {
     }
 }
 
-// Rate limiting protection
-let lastRegistrationAttempt = 0;
-const REGISTRATION_COOLDOWN = 5000; // 5 seconds
-
 async function handleRegister(event) {
     event.preventDefault();
     
@@ -1272,15 +1268,6 @@ async function handleRegister(event) {
         showToast('Database connection not available. Please refresh the page.', 'error');
         return;
     }
-    
-    // Rate limiting check
-    const now = Date.now();
-    if (now - lastRegistrationAttempt < REGISTRATION_COOLDOWN) {
-        const remainingTime = Math.ceil((REGISTRATION_COOLDOWN - (now - lastRegistrationAttempt)) / 1000);
-        showToast(`Please wait ${remainingTime} seconds before trying again.`, 'error');
-        return;
-    }
-    lastRegistrationAttempt = now;
     
     const name = document.getElementById('regName').value.trim();
     const email = document.getElementById('regEmail').value.trim();
@@ -1394,8 +1381,7 @@ async function handleRegister(event) {
             if (authError.message) {
                 const msg = authError.message.toLowerCase();
                 if (msg.includes('429') || msg.includes('too many requests') || msg.includes('rate limit') || msg.includes('email rate limit exceeded')) {
-                    errorMessage = 'Too many signup attempts (rate limit). Please wait 10–15 minutes and try again, or use a different email. This applies to both Patient and Dentist registration.';
-                    lastRegistrationAttempt = Date.now() + 60000;
+                    errorMessage = 'Supabase temporarily limited signups (too many attempts). You can try again in a few minutes or use a different email.';
                 } else if (authError.message.includes('already registered') || authError.message.includes('User already registered') || authError.message.includes('already exists')) {
                     errorMessage = 'This email is already registered. Please try logging in instead.';
                 } else if (authError.message.includes('Invalid email')) {

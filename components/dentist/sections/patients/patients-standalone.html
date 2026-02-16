@@ -1451,7 +1451,7 @@
                     if (authError.message) {
                         const m = authError.message.toLowerCase();
                         if (m.includes('429') || m.includes('too many requests') || m.includes('rate limit') || m.includes('email rate limit exceeded')) {
-                            errorMessage = 'Too many signup attempts (rate limit). Please wait 10–15 minutes and try again, or use a different email.';
+                            errorMessage = 'Supabase temporarily limited signups (too many attempts). Try again in a few minutes or use a different email.';
                         } else if (authError.message.includes('already registered') || authError.message.includes('already exists')) {
                             errorMessage = 'This email is already registered.';
                         } else if (authError.message.includes('Invalid email')) {
