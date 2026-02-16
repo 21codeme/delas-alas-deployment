@@ -462,7 +462,10 @@ document.getElementById('dentistForm').onsubmit = async function(e) {
         if (authError) {
             let errorMessage = 'Registration failed.';
             if (authError.message) {
-                if (authError.message.includes('already registered') || authError.message.includes('already exists')) {
+                const m = authError.message.toLowerCase();
+                if (m.includes('429') || m.includes('too many requests') || m.includes('rate limit') || m.includes('email rate limit exceeded')) {
+                    errorMessage = 'Too many signup attempts (rate limit). Please wait 10–15 minutes and try again, or use a different email.';
+                } else if (authError.message.includes('already registered') || authError.message.includes('already exists')) {
                     errorMessage = 'This email is already registered.';
                 } else if (authError.message.includes('Invalid email')) {
                     errorMessage = 'Please enter a valid email address.';

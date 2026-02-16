@@ -1368,10 +1368,10 @@ async function handleRegister(event) {
             let errorMessage = 'Registration failed';
             
             if (authError.message) {
-                if (authError.message.includes('429') || authError.message.includes('Too Many Requests')) {
-                    errorMessage = 'Too many registration attempts. Please wait a few minutes and try again.';
-                    // Reset the cooldown timer to prevent immediate retry
-                    lastRegistrationAttempt = Date.now() + 60000; // Add 1 minute
+                const msg = authError.message.toLowerCase();
+                if (msg.includes('429') || msg.includes('too many requests') || msg.includes('rate limit') || msg.includes('email rate limit exceeded')) {
+                    errorMessage = 'Too many signup attempts (rate limit). Please wait 10–15 minutes and try again, or use a different email. This applies to both Patient and Dentist registration.';
+                    lastRegistrationAttempt = Date.now() + 60000;
                 } else if (authError.message.includes('already registered') || authError.message.includes('User already registered') || authError.message.includes('already exists')) {
                     errorMessage = 'This email is already registered. Please try logging in instead.';
                 } else if (authError.message.includes('Invalid email')) {
