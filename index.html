@@ -247,6 +247,10 @@
                         <option value="dentist">Dentist</option>
                     </select>
                 </div>
+                <div id="loginEmailNotConfirmedBox" class="login-email-not-confirmed" style="display: none;">
+                    <p>Your email is not confirmed. Check your inbox (and spam) for the verification link, or click below to resend it.</p>
+                    <p><a href="#" id="loginResendConfirmationLink" onclick="resendLoginConfirmationEmail(); return false;">Resend confirmation email</a></p>
+                </div>
                 <button type="submit" class="btn btn-primary btn-full">Login</button>
                 <p class="forgot-password-link">
                     <a href="#" onclick="showForgotPasswordModal(); return false;">Forgot Password?</a>

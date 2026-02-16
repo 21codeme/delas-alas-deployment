@@ -571,6 +571,8 @@ function scrollToSection(sectionId) {
 
 // Modal Functions
 function showLoginModal() {
+    const box = document.getElementById('loginEmailNotConfirmedBox');
+    if (box) box.style.display = 'none';
     document.getElementById('loginModal').style.display = 'block';
     document.body.style.overflow = 'hidden';
 }
@@ -845,9 +847,15 @@ async function handleLogin(event) {
         });
         
         if (error) {
+            const msg = (error.message || '').toLowerCase();
+            const emailNotConfirmed = msg.includes('email not confirmed') || msg.includes('not confirmed') || msg.includes('confirm your email');
+            const box = document.getElementById('loginEmailNotConfirmedBox');
+            if (box) box.style.display = emailNotConfirmed ? 'block' : 'none';
             showToast('Login failed: ' + error.message, 'error');
             return;
         }
+        const box = document.getElementById('loginEmailNotConfirmedBox');
+        if (box) box.style.display = 'none';
         
         // Get user profile from database
         let { data: profile, error: profileError } = await supabase
@@ -856,31 +864,47 @@ async function handleLogin(event) {
             .eq('id', data.user.id)
             .single();
         
-        // If profile doesn't exist, try to create it
+        // If profile doesn't exist, create it via RPC (bypasses RLS)
         if (profileError && profileError.code === 'PGRST116') {
-            console.log('User profile not found, creating one...');
-            
-            // Try to create profile using user metadata
-            const { data: newProfile, error: createError } = await supabase
+            console.log('User profile not found, creating via RPC...');
+            const meta = data.user.user_metadata || {};
+            const name = meta.name || data.user.email?.split('@')[0] || 'User';
+            const phone = meta.phone || '';
+            const userType = meta.user_type || 'patient';
+
+            const { data: rpcResult, error: rpcError } = await supabase.rpc('create_user_profile_rpc', {
+                user_id: data.user.id,
+                user_name: name,
+                user_email: data.user.email,
+                user_phone: phone,
+                user_type: userType
+            });
+
+            if (!rpcError && rpcResult && rpcResult.success) {
+                console.log('Profile created via RPC');
+            } else if (rpcError) {
+                const { error: fallbackError } = await supabase.rpc('insert_user_profile', {
+                    user_id: data.user.id,
+                    user_name: name,
+                    user_email: data.user.email,
+                    user_phone: phone,
+                    user_type: userType
+                });
+                if (fallbackError) console.log('Fallback RPC:', fallbackError.message);
+            }
+
+            const { data: newProfile, error: fetchError } = await supabase
                 .from('users')
-                .insert([{
-                    id: data.user.id,
-                    name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'User',
-                    email: data.user.email,
-                    phone: data.user.user_metadata?.phone || '',
-                    user_type: data.user.user_metadata?.user_type || 'patient'
-                }])
-                .select()
+                .select('*')
+                .eq('id', data.user.id)
                 .single();
-            
-            if (createError) {
-                console.log('Failed to create profile:', createError);
+
+            if (fetchError || !newProfile) {
+                console.log('Still no profile after create:', fetchError);
                 showToast('Failed to load user profile. Please contact support.', 'error');
                 return;
-            } else {
-                profile = newProfile;
-                console.log('Profile created successfully');
             }
+            profile = newProfile;
         } else if (profileError) {
             showToast('Failed to load user profile: ' + profileError.message, 'error');
             return;
@@ -2377,6 +2401,31 @@ async function resendVerificationEmail() {
     } catch (error) {
         console.error('Resend email error:', error);
         showToast('Failed to resend email. Please try again.', 'error');
+    }
+}
+
+/** Resend confirmation email using the email from the login form (when login fails due to unconfirmed email). */
+async function resendLoginConfirmationEmail() {
+    const emailEl = document.getElementById('loginEmail');
+    const email = (emailEl && emailEl.value && emailEl.value.trim()) || '';
+    if (!email) {
+        showToast('Please enter your email in the login form first.', 'error');
+        return;
+    }
+    if (!supabase || !supabase.auth || typeof supabase.auth.resend !== 'function') {
+        showToast('Resend is not available. Please check your email inbox (and spam) for the verification link.', 'error');
+        return;
+    }
+    try {
+        const { error } = await supabase.auth.resend({ type: 'signup', email });
+        if (error) {
+            showToast('Failed to resend: ' + error.message, 'error');
+        } else {
+            showToast('Confirmation email sent! Check your inbox (and spam folder), then click the link and try logging in again.', 'success');
+        }
+    } catch (e) {
+        console.error('Resend error:', e);
+        showToast('Failed to resend. Please try again.', 'error');
     }
 }
 

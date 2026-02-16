@@ -1241,6 +1241,18 @@ p {
     margin-bottom: 0;
 }
 
+.login-email-not-confirmed {
+    background: #fff8e6;
+    border: 1px solid #f0c674;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+.login-email-not-confirmed p { margin: 0 0 0.5rem 0; }
+.login-email-not-confirmed p:last-child { margin-bottom: 0; }
+.login-email-not-confirmed a { color: var(--primary-color); font-weight: 600; }
+
 .forgot-password-link {
     text-align: center;
     margin-top: 0.5rem;
