@@ -1389,6 +1389,8 @@ async function handleRegister(event) {
                     errorMessage = 'Please enter a valid email address.';
                 } else if (authError.message.includes('Password should be at least')) {
                     errorMessage = 'Password must be at least 6 characters long.';
+                } else if ((authError.originalError && (authError.originalError.msg === 'Error sending confirmation email' || authError.originalError.error_code === 'unexpected_failure')) || (msg.includes('confirmation email') && msg.includes('sending'))) {
+                    errorMessage = 'Confirmation email could not be sent. In Supabase: check Authentication → Notifications → Email (SMTP), or turn OFF "Confirm email" in Providers → Email to sign up without verification.';
                 } else if (authError.message.includes('500') || authError.message.includes('Internal Server Error')) {
                     errorMessage = 'Server error during registration. This might be due to database configuration. Please contact support or try again later.';
                 } else {

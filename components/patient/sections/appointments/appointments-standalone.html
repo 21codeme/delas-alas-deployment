@@ -1639,9 +1639,10 @@
                 const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
                 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
 
-                // Encode user ID to handle special characters
+                // Load by patient_id (logged-in) OR patient_email (guest bookings with same email)
                 const encodedUserId = encodeURIComponent(userData.id);
-                const url = `${SUPABASE_URL}/rest/v1/appointments?patient_id=eq.${encodedUserId}&order=appointment_date.desc`;
+                const encodedEmail = encodeURIComponent(userData.email || '');
+                const url = `${SUPABASE_URL}/rest/v1/appointments?or=(patient_id.eq.${encodedUserId},patient_email.eq.${encodedEmail})&order=appointment_date.desc`;
                 console.log('🔗 Fetching from URL:', url);
                 
                 // Load appointments with timeout

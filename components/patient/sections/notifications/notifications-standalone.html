@@ -579,8 +579,10 @@
                 });
                 const dbNotifications = await dbNotificationsResponse.json();
 
-                // Fetch appointments
-                const appointmentsResponse = await fetch(`${SUPABASE_URL}/rest/v1/appointments?patient_id=eq.${userData.id}&select=id,appointment_date,appointment_time,status,service_type,created_at&order=created_at.desc&limit=20`, {
+                // Fetch appointments (by patient_id or patient_email for guest bookings)
+                const encId = encodeURIComponent(userData.id);
+                const encEmail = encodeURIComponent(userData.email || '');
+                const appointmentsResponse = await fetch(`${SUPABASE_URL}/rest/v1/appointments?or=(patient_id.eq.${encId},patient_email.eq.${encEmail})&select=id,appointment_date,appointment_time,status,service_type,created_at&order=created_at.desc&limit=20`, {
                     headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
                 });
                 const appointments = await appointmentsResponse.json();

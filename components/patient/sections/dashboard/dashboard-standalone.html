@@ -1954,9 +1954,10 @@
                 const SUPABASE_URL = 'https://xlubjwiumytdkxrzojdg.supabase.co';
                 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdWJqd2l1bXl0ZGt4cnpvamRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTQ2MDAsImV4cCI6MjA3NjI5MDYwMH0.RYal1H6Ibre86bHyMIAmc65WCLt1x0j9p_hbEWdBXnQ';
                 
-                // Encode user ID to handle special characters
+                // Load appointments by patient_id (logged-in) OR patient_email (guest bookings with same email)
                 const encodedUserId = encodeURIComponent(user.id);
-                const url = `${SUPABASE_URL}/rest/v1/appointments?patient_id=eq.${encodedUserId}&select=*`;
+                const encodedEmail = encodeURIComponent(user.email || '');
+                const url = `${SUPABASE_URL}/rest/v1/appointments?or=(patient_id.eq.${encodedUserId},patient_email.eq.${encodedEmail})&select=*`;
                 console.log('🔗 Fetching from URL:', url);
                 
                 // Load patient's own appointments with timeout
@@ -2192,17 +2193,16 @@
                 });
                 const totalBookings = dayAppointments.length;
                 const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                const isMyAppointment = (a) => (a.patient_id && String(a.patient_id) === String(currentUser.id)) || (a.patient_email && String(a.patient_email).toLowerCase() === String(currentUser.email || '').toLowerCase());
                 
-                // "My" counts from dayAppointments so indicator matches what's on the calendar (fix: show indicator when day has my appointments even if status is completed/other)
-                const myOnThisDay = dayAppointments.filter(a => a.patient_id && String(a.patient_id) === String(currentUser.id));
+                // "My" counts: patient_id match OR patient_email match (guest bookings with same email)
+                const myOnThisDay = dayAppointments.filter(isMyAppointment);
                 const myPending = myOnThisDay.filter(a => (a.status || '').toLowerCase() === 'pending').length;
                 const myConfirmed = myOnThisDay.filter(a => ['confirmed', 'rescheduled'].includes((a.status || '').toLowerCase())).length;
                 const myCompleted = myOnThisDay.filter(a => (a.status || '').toLowerCase() === 'completed').length;
                 
-                // Count of OTHER users' appointments (excluding patient's own)
-                const otherUsersAppointments = dayAppointments.filter(a => {
-                    return a.patient_id && String(a.patient_id) !== String(currentUser.id);
-                });
+                // Count of OTHER users' appointments (excluding patient's own by id or email)
+                const otherUsersAppointments = dayAppointments.filter(a => !isMyAppointment(a));
                 const otherUsersCount = otherUsersAppointments.length;
                 
                 // Count ALL bookings (pending + confirmed + rescheduled) for this date
@@ -2287,7 +2287,7 @@
                 
                 // Load ALL appointments for this month (past, present, and future)
                 // Include status field to filter by pending/confirmed
-                const url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=gte.${startDate}&appointment_date=lte.${endDate}&select=id,appointment_date,patient_id,status`;
+                const url = `${SUPABASE_URL}/rest/v1/appointments?appointment_date=gte.${startDate}&appointment_date=lte.${endDate}&select=id,appointment_date,patient_id,patient_email,status`;
                 console.log(`📅 Fetching from: ${url}`);
                 
                 const response = await fetch(url, {

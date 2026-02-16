@@ -50,9 +50,14 @@ class LocalSupabaseAuth {
                 // Extract error message from various possible formats
                 let errorMessage = data.msg || data.message || data.error_description || 'Signup failed';
                 
-                // If it's a 500 error, provide more context
+                // If it's a 500, use server message when it's about email; otherwise generic server error
                 if (response.status === 500) {
-                    errorMessage = 'Server error during registration. The database trigger may have failed. Please check your database configuration or contact support.';
+                    const msg = (errorMessage || '').toLowerCase();
+                    if (msg.includes('confirmation email') || msg.includes('sending') && msg.includes('email')) {
+                        errorMessage = 'Error sending confirmation email. Check Supabase: Authentication → Notifications → Email (SMTP settings), or turn OFF "Confirm email" in Authentication → Providers → Email to allow signup without verification.';
+                    } else {
+                        errorMessage = 'Server error during registration. The database trigger may have failed. Please check your database configuration or contact support.';
+                    }
                 }
                 
                 return { 
