@@ -1380,8 +1380,9 @@ async function handleRegister(event) {
             
             if (authError.message) {
                 const msg = authError.message.toLowerCase();
-                if (msg.includes('429') || msg.includes('too many requests') || msg.includes('rate limit') || msg.includes('email rate limit exceeded')) {
-                    errorMessage = 'Supabase temporarily limited signups (too many attempts). You can try again in a few minutes or use a different email.';
+                if (msg.includes('429') || msg.includes('too many requests') || msg.includes('rate limit') || msg.includes('email rate limit exceeded') || (authError.originalError && authError.originalError.error_code === 'over_email_send_rate_limit')) {
+                    errorMessage = 'Signup is temporarily blocked (email limit from server). Try again in 1–2 hours, or ask the site admin to turn OFF "Confirm email" in Supabase (Authentication → Email) so signups work without verification.';
+                    console.warn('Admin fix for signup 429: Supabase Dashboard → Authentication → Providers → Email → disable "Confirm email". Then signups work without sending verification emails.');
                 } else if (authError.message.includes('already registered') || authError.message.includes('User already registered') || authError.message.includes('already exists')) {
                     errorMessage = 'This email is already registered. Please try logging in instead.';
                 } else if (authError.message.includes('Invalid email')) {
