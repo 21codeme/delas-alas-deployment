@@ -1,0 +1,33 @@
+# Ping Supabase para hindi ma-pause ang free tier project (inactivity = 7 days).
+# Tumakbo every 5 days para sigurado na may activity bago mag-7 days.
+name: Supabase Keep-Alive
+
+on:
+  schedule:
+    # Every 5 days at 00:00 UTC (8am PH time)
+    - cron: '0 0 */5 * *'
+  workflow_dispatch: # Pwede i-run manually sa Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase
+        run: |
+          URL="${{ secrets.SUPABASE_URL }}"
+          KEY="${{ secrets.SUPABASE_ANON_KEY }}"
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then
+            echo "::warning::Add SUPABASE_URL and SUPABASE_ANON_KEY in repo Secrets (Settings > Secrets and variables > Actions)."
+            exit 0
+          fi
+          HTTP=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "apikey: $KEY" \
+            -H "Authorization: Bearer $KEY" \
+            -H "Content-Type: application/json" \
+            "${URL}/rest/v1/clinic_settings?id=eq.clinic&select=id&limit=1")
+          echo "Supabase response: $HTTP"
+          if [ "$HTTP" = "200" ] || [ "$HTTP" = "206" ]; then
+            echo "Keep-alive OK."
+          else
+            echo "::warning::Unexpected status $HTTP (project might be paused or table missing)."
+          fi
